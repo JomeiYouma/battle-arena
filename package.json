@@ -1,0 +1,12 @@
+{
+  "name": "mood-checker",
+  "version": "1.0.0",
+  "description": "Small script to change your mood.",
+  "license": "UNLICENSED",
+  "author": "Jomeiyouma",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
