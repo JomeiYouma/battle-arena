@@ -8,6 +8,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node ./src/index.js",
+    "quiz": "node ./src/quizz.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
