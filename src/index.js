@@ -1,30 +1,13 @@
 console.log('Hello, World!');
 import { select } from '@inquirer/prompts';
+import * as cowsay from "cowsay"
 
 const answer = await select({
   message: 'What\'s your current mood',
-  choices: [
-    {
-      name: 'happy',
-      value: 'happy',
-      description: 'I am feeling happy today!',
-    },
-    {
-      name: 'suicidal',
-      value: 'suicidal',
-      description: 'I am feeling suicidal today!',
-    },
-    {
-      name: 'sad',
-      value: 'sad',
-      description: 'I am feeling suicidal today!',
-    },
-    {
-      name: 'dangerous',
-      value: 'dangerous',
-      description: 'I am feeling suicidal today!',
-    },
-  ],
+  choices: ['sad', 'happy', 'excited', 'angry'],
 });
 
-console.log(`Va creuver la bouche ouverte, ${answer} boii!`);
+console.log(cowsay.say({
+    text : `I'm f*cking ${answer}, coward!`,
+    f : "banana"
+}));
