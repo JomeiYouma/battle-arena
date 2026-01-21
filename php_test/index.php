@@ -12,7 +12,7 @@ var_dump($gandalf);
 echo "<br><br>";
 
 // Test de l'attaque
-echo $gandalf->name . " attaque " . $orc->name . "<br><br>";
+echo $gandalf->getName() . " attaque " . $orc->getName() . "<br><br>";
 
 echo $gandalf->attack($orc);
 
@@ -22,3 +22,4 @@ echo "<br><br>";
 $orc->heal(); 
 var_dump($orc); // Il devrait être revenu à 50 PV
 echo "<br><br>";
+echo $gandalf->getName() . ":<br>Atk : " . $gandalf->getAtk() . "<br>Pv : ".$gandalf->getPv() ." / ". $gandalf->getBasePv();

@@ -1,19 +1,22 @@
 <?php
 
 class Personnage {
-
+const MAX_PV = 100;
     private $pv;
     private $atk;
     private $name;
     private $basePv;
 
     public function __construct($pv, $atk, $name) {
-        $this->pv = $pv;
-        $this->basePv = $pv;
-        $this->atk = $atk;
         $this->name = $name;
+        $this->atk = $atk;
+        $this->basePv = $pv;
+        
+        $this->setPv($pv); 
     }
-//Getters
+
+    // --- GETTERS (Accesseurs) ---
+
     public function getPv() {
         return $this->pv;
     }
@@ -26,25 +29,45 @@ class Personnage {
         return $this->name;
     }
 
-    public function getBasePv($pv) {
-        $this->pv = $pv;
+    public function getBasePv() {
+        return $this->basePv;
     }
-//Setters
+
+    // --- SETTERS (Mutateurs) ---
+
     public function setAtk($atk) {
-        $this->atk = $atk;
+        if ($atk > 0) {
+            $this->atk = $atk;
+        }
     }
 
     public function setName($name) {
         $this->name = $name;
     }
 
-    public function setBasePv($pv) {
-        $this->basePv = $pv;
+    public function setBasePv($x) {
+        if ($x > self::MAX_PV) {
+            $x = self::MAX_PV;
+        }
+        if ($x > 0) {
+            $this->basePv = $x;
+        }
     }
 
-    public function setPv($pv) {
-        $this->pv = $pv;
+    public function setPv($x) {
+        if ($x > self::MAX_PV) {
+            $x = self::MAX_PV;
+        }
+        if ($x < 0) {
+            $x = 0;
+        }
+        if ($x > $this->basePv) {
+            $x = $this->basePv;
+        }
+        $this->pv = $x;
     }
+
+    // --- MÉTHODES ---
 
     public function cri() {
         return "YOU SHALL NOT PASS !";
@@ -52,30 +75,25 @@ class Personnage {
 
     public function heal($x = null) {
         if (is_null($x)) {
-            $this->pv = $this->basePv;
+            $this->setPv($this->basePv);
         } else {
-            $this->pv += $x;
-            if ($this->pv > $this->basePv) {
-                $this->pv = $this->basePv;
-            }
+            $this->setPv($this->pv + $x);
         }
     }
 
     public function isDead() {
-        return $this->pv > 0;
+        return $this->pv <= 0;
     }
 
     public function attack(Personnage $target) {
-        $target->pv -= $this->atk;
+        $newPv = $target->getPv() - $this->atk;
+        
+        $target->setPv($newPv);
 
-        if ($target->pv < 0) {
-            $target->pv = 0;
-        }
-
-        if (!$target->isDead()) {
-            return $target->name . " est mort !<br>";
+        if ($target->isDead()) {
+            return $target->getName() . " est mort !<br>";
         } else {
-            return $target->name . " a " . $target->pv . " PV restants.<br>";
+            return $target->getName() . " a " . $target->getPv() . " PV restants.<br>";
         }
     }
 }
