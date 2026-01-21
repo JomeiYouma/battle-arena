@@ -8,7 +8,7 @@ spl_autoload_register('chargerClasse');
 $gandalf = new Personnage(100, 20, "Gandalf");
 
 // Création d'un méchant pour tester la bagarre
-$orc = new Guerisseur(50, 10, "Azog");
+$orc = new Personnage(50, 10, "Azog");
 
 // Test du var_dump
 var_dump($gandalf);
@@ -27,4 +27,4 @@ var_dump($orc); // Il devrait être revenu à 50 PV
 echo "<br><br>";
 echo $gandalf->getName() . ":<br>Atk : " . $gandalf->getAtk() . "<br>Pv : ".$gandalf->getPv() ." / ". $gandalf->getBasePv();
 echo "<br><br>";
-echo "Compteur : " . Personnage::getNbPersonnages();
+echo Personnage::getNbPersonnages();

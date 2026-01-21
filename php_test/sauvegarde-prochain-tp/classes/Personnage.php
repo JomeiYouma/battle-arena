@@ -3,15 +3,15 @@
 class Personnage {
 const MAX_PV = 100;
 
-protected static $nbPersonnages = 0;
+private static $nbPersonnages = 0;
 public static function getNbPersonnages() {
         return self::$nbPersonnages;
     }
 
-    protected $pv;
-    protected $atk;
-    protected $name;
-    protected $basePv;
+    private $pv;
+    private $atk;
+    private $name;
+    private $basePv;
 
     public function __construct($pv, $atk, $name) {
          self::$nbPersonnages++;
@@ -80,6 +80,13 @@ public static function getNbPersonnages() {
         return "YOU SHALL NOT PASS !";
     }
 
+    public function heal($x = null) {
+        if (is_null($x)) {
+            $this->setPv($this->basePv);
+        } else {
+            $this->setPv($this->pv + $x);
+        }
+    }
 
     public function isDead() {
         return $this->pv <= 0;
@@ -97,4 +104,3 @@ public static function getNbPersonnages() {
         }
     }
 }
-
