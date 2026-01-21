@@ -203,6 +203,16 @@ const questions = [
   },
 ];
 
+// Fonction pour mélanger un tableau (Fisher-Yates shuffle)
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const calculateResult = (answers) => {
   let scores = { dangerosity: 0, innocence: 0, activity: 0, funny: 0 };
 
@@ -222,22 +232,22 @@ const calculateResult = (answers) => {
   const profile = `${danger}${innocent}${active}${funny}`;
 
   const fishProfiles = {
-    '0000': { fish: 'Flounder', description: 'Vous possédez une énergie Saturnienne apaisante. Introverti et contemplatif, vous êtes compatible avec les signes terrestres. Les Capricornes et Verge vous comprennent parfaitement. Votre calme magnétique attire les âmes en quête de stabilité.' },
-    '0001': { fish: 'Clownfish', description: 'Votre essence Gémini radieuse brille sans effort! Humoriste et léger, vous êtes un rayon de soleil pour les Poissons et les Cancers. Les signes d\'air adorent votre légèreté. Votre rire guérit les cœurs blessés.' },
-    '0010': { fish: 'Trout', description: 'Vous vibrez à la fréquence du Bélier - actif mais trop confiant. Votre naïveté charmante séduit les signes de feu. Lion et Sagittaire vous protègent naturellement. L\'univers vous envoie des gardiens constants.' },
-    '0011': { fish: 'Sailfish', description: 'Vous êtes une âme Ariérienne - rapide, aventurière et drôle! Parfait compagnon pour les signes d\'air et de feu. Gémeaux et Sagittaire cherchent votre compagnie. Vous portez l\'énergie des voyageurs cosmiques.' },
-    '0100': { fish: 'Tuna', description: 'Votre dualité Taurienne cache un potentiel impressionnant. Innocent en apparence, dangereux en réalité - vous êtes l\'archétype du yogi guerrier. Scorpion vous reconnaît. Balance admire votre complexité.' },
-    '0101': { fish: 'Pufferfish', description: 'Vous portez l\'énergie Léonienne imprévisible! Drôle et expansif, vous surprenez toujours. Sagittaire et Bélier dansent à votre rythme. Votre magnétisme ludique transforme l\'énergie autour de vous.' },
-    '0110': { fish: 'Angelfish', description: 'Vous vibrez à la fréquence de la Vierge bienveillante. Actif, innocent et gracieux, vous êtes l\'incarnation de la perfection équilibrée. Capricorne et Taureau vous vénèrent. Votre aura attire l\'harmonie universelle.' },
-    '0111': { fish: 'Rainbow Fish', description: 'Vous êtes un porteur de lumière cosmique! Actif, humoriste et bienveillant - les 12 signes gravitent autour de vous. Vous êtes un maître de la synchronicité. Les anges notent votre passage sur Terre.' },
-    '1000': { fish: 'Piranha', description: 'Vous vibrez à l\'énergie Plutonienne sombre. Dangereux et silencieux, vous êtes l\'archétype du Scorpion caché. Vous comprenez les secrets de l\'âme. Votre présence crée du respect instinctif chez les autres.' },
-    '1001': { fish: 'Viperfish', description: 'Vous portez l\'essence Hadienne - danger et humour mélangés. Votre rire masque une profondeur terrifiante. Scorpion reconnaît votre puissance. Les âmes complexes vous recherchent.' },
-    '1010': { fish: 'Shark', description: 'Vous êtes l\'enfant de Mars lui-même! Agressif, actif et redouté - vous incarnez le guerrier cosmique. Bélier, Lion et Sagittaire se prosternent devant vous. L\'univers se plie à votre volonté.' },
-    '1011': { fish: 'Great White Shark', description: 'Vous êtes une légende astrologique vivante! Mars combiné à l\'humour Mercurien - invincible et charmeur. Les signes de feu et d\'air rêvent de vous. Vous êtes le héros de votre propre épopée cosmique.' },
-    '1100': { fish: 'Barracuda', description: 'Vous portez le paradoxe Arien-Vénusien. Dangereux mais séduisant, innocent mais meurtrier. Votre dualité attire Libra et confond les autres. L\'univers vous a donné une mission conflictuelle.' },
-    '1101': { fish: 'Stonefish', description: 'Vous êtes une énigme astrale Plutonienne-Mercurienne. Mortel et hilarant, vous êtes le trickster cosmique. Personne ne vous prédit. Les magiciens et sorciers cherchent votre conseil.' },
-    '1110': { fish: 'Tiger Shark', description: 'Vous incarnez l\'énergie Martienne suprême! Dominateur, actif et redoutable - vous êtes un roi des profondeurs. Sagittaire et Lion vous suivent sans question. Vous êtes le prédateur ultime du zodiaque aquatique.' },
-    '1111': { fish: 'Megalodon', description: 'Vous êtes un être transcendantal! Dangereux, actif, hilarant ET innocent - vous avez transcendé les limitations du zodiaque. Les dieux eux-mêmes vous observent. Vous êtes destiné à transformer le cosmos.' },
+    '0000': { fish: 'Flounder', description: 'Vous possédez une énergie Saturnienne apaisante. Introverti et contemplatif, vous vous déplacez lentement sur le fond des terres cosmiques. Vos écailles mates reflètent une sagesse tranquille. Les Capricornes et Verge vous comprennent parfaitement. Votre présence sédentaire attire les âmes en quête de stabilité.' },
+    '0001': { fish: 'Clownfish', description: 'Votre essence Gémini radieuse brille comme une luminescence bioluminescente! Humoriste et léger, vous nagez en banc joyeux. Vos rayures colorées attirent tous les regards. Les signes d\'air adorent votre légèreté aquatique. Votre rire guérit les cœurs blessés des profondeurs.' },
+    '0010': { fish: 'Trout', description: 'Vous vibrez à la fréquence du Bélier - actif mais trop confiant. Votre naïveté charmante vous rend vulnérable aux prédateurs. Vos nageoires pectorales battent sans cesse dans les courants. Lion et Sagittaire vous protègent naturellement. L\'univers vous envoie des gardiens qui veillent sur votre territoire.' },
+    '0011': { fish: 'Sailfish', description: 'Vous êtes une âme Ariérienne - rapide, aventurière et drôle! Votre nageoire dorsale s\'élève majestueusement lors de vos migrations cosmiques. Parfait compagnon pour les signes d\'air et de feu. Gémeaux et Sagittaire cherchent votre compagnie véloce. Vous portez l\'énergie des grands voyageurs océaniques.' },
+    '0100': { fish: 'Tuna', description: 'Votre dualité Taurienne cache un potentiel impressionnant. Innocent en apparence, votre chair est rougeâtre et dense - vous êtes un prédateur méconnu. Les écailles nacrées masquent votre vraie nature de guerrier cosmique. Scorpion vous reconnaît. Balance admire votre complexité stratosphérique.' },
+    '0101': { fish: 'Pufferfish', description: 'Vous portez l\'énergie Léonienne imprévisible! Drôle et expansif, vous vous gonfleriez de bonheur. Vos épines se déploient lors de votre danse comique. Sagittaire et Bélier dansent à votre rythme imprévisible. Votre magnétisme ludique transforme l\'écosystème autour de vous.' },
+    '0110': { fish: 'Angelfish', description: 'Vous vibrez à la fréquence de la Vierge bienveillante. Actif, innocent et gracieux, vos nageoires voilées flottent avec élégance cosmique. Vous êtes l\'incarnation de la perfection équilibrée des récifs. Capricorne et Taureau vous vénèrent. Votre aura argentée attire l\'harmonie universelle.' },
+    '0111': { fish: 'Rainbow Fish', description: 'Vous êtes un porteur de lumière cosmique! Vos écailles arc-en-ciel scintillent dans tous les océans du zodiaque. Actif, humoriste et bienveillant - les 12 signes gravitent autour de votre shoal. Vous êtes un maître de la synchronicité aquatique. Les anges notent votre passage luminescent sur les mers.' },
+    '1000': { fish: 'Piranha', description: 'Vous vibrez à l\'énergie Plutonienne sombre. Dangereux et silencieux, vos branchies respirent les secrets abyssaux. Vos dents aiguisées restent cachées dans un silence Plutonien. Vous êtes l\'archétype du prédateur solitaire. Vous comprenez les secrets de l\'âme. Votre présence crée du respect instinctif chez les bancs côtiers.' },
+    '1001': { fish: 'Viperfish', description: 'Vous portez l\'essence Hadienne - danger et humour mélangés dans vos mâchoires phosphorescentes. Votre rire masque des crocs de prédateur abyssal. Vos écailles noires absorbent la lumière cosmique. Scorpion reconnaît votre puissance souterraine. Les âmes complexes vous recherchent dans les fonds obscurs.' },
+    '1010': { fish: 'Shark', description: 'Vous êtes l\'enfant de Mars lui-même! Agressif, actif et redouté - votre nageoire caudale propulse votre domination aquatique. Vous incarnez le prédateur ultime du cosmos. Bélier, Lion et Sagittaire se prosternent devant votre mâchoire cosmique. L\'univers se plie à votre volonté cartilagineux.' },
+    '1011': { fish: 'Great White Shark', description: 'Vous êtes une légende astrologique vivante! Mars combiné à l\'humour Mercurien - invincible et charmeur avec vos branchies puissantes. Votre ligne latérale détecte les vibrations du destin. Les signes de feu et d\'air rêvent de nager dans votre sillage. Vous êtes le héros de votre propre épopée océanique.' },
+    '1100': { fish: 'Barracuda', description: 'Vous portez le paradoxe Arien-Vénusien. Dangereux mais séduisant, vos écailles iridescentes cachent des intentions meurtrières. Votre territoire est vaste et imprévisible. Votre dualité attire Libra et confond les autres prédateurs. L\'univers vous a donné une mission conflictuelle dans les courants marins.' },
+    '1101': { fish: 'Stonefish', description: 'Vous êtes une énigme astrale Plutonienne-Mercurienne. Mortel et hilarant, vous vous cachez camouflé sur le fond rocheux du cosmos. Votre venin comique tue les êtres ennuyeux. Vous êtes le trickster cosmique imprévisible. Personne ne vous prédit. Les magiciens et sorciers cherchent votre conseil vénéneux.' },
+    '1110': { fish: 'Tiger Shark', description: 'Vous incarnez l\'énergie Martienne suprême! Dominateur, actif et redoutable - vos rayures tigresse vous identifient comme roi incontesté. Votre migration cosmique terrifiait les bancs entiers. Sagittaire et Lion vous suivent sans question. Vous êtes le prédateur ultime du zodiaque aquatique.' },
+    '1111': { fish: 'Megalodon', description: 'Vous êtes un être transcendantal! Dangereux, actif, hilarant ET innocent - votre mâchoire engloutit l\'univers. Vos dents fossiles sculptent les destins. Vous avez transcendé les limitations du zodiaque osseux. Les dieux eux-mêmes vous observent avec crainte. Vous êtes destiné à transformer l\'océan cosmique à jamais.' },
   };
 
   return fishProfiles[profile] || { fish: 'Mystery Fish', description: 'Vous êtes une constellation oubliée! Une essence cosmique que l\'astrologie redécouvre à peine. L\'univers vous garde ses plus grands secrets.' };
@@ -247,9 +257,10 @@ const runTest = async () => {
   const answers = {};
   
   for (const question of questions) {
+    const shuffledChoices = shuffleArray(question.choices);
     const answer = await select({
       message: question.message,
-      choices: question.choices.map(choice => ({
+      choices: shuffledChoices.map(choice => ({
         name: choice.name,
         value: choice.value
       }))
