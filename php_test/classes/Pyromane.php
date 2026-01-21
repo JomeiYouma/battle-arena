@@ -1,3 +1,3 @@
 <?php
-class Guerrier extends Personnage {};
+class Pyromane extends Personnage {};
 ?>

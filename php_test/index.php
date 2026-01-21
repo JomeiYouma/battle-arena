@@ -1,30 +1,60 @@
 <?php
 function chargerClasse($classe) {
-    require 'classes/' . $classe . '.php';
+    if (file_exists('classes/' . $classe . '.php')) {
+        require 'classes/' . $classe . '.php';
+    }
 }
 spl_autoload_register('chargerClasse');
+session_start();
+$modeChoisi = null;
 
-// Création de Gandalf (PV, ATK, NOM)
-$gandalf = new Personnage(100, 20, "Gandalf");
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mode'])) {
+    $modeChoisi = $_POST['mode'];
+}
+?>
 
-// Création d'un méchant pour tester la bagarre
-$orc = new Guerisseur(50, 10, "Azog");
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horus Battle Arena</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-// Test du var_dump
-var_dump($gandalf);
-echo "<br><br>";
+    <h1>Horus Battle Arena</h1>
 
-// Test de l'attaque
-echo $gandalf->getName() . " attaque " . $orc->getName() . "<br><br>";
+    <?php if ($modeChoisi === null): ?>
 
-echo $gandalf->attack($orc);
+        <div class="menu-container">
+            <form method="POST">
+                <button type="submit" name="mode" value="single" class="menu-btn">
+                    Single player
+                </button>
+                
+                <button type="submit" name="mode" value="multi" class="menu-btn">
+                    Multiplayer
+                </button>
+            </form>
+        </div>
 
-var_dump($orc); // On vérifie que l'orc a perdu des PV
-echo "<br><br>";
-// Test de la régénération sans paramètre (full soin)
-$orc->heal(); 
-var_dump($orc); // Il devrait être revenu à 50 PV
-echo "<br><br>";
-echo $gandalf->getName() . ":<br>Atk : " . $gandalf->getAtk() . "<br>Pv : ".$gandalf->getPv() ." / ". $gandalf->getBasePv();
-echo "<br><br>";
-echo "Compteur : " . Personnage::getNbPersonnages();
+    <?php else: ?>
+
+        <div class="mode-container">
+            <?php
+            if ($modeChoisi === 'single') {
+                require 'single_player.php'; 
+            } elseif ($modeChoisi === 'multi') {
+                require 'multi_player.php'; 
+            }
+            ?>
+            
+            <br><br>
+            <a href="index.php" class="back-link">Retour au menu</a>
+        </div>
+
+    <?php endif; ?>
+    
+</body>
+</html>
