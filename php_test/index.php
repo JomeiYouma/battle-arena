@@ -6,10 +6,21 @@ function chargerClasse($classe) {
 }
 spl_autoload_register('chargerClasse');
 session_start();
-$modeChoisi = null;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mode'])) {
-    $modeChoisi = $_POST['mode'];
+// --- LOGIQUE DE RESET GLOBALE ---
+// Doit être ici car les formulaires de reset sont soumis vers index.php
+if (isset($_POST['logout']) || isset($_POST['new_game'])) {
+    session_unset();
+    session_destroy();
+    // Redémarrer une nouvelle session vide
+    session_start();
+    // Afficher le menu principal (pas de mode choisi)
+    $modeChoisi = null;
+} else {
+    $modeChoisi = null;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['mode'])) {
+        $modeChoisi = $_POST['mode'];
+    }
 }
 ?>
 

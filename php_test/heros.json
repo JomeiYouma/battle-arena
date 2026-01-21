@@ -4,7 +4,9 @@
         "name": "Brutor le Brûlant",
         "type": "Pyromane",
         "pv": 100,
-        "atk": 15,
+        "atk": 18,
+        "def": 4,
+        "description": "Maître des flammes, Brutor peut entrer en surchauffe pour déchaîner des dégâts dévastateurs au prix de sa propre santé.",
         "images": {
             "p1": "media/fire_skol.png",
             "p2": "media/fire_skol_2.png"
@@ -16,6 +18,8 @@
         "type": "Guerrier",
         "pv": 120,
         "atk": 25,
+        "def": 12,
+        "description": "Guerrier impitoyable, Ulroc peut entrer en rage pour augmenter ses dégâts ou lever son bouclier pour encaisser les coups.",
         "images": {
             "p1": "media/combat_skol.png",
             "p2": "media/combat_skol_2.png"
@@ -27,6 +31,8 @@
         "type": "Guerisseur",
         "pv": 150,
         "atk": 10,
+        "def": 6,
+        "description": "Prêtre bienveillant, Siras peut se soigner et invoquer des bénédictions divines pour renforcer sa défense.",
         "images": {
             "p1": "media/priest_skol.png",
             "p2": "media/priest_skol_2.png"
@@ -38,6 +44,8 @@
         "type": "Aquatique",
         "pv": 85,
         "atk": 20,
+        "def": 3,
+        "description": "Créature des profondeurs, Poissard a 50% de chance d'esquiver la prochaine attaque grâce à sa fluidité aquatique.",
         "images": {
             "p1": "media/fish_skol.png",
             "p2": "media/fish_skol_2.png"
@@ -48,7 +56,9 @@
         "name": "Pedro",
         "type": "Barbare",
         "pv": 110,
-        "atk": 25,
+        "atk": 28,
+        "def": 4,
+        "description": "Barbare sanguinaire, Pedro devient plus puissant quand ses PV sont bas (mode Berserk). Son cri de guerre terrorise ses ennemis.",
         "images": {
             "p1": "media/kouto_skol.png",
             "p2": "media/kouto_skol_2.png"
@@ -59,7 +69,9 @@
         "name": "Krimus l'Astucieux",
         "type": "Guerisseur",
         "pv": 110,
-        "atk": 10,
+        "atk": 12,
+        "def": 7,
+        "description": "Guérisseur rusé, Krimus combine soins puissants et bénédictions pour survivre aux combats les plus difficiles.",
         "images": {
             "p1": "media/sat_skol.png",
             "p2": "media/sat_skol_2.png"
