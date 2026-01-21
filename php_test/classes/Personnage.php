@@ -2,12 +2,19 @@
 
 class Personnage {
 const MAX_PV = 100;
+
+private static $nbPersonnages = 0;
+public static function getNbPersonnages() {
+        return self::$nbPersonnages;
+    }
+
     private $pv;
     private $atk;
     private $name;
     private $basePv;
 
     public function __construct($pv, $atk, $name) {
+         self::$nbPersonnages++;
         $this->name = $name;
         $this->atk = $atk;
         $this->basePv = $pv;
