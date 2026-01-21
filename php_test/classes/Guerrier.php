@@ -1,6 +1,5 @@
 <?php
 class Guerrier extends Personnage {
-    const MAX_PV = 150;
     public function attack(Personnage $target) {
         $newPv = $target->getPv() - $this->atk + 20;
         

@@ -1,0 +1,24 @@
+[
+    {
+        "id": "brutor",
+        "name": "Brutor le Brûlant",
+        "type": "Pyromane",
+        "pv": 100,
+        "atk": 15,
+        "images": {
+            "p1": "media/fire_skol.png",
+            "p2": "media/fire_skol_2.png"
+        }
+    },
+    {
+        "id": "ulroc",
+        "name": "Ulroc le Mastoc",
+        "type": "Guerrier",
+        "pv": 120,
+        "atk": 25,
+        "images": {
+            "p1": "media/combat_skol.png",
+            "p2": "media/combat_skol_2.png"
+        }
+    }
+]

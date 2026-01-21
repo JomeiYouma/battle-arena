@@ -1,7 +1,7 @@
 <?php
 
 class Personnage {
-const MAX_PV = 100;
+const MAX_PV = 150;
 
 protected static $nbPersonnages = 0;
 public static function getNbPersonnages() {
