@@ -1,100 +1,81 @@
 <?php
 /**
- * =============================================================================
- * CLASSE GUERRIER - Spécialiste du combat au corps à corps
- * =============================================================================
- * 
- * TODO [À RECODER PAR TOI-MÊME] :
- * - Ajouter un système de combo (plusieurs attaques d'affilée)
- * - Implémenter une jauge de rage qui augmente les dégâts
- * - Ajouter des attaques spéciales débloquables
- * 
- * =============================================================================
+ * GUERRIER - Force brute et défense
+ * Thème: Rage et protection - Alterner attaques dévastatrices et défense solide
  */
-
 class Guerrier extends Personnage {
     
-    private $isBlocking = false;
-    private $rageActive = false;
     private $rageBonus = 10;
+    private $shieldBonus = 15;
 
-    public function __construct($pv, $atk, $name, $def = 10) {
-        // Le guerrier a une défense de base plus élevée
-        parent::__construct($pv, $atk, $name, $def, "Guerrier");
+    public function __construct($pv, $atk, $name, $def = 10, $speed = 10) {
+        parent::__construct($pv, $atk, $name, $def, "Guerrier", $speed);
     }
 
-    /**
-     * Liste des actions disponibles pour le Guerrier
-     * TODO [À RECODER] : Ajoute tes propres compétences !
-     */
     public function getAvailableActions(): array {
         return [
             'attack' => [
-                'label' => '⚔️ Attaquer',
-                'description' => 'Attaque basique infligeant des dégâts basés sur l\'ATK',
+                'label' => 'Attaquer',
+                'emoji' => '⚔️',
+                'description' => 'Frappe puissante au corps à corps',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
             'rage' => [
-                'label' => '🔥 Rage',
-                'description' => 'Entre en rage ! +' . $this->rageBonus . ' ATK pour la prochaine attaque',
+                'label' => 'Rage',
+                'emoji' => '🔥',
+                'description' => '+' . $this->rageBonus . ' ATK pendant 2 tours',
                 'method' => 'rage',
-                'needsTarget' => false
+                'needsTarget' => false,
+                'pp' => 3
             ],
             'shield' => [
-                'label' => '🛡️ Bloquer',
-                'description' => 'Adopte une posture défensive, +15 DEF ce tour',
+                'label' => 'Bloquer',
+                'emoji' => '🛡️',
+                'description' => '+' . $this->shieldBonus . ' DEF pendant 2 tours',
                 'method' => 'shield',
-                'needsTarget' => false
+                'needsTarget' => false,
+                'pp' => 3
+            ],
+            'charge' => [
+                'label' => 'Charge',
+                'emoji' => '💥',
+                'description' => '1.5x dégâts mais -5 DEF',
+                'method' => 'charge',
+                'needsTarget' => true,
+                'pp' => 2
             ]
         ];
     }
 
-    /**
-     * Attaque améliorée du guerrier - utilise le bonus de rage si actif
-     */
     public function attack(Personnage $target): string {
-        $originalAtk = $this->atk;
-        
-        // Applique le bonus de rage si actif
-        if ($this->rageActive) {
-            $this->atk += $this->rageBonus;
-            $this->rageActive = false;
-        }
-
-        // Calcul des dégâts avec bonus de force
-        // TODO [À RECODER] : Personnalise la formule de dégâts du guerrier
-        $damage = max(1, $this->atk - $target->getDef() + 5); // Bonus de force +5
-        $newPv = $target->getPv() - $damage;
-        
-        $target->setPv($newPv);
-
-        // Restaure l'ATK original
-        $this->atk = $originalAtk;
-
-        if ($target->isDead()) {
-            return "frappe violemment et inflige " . $damage . " dégâts ! " . $target->getName() . " est K.O. !";
-        } else {
-            return "frappe et inflige " . $damage . " dégâts à " . $target->getName() . " (" . $target->getPv() . " PV)";
-        }
+        $baseDamage = max(1, $this->atk - $target->getDef() + 5);
+        $damage = $this->randomDamage($baseDamage, 3);
+        $target->setPv($target->getPv() - $damage);
+        return $target->isDead() 
+            ? "frappe violemment ! $damage dégâts ! K.O. !"
+            : "frappe : $damage dégâts";
     }
 
-    /**
-     * Rage - Augmente l'attaque pour le prochain coup
-     * TODO [À RECODER] : Tu peux faire durer la rage plusieurs tours
-     */
     public function rage(): string {
-        $this->rageActive = true;
-        return "entre en RAGE ! 🔥 Prochaine attaque +" . $this->rageBonus . " dégâts !";
+        if (isset($this->activeBuffs['Rage'])) return "est déjà en rage !";
+        $this->addBuff('Rage', 'atk', $this->rageBonus, 2);
+        return "entre en RAGE ! +{$this->rageBonus} ATK";
     }
 
-    /**
-     * Bouclier - Augmente la défense pour ce tour
-     * TODO [À RECODER] : Faire en sorte que le buff dure ou ajouter une contre-attaque
-     */
     public function shield(): string {
-        $oldDef = $this->def;
-        $this->def += 15;
-        return "lève son bouclier ! 🛡️ DEF: " . $oldDef . " → " . $this->def;
+        if (isset($this->activeBuffs['Bouclier'])) return "bouclier déjà actif !";
+        $this->addBuff('Bouclier', 'def', $this->shieldBonus, 2);
+        return "lève son bouclier ! +{$this->shieldBonus} DEF";
+    }
+
+    public function charge(Personnage $target): string {
+        $this->def = max(0, $this->def - 5);
+        $baseDamage = max(1, (int)(($this->atk * 1.5) - $target->getDef()));
+        $damage = $this->randomDamage($baseDamage, 4);
+        $target->setPv($target->getPv() - $damage);
+        return $target->isDead() 
+            ? "CHARGE ! $damage dégâts ! K.O. !"
+            : "CHARGE ! $damage dégâts !";
     }
 }

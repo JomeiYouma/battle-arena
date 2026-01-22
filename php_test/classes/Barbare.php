@@ -1,107 +1,90 @@
 <?php
 /**
- * =============================================================================
- * CLASSE BARBARE - Spécialiste de la force brute
- * =============================================================================
- * 
- * TODO [À RECODER PAR TOI-MÊME] :
- * - Ajouter une mécanique de "berserk" quand les PV sont bas
- * - Implémenter des attaques à deux mains plus puissantes
- * - Créer un système de cri de guerre qui buff l'équipe
- * 
- * =============================================================================
+ * BARBARE - Force brute et berserk
+ * Thème: Plus dangereux quand blessé - Risque et récompense
  */
-
 class Barbare extends Personnage {
     
-    private $berserkThreshold = 0.3; // 30% PV = mode berserk
+    private $berserkThreshold = 0.3;
     private $berserkBonus = 15;
+    private $warcryBonus = 8;
 
-    public function __construct($pv, $atk, $name, $def = 3) {
-        // Le barbare a peu de défense mais beaucoup d'attaque
-        parent::__construct($pv, $atk, $name, $def, "Barbare");
+    public function __construct($pv, $atk, $name, $def = 3, $speed = 10) {
+        parent::__construct($pv, $atk, $name, $def, "Barbare", $speed);
     }
 
-    /**
-     * Vérifie si le barbare est en mode berserk (PV bas)
-     */
     private function isBerserk(): bool {
         return ($this->pv / $this->basePv) <= $this->berserkThreshold;
     }
 
-    /**
-     * Liste des actions disponibles pour le Barbare
-     * TODO [À RECODER] : Ajoute des attaques de zone, des charges, etc.
-     */
     public function getAvailableActions(): array {
         return [
             'attack' => [
-                'label' => '🪓 Coup de hache',
-                'description' => 'Frappe puissante à la hache. +' . $this->berserkBonus . ' dégâts si PV < 30%',
+                'label' => 'Coup de hache',
+                'emoji' => '🪓',
+                'description' => '+15 dégâts si PV < 30% (Berserk)',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
             'warcry' => [
-                'label' => '📢 Cri de guerre',
-                'description' => 'Pousse un cri terrifiant ! +8 ATK permanent',
+                'label' => 'Cri de guerre',
+                'emoji' => '📢',
+                'description' => '+8 ATK pendant 3 tours',
                 'method' => 'warcry',
-                'needsTarget' => false
+                'needsTarget' => false,
+                'pp' => 2
             ],
             'heal' => [
-                'label' => '🍖 Dévorer',
-                'description' => 'Dévore un morceau de viande, +20 PV',
+                'label' => 'Dévorer',
+                'emoji' => '🍖',
+                'description' => 'Mange de la viande, +18-22 PV',
                 'method' => 'heal',
-                'needsTarget' => false
+                'needsTarget' => false,
+                'pp' => 3
+            ],
+            'fury' => [
+                'label' => 'Fureur',
+                'emoji' => '💢',
+                'description' => 'Double attaque mais perd 15 PV',
+                'method' => 'fury',
+                'needsTarget' => true,
+                'pp' => 2
             ]
         ];
     }
 
-    /**
-     * Attaque du Barbare - Plus forte si en mode Berserk
-     * TODO [À RECODER] : Ajoute un effet de saignement, des coups critiques
-     */
     public function attack(Personnage $target): string {
-        $bonusDamage = 0;
-        $berserkText = "";
-        
-        // Bonus berserk si PV bas
-        if ($this->isBerserk()) {
-            $bonusDamage = $this->berserkBonus;
-            $berserkText = " [BERSERK!] ";
-        }
-
-        $damage = max(1, $this->atk + $bonusDamage - $target->getDef());
-        $newPv = $target->getPv() - $damage;
-        
-        $target->setPv($newPv);
-
-        if ($target->isDead()) {
-            return "déchaîne sa fureur !" . $berserkText . " 🪓 " . $damage . " dégâts ! " . $target->getName() . " est écrasé !";
-        } else {
-            return "abat sa hache !" . $berserkText . " 🪓 " . $damage . " dégâts à " . $target->getName() . " (" . $target->getPv() . " PV)";
-        }
+        $bonusDamage = $this->isBerserk() ? $this->berserkBonus : 0;
+        $berserkText = $this->isBerserk() ? " [BERSERK!]" : "";
+        $baseDamage = max(1, $this->atk + $bonusDamage - $target->getDef());
+        $damage = $this->randomDamage($baseDamage, 4);
+        $target->setPv($target->getPv() - $damage);
+        return $target->isDead() 
+            ? "DÉCAPITE !$berserkText $damage dégâts ! K.O. !"
+            : "frappe !$berserkText $damage dégâts";
     }
 
-    /**
-     * Cri de guerre - Augmente l'ATK de façon permanente
-     * TODO [À RECODER] : Faire affecter aussi les alliés en mode multi
-     */
     public function warcry(): string {
-        $this->atk += 8;
-        return "pousse un CRI DE GUERRE terrifiant ! 📢 ATK +" . 8 . " (Total: " . $this->atk . ")";
+        if (isset($this->activeBuffs['Cri de guerre'])) return "a déjà crié !";
+        $this->addBuff('Cri de guerre', 'atk', $this->warcryBonus, 3);
+        return "CRI DE GUERRE ! +{$this->warcryBonus} ATK";
     }
 
-    /**
-     * Dévorer - Soin du barbare
-     * TODO [À RECODER] : Ajouter différents types de nourriture avec des effets
-     */
     public function heal($x = null): string {
         $oldPv = $this->pv;
-        $healValue = $x ?? 20;
-        
-        $this->setPv($this->pv + $healValue);
-        
-        $actualHeal = $this->pv - $oldPv;
-        return "dévore un morceau de viande ! 🍖 +" . $actualHeal . " PV (" . $this->pv . "/" . $this->basePv . ")";
+        $this->setPv($this->pv + rand(18, 22));
+        return "dévore de la viande ! +" . ($this->pv - $oldPv) . " PV";
+    }
+
+    public function fury(Personnage $target): string {
+        $this->setPv($this->pv - 15);
+        $baseDamage = max(1, $this->atk - $target->getDef());
+        $damage1 = $this->randomDamage($baseDamage, 3);
+        $damage2 = $this->randomDamage($baseDamage, 3);
+        $total = $damage1 + $damage2;
+        $target->setPv($target->getPv() - $total);
+        return $target->isDead() 
+            ? "FUREUR ! $total dégâts ! K.O. !"
+            : "FUREUR ! $damage1+$damage2=$total dég (-15 PV)";
     }
 }

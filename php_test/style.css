@@ -880,3 +880,435 @@ select option {
         display: none;
     }
 }
+
+/* ==============================================
+   SYSTÈME D'EMOJI D'ACTION - ANIMATIONS
+   ============================================== */
+
+/* Container pour les emojis d'action */
+.fighter {
+    position: relative;
+}
+
+/* Emoji d'action - Animation pop */
+.action-emoji {
+    position: absolute;
+    font-size: 3rem;
+    z-index: 100;
+    pointer-events: none;
+    animation: emoji-pop 1.5s ease-out forwards;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+/* Position sur soi-même (centre du personnage) */
+.action-emoji.on-self {
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Position sur la cible (au-dessus) */
+.action-emoji.on-target {
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Style différent pour les actions ennemies */
+.action-emoji.enemy-action {
+    filter: hue-rotate(180deg) brightness(1.2);
+}
+
+/* Animation emoji pop */
+@keyframes emoji-pop {
+    0% {
+        transform: translateX(-50%) scale(0) rotate(-20deg);
+        opacity: 0;
+    }
+    20% {
+        transform: translateX(-50%) scale(1.5) rotate(10deg);
+        opacity: 1;
+    }
+    40% {
+        transform: translateX(-50%) scale(1.2) rotate(-5deg);
+        opacity: 1;
+    }
+    60% {
+        transform: translateX(-50%) scale(1.3) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) scale(1) translateY(-20px);
+        opacity: 0;
+    }
+}
+
+/* Indicateurs d'effets actifs (brûlure, etc.) */
+.effect-indicator {
+    position: absolute;
+    bottom: -10px;
+    font-size: 1.5rem;
+    animation: pulse-effect 1s ease-in-out infinite;
+    text-shadow: 0 0 10px rgba(255, 100, 0, 0.8);
+    z-index: 50;
+}
+
+.fighter.hero .effect-indicator {
+    left: 10px;
+}
+
+.fighter.enemy .effect-indicator {
+    right: 10px;
+}
+
+/* Effet en attente (brûlure à venir) */
+.effect-indicator.pending {
+    opacity: 0.6;
+    animation: pulse-pending 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-effect {
+    0%, 100% {
+        transform: scale(1);
+        filter: brightness(1);
+    }
+    50% {
+        transform: scale(1.2);
+        filter: brightness(1.3);
+    }
+}
+
+@keyframes pulse-pending {
+    0%, 100% {
+        opacity: 0.4;
+        transform: scale(0.9);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+}
+
+/* Bouton Flèche Enflammée */
+.action-btn.flamearrow {
+    background: linear-gradient(180deg, #ff5722 0%, #d84315 100%);
+    border-color: #ff5722;
+}
+
+.action-btn.flamearrow:hover {
+    box-shadow: 0 0 25px rgba(255, 87, 34, 0.6);
+    background: linear-gradient(180deg, #ff7043 0%, #ff5722 100%);
+}
+
+/* Amélioration responsive pour les emojis */
+@media (max-width: 768px) {
+    .action-emoji {
+        font-size: 2rem;
+    }
+    
+    .effect-indicator {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .action-emoji {
+        font-size: 1.5rem;
+    }
+    
+    .effect-indicator {
+        font-size: 1rem;
+        bottom: -5px;
+    }
+}
+
+/* ==============================================
+   SYSTÈME DE PP (Power Points)
+   ============================================== */
+
+/* Boutons avec structure PP */
+.action-btn.has-pp {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 20px;
+    min-width: 120px;
+}
+
+.action-icon {
+    font-size: 0.8rem;
+    color: var(--gold-accent);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.action-name {
+    font-size: 0.9rem;
+}
+
+.action-pp {
+    font-size: 0.75rem;
+    color: var(--parchment-text);
+    background: rgba(0, 0, 0, 0.4);
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid var(--blood-red);
+}
+
+/* Boutons désactivés (plus de PP) */
+.action-btn.disabled,
+.action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(0.8);
+    transform: none !important;
+}
+
+.action-btn.disabled:hover,
+.action-btn:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Styles pour les nouvelles capacités */
+.action-btn.charge {
+    background: linear-gradient(180deg, #ff7043 0%, #bf360c 100%);
+    border-color: #ff5722;
+}
+
+.action-btn.smite {
+    background: linear-gradient(180deg, #ffd54f 0%, #ff8f00 100%);
+    border-color: #ffb300;
+    color: var(--dark-bg);
+}
+
+.action-btn.barrier {
+    background: linear-gradient(180deg, #90caf9 0%, #1565c0 100%);
+    border-color: #42a5f5;
+}
+
+.action-btn.fury {
+    background: linear-gradient(180deg, #f44336 0%, #b71c1c 100%);
+    border-color: #f44336;
+}
+
+.action-btn.stomp {
+    background: linear-gradient(180deg, #8d6e63 0%, #4e342e 100%);
+    border-color: #8d6e63;
+}
+
+.action-btn.tsunami {
+    background: linear-gradient(180deg, #00bcd4 0%, #006064 100%);
+    border-color: #00bcd4;
+}
+
+.action-btn.mist {
+    background: linear-gradient(180deg, #b0bec5 0%, #546e7a 100%);
+    border-color: #b0bec5;
+}
+
+.action-btn.inferno {
+    background: linear-gradient(180deg, #ff5722 0%, #bf360c 100%);
+    border-color: #ff5722;
+}
+
+.action-btn.fireshield {
+    background: linear-gradient(180deg, #ff9800 0%, #e65100 100%);
+    border-color: #ff9800;
+}
+
+/* Victory/Defeat text */
+.victory-text {
+    color: var(--gold-accent);
+    text-shadow: 0 0 20px rgba(184, 134, 11, 0.8);
+    font-size: 2rem;
+}
+
+.defeat-text {
+    color: #666;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    font-size: 1.8rem;
+}
+
+/* ==============================================
+   NOUVELLE UI - LISTE DE SÉLECTION DES HÉROS
+   ============================================== */
+
+.hero-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.hero-row {
+    display: block;
+    cursor: pointer;
+}
+
+.hero-row input[type="radio"] {
+    display: none;
+}
+
+.hero-row-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(50,30,30,0.6) 100%);
+    border: 2px solid var(--stone-gray);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.hero-row:hover .hero-row-content {
+    border-color: var(--gold-accent);
+    transform: translateX(5px);
+}
+
+.hero-row input:checked + .hero-row-content {
+    border-color: var(--accent-red);
+    background: linear-gradient(135deg, rgba(139,0,0,0.3) 0%, rgba(0,0,0,0.8) 100%);
+    box-shadow: 0 0 20px rgba(196, 30, 58, 0.3);
+}
+
+.hero-thumb {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid var(--stone-gray);
+}
+
+.hero-info {
+    flex: 1;
+}
+
+.hero-info h4 {
+    color: var(--gold-accent);
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+}
+
+.hero-theme {
+    color: var(--parchment-text);
+    font-size: 0.85rem;
+    margin: 5px 0;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.hero-stats-mini {
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-top: 5px;
+}
+
+/* ==============================================
+   NOUVELLE UI - LISTE D'ACTIONS DÉFILANTE
+   ============================================== */
+
+.action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.action-list .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    width: 100%;
+    text-align: left;
+}
+
+.action-emoji-icon {
+    font-size: 1.5rem;
+    min-width: 40px;
+    text-align: center;
+}
+
+.action-label {
+    flex: 1;
+    font-size: 0.95rem;
+}
+
+.action-pp {
+    font-size: 0.8rem;
+    color: var(--parchment-text);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 3px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--blood-red);
+}
+
+/* Stats display */
+.stat-numbers {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-thumb {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .hero-theme {
+        font-size: 0.75rem;
+    }
+    
+    .action-list {
+        max-height: 150px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero-row-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .hero-thumb {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .action-emoji-icon {
+        font-size: 1.2rem;
+        min-width: 30px;
+    }
+}
+
+/* ==============================================
+   SPEED INDICATOR
+   ============================================== */
+
+.speed-indicator {
+    display: block;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+
+.speed-indicator.player-faster {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.speed-indicator.enemy-faster {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+}
