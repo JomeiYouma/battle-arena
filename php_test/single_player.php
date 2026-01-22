@@ -154,8 +154,7 @@ if (isset($_SESSION['combat'])):
 
     <!-- CONTRÔLES -->
     <div class="controls">
-        <?php if (!$combat->isOver()): ?>
-            <form method="POST" class="action-form">
+            <form method="POST" class="action-form" id="actionForm">
                 <input type="hidden" name="mode" value="single">
                 
                 <!-- LISTE D'ACTIONS DÉFILANTE -->
@@ -164,13 +163,14 @@ if (isset($_SESSION['combat'])):
                         $ppText = $hero->getPPText($key);
                         $canUse = $hero->canUseAction($key);
                         $hasPP = isset($action['pp']);
+                        $isGameOver = $combat->isOver();
                     ?>
                         <button type="submit" 
                                 name="action" 
                                 value="<?php echo $key; ?>" 
-                                class="action-btn <?php echo $key; ?> <?php echo !$canUse ? 'disabled' : ''; ?>"
+                                class="action-btn <?php echo $key; ?> <?php echo (!$canUse || $isGameOver) ? 'disabled' : ''; ?>"
                                 title="<?php echo htmlspecialchars($action['description']); ?>"
-                                <?php echo !$canUse ? 'disabled' : ''; ?>>
+                                <?php echo (!$canUse || $isGameOver) ? 'disabled' : ''; ?>>
                             <span class="action-emoji-icon"><?php echo $action['emoji'] ?? '⚔️'; ?></span>
                             <span class="action-label"><?php echo $action['label']; ?></span>
                             <?php if ($hasPP): ?>
@@ -180,10 +180,10 @@ if (isset($_SESSION['combat'])):
                     <?php endforeach; ?>
                 </div>
                 
-                <button type="submit" name="logout" class="action-btn abandon">Abandonner</button>
+                <button type="submit" name="logout" class="action-btn abandon" <?php echo $combat->isOver() ? 'disabled' : ''; ?>>Abandonner</button>
             </form>
         
-        <?php else: ?>
+        <?php if ($combat->isOver()): ?>
             <div class="game-over" id="gameOverSection" style="display: none;">
                 <?php if ($combat->getWinner() === $hero): ?>
                     <h3 class="victory-text">VICTOIRE !</h3>
@@ -261,7 +261,13 @@ if (isset($_SESSION['combat'])):
     
     function showGameOver() {
         const gameOver = document.getElementById('gameOverSection');
+        const actionForm = document.getElementById('actionForm');
         if (gameOver) {
+            // Cacher le formulaire d'actions
+            if (actionForm) {
+                actionForm.style.display = 'none';
+            }
+            // Afficher le game-over
             gameOver.style.display = 'block';
         }
     }
