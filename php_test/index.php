@@ -1,7 +1,15 @@
 <?php
+// Autoloader (AVANT session_start pour la désérialisation des objets StatusEffect)
 function chargerClasse($classe) {
-    if (file_exists('classes/' . $classe . '.php')) {
-        require 'classes/' . $classe . '.php';
+    // Chercher dans classes/
+    if (file_exists(__DIR__ . '/classes/' . $classe . '.php')) {
+        require __DIR__ . '/classes/' . $classe . '.php';
+        return;
+    }
+    // Chercher dans classes/effects/
+    if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
+        require __DIR__ . '/classes/effects/' . $classe . '.php';
+        return;
     }
 }
 spl_autoload_register('chargerClasse');

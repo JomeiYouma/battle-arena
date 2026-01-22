@@ -4,10 +4,12 @@
  * CLASSE PERSONNAGE - Classe de base pour tous les personnages
  * =============================================================================
  * 
- * Système de buffs temporaires, effets retardés, et PP (Power Points)
+ * Système de buffs temporaires, effets de statut (POO), et PP (Power Points)
  * 
  * =============================================================================
  */
+
+require_once __DIR__ . '/StatusEffect.php';
 
 abstract class Personnage {
     const MAX_PV = 150;
@@ -27,20 +29,14 @@ abstract class Personnage {
     protected $isEvading = false;
 
     // --- SYSTÈME DE PP (Power Points) ---
-    // Format: ['action_key' => ['current' => X, 'max' => Y]]
     protected $pp = [];
 
     // --- SYSTÈME DE BUFFS TEMPORAIRES ---
-    // Format: ['buff_name' => ['value' => X, 'duration' => Y, 'stat' => 'atk'|'def']]
     protected $activeBuffs = [];
 
-    // --- SYSTÈME D'EFFETS RETARDÉS ---
-    // Format: ['effect_name' => ['turnsDelay' => X, 'duration' => Y, 'damage' => Z, 'emoji' => '🔥']]
-    protected $pendingEffects = [];
-
-    // --- EFFETS ACTIFS (brûlure, saignement, etc.) ---
-    // Format: ['effect_name' => ['duration' => X, 'damage' => Y, 'emoji' => '🔥']]
-    protected $activeEffects = [];
+    // --- NOUVEAU SYSTÈME D'EFFETS DE STATUT (POO) ---
+    /** @var StatusEffect[] */
+    protected array $statusEffects = [];
 
     // --- CONSTRUCTEUR ---
     public function __construct($pv, $atk, $name, $def = 5, $type = "Personnage", $speed = 10) {
@@ -54,7 +50,7 @@ abstract class Personnage {
         $this->basePv = $pv;
         $this->type = $type;
         $this->setPv($pv);
-        $this->initializePP();  // Initialise les PP selon les actions
+        $this->initializePP();
     }
 
     /**
@@ -272,74 +268,166 @@ abstract class Personnage {
     }
 
     // ==========================================================================
-    // SYSTÈME D'EFFETS RETARDÉS (Ex: Flèche enflammée)
+    // NOUVEAU SYSTÈME D'EFFETS DE STATUT (POO)
     // ==========================================================================
 
     /**
-     * Ajoute un effet retardé sur la cible (ex: brûlure qui commence dans X tours)
+     * Ajoute un effet de statut au personnage
      */
-    public function addPendingEffect(string $name, int $turnsDelay, int $duration, int $damage, string $emoji): void {
-        $this->pendingEffects[$name] = [
-            'turnsDelay' => $turnsDelay,
-            'duration' => $duration,
-            'damage' => $damage,
-            'emoji' => $emoji
-        ];
+    public function addStatusEffect(StatusEffect $effect): void {
+        // Éviter les doublons du même type
+        $effectClass = get_class($effect);
+        foreach ($this->statusEffects as $key => $existing) {
+            if (get_class($existing) === $effectClass) {
+                // Remplace l'ancien effet par le nouveau
+                $this->statusEffects[$key] = $effect;
+                return;
+            }
+        }
+        $this->statusEffects[] = $effect;
     }
 
     /**
-     * Résout les effets en attente et les effets actifs
-     * @return array ['logs' => [...], 'emojis' => [...]]
+     * Phase de résolution des DÉGÂTS (Phase 2-3 du tour)
+     * Applique les dégâts des effets actifs (brûlure, poison, etc.)
+     * @return array Liste des résultats pour animations
      */
-    public function resolveEffects(): array {
-        $logs = [];
-        $emojis = [];
+    public function resolveDamagePhase(): array {
+        $results = [];
+        $toRemove = [];
 
-        // 1. Vérifier les effets en attente
-        foreach ($this->pendingEffects as $name => $effect) {
-            $this->pendingEffects[$name]['turnsDelay']--;
-            
-            if ($this->pendingEffects[$name]['turnsDelay'] <= 0) {
-                // L'effet s'active !
-                $this->activeEffects[$name] = [
-                    'duration' => $effect['duration'],
-                    'damage' => $effect['damage'],
-                    'emoji' => $effect['emoji']
+        foreach ($this->statusEffects as $key => $effect) {
+            // Tick le délai si en attente
+            if ($effect->isPending()) {
+                $justActivated = $effect->tick();
+                if ($justActivated) {
+                    $results[] = [
+                        'type' => 'activation',
+                        'log' => $effect->onActivate($this),
+                        'emoji' => $effect->getEmoji(),
+                        'effectName' => $effect->getName()
+                    ];
+                }
+                continue;
+            }
+
+            // Résoudre les dégâts
+            $damageResult = $effect->resolveDamage($this);
+            if ($damageResult !== null) {
+                $results[] = array_merge($damageResult, ['type' => 'damage']);
+            }
+
+            // Tick la durée
+            $effect->tick();
+
+            // Marquer pour suppression si expiré
+            if ($effect->isExpired()) {
+                $results[] = [
+                    'type' => 'expire',
+                    'log' => $effect->onExpire($this),
+                    'emoji' => '✨',
+                    'effectName' => $effect->getName()
                 ];
-                $emojis[] = $effect['emoji'];
-                $logs[] = "💥 " . $name . " s'abat sur " . $this->name . " !";
-                unset($this->pendingEffects[$name]);
+                $toRemove[] = $key;
             }
         }
 
-        // 2. Appliquer les effets actifs (brûlure, poison, etc.)
-        foreach ($this->activeEffects as $name => $effect) {
-            $this->setPv($this->pv - $effect['damage']);
-            $emojis[] = $effect['emoji'];
-            $logs[] = $effect['emoji'] . " " . $this->name . " subit " . $effect['damage'] . " dégâts de " . $name . " ! (" . $this->pv . " PV)";
-            
-            $this->activeEffects[$name]['duration']--;
-            if ($this->activeEffects[$name]['duration'] <= 0) {
-                $logs[] = "✨ L'effet " . $name . " sur " . $this->name . " s'est dissipé.";
-                unset($this->activeEffects[$name]);
-            }
+        // Supprimer les effets expirés
+        foreach ($toRemove as $key) {
+            unset($this->statusEffects[$key]);
         }
+        $this->statusEffects = array_values($this->statusEffects);
 
-        return ['logs' => $logs, 'emojis' => $emojis];
+        return $results;
     }
 
     /**
-     * Retourne les effets actifs
+     * Phase de résolution des STATS (Phase 4-5 du tour)
+     * Applique les modifications de stats des effets (gel, etc.)
+     * @return array Liste des résultats pour animations
+     */
+    public function resolveStatsPhase(): array {
+        $results = [];
+
+        foreach ($this->statusEffects as $effect) {
+            if ($effect->isPending()) continue;
+
+            $statsResult = $effect->resolveStats($this);
+            if ($statsResult !== null) {
+                $results[] = array_merge($statsResult, ['type' => 'stats']);
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Retourne tous les effets de statut (pour affichage)
+     * @return StatusEffect[]
+     */
+    public function getStatusEffects(): array {
+        return $this->statusEffects;
+    }
+
+    /**
+     * Retourne les effets actifs (non pending) pour affichage UI
      */
     public function getActiveEffects(): array {
-        return $this->activeEffects;
+        $active = [];
+        foreach ($this->statusEffects as $effect) {
+            if (!$effect->isPending()) {
+                $active[$effect->getName()] = [
+                    'emoji' => $effect->getEmoji(),
+                    'duration' => $effect->getDuration()
+                ];
+            }
+        }
+        return $active;
     }
 
     /**
-     * Retourne les effets en attente
+     * Retourne les effets en attente pour affichage UI
      */
     public function getPendingEffects(): array {
-        return $this->pendingEffects;
+        $pending = [];
+        foreach ($this->statusEffects as $effect) {
+            if ($effect->isPending()) {
+                $pending[$effect->getName()] = [
+                    'emoji' => $effect->getEmoji(),
+                    'turnsDelay' => $effect->getTurnsDelay()
+                ];
+            }
+        }
+        return $pending;
+    }
+
+    /**
+     * Méthode legacy pour compatibilité - utilise le nouveau système
+     * @deprecated Utiliser addStatusEffect() avec un objet StatusEffect
+     */
+    public function addPendingEffect(string $name, int $turnsDelay, int $duration, int $damage, string $emoji): void {
+        require_once __DIR__ . '/effects/BurningEffect.php';
+        $effect = new BurningEffect($duration, $damage, $turnsDelay);
+        $this->addStatusEffect($effect);
+    }
+
+    /**
+     * Méthode legacy pour compatibilité
+     * @deprecated Utiliser resolveDamagePhase() + resolveStatsPhase()
+     */
+    public function resolveEffects(): array {
+        $damageResults = $this->resolveDamagePhase();
+        $statsResults = $this->resolveStatsPhase();
+        
+        $logs = [];
+        $emojis = [];
+        
+        foreach (array_merge($damageResults, $statsResults) as $result) {
+            $logs[] = $result['log'];
+            $emojis[] = $result['emoji'];
+        }
+        
+        return ['logs' => $logs, 'emojis' => $emojis];
     }
 
     /**

@@ -3,17 +3,26 @@
  * SINGLE PLAYER MODE - Combat contre l'IA
  */
 
-// Autoloader et session (si accès direct)
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Autoloader (AVANT session_start pour la désérialisation)
 if (!function_exists('chargerClasse')) {
     function chargerClasse($classe) {
+        // Chercher dans classes/
         if (file_exists(__DIR__ . '/classes/' . $classe . '.php')) {
             require __DIR__ . '/classes/' . $classe . '.php';
+            return;
+        }
+        // Chercher dans classes/effects/
+        if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
+            require __DIR__ . '/classes/effects/' . $classe . '.php';
+            return;
         }
     }
     spl_autoload_register('chargerClasse');
+}
+
+// Session (après autoloader pour que les classes soient chargées lors de unserialize)
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
 // --- RESET ---
@@ -88,18 +97,18 @@ if (isset($_SESSION['combat'])):
             <strong><?php echo $hero->getName(); ?></strong>
             <span class="type-badge"><?php echo $hero->getType(); ?></span>
             <div class="stat-bar">
-                <div class="pv-bar" style="width: <?php echo ($hero->getPv() / $hero->getBasePv()) * 100; ?>%"></div>
+                <div class="pv-bar" id="heroPvBar" style="width: 100%"></div>
             </div>
-            <span class="stat-numbers"><?php echo $hero->getPv(); ?>/<?php echo $hero->getBasePv(); ?> PV | <?php echo $hero->getAtk(); ?> ATK | <?php echo $hero->getDef(); ?> DEF | <?php echo $hero->getSpeed(); ?> SPE</span>
+            <span class="stat-numbers" id="heroStats">-- PV | -- ATK | -- DEF | -- SPE</span>
         </div>
         
         <div class="stats enemy-stats">
             <strong><?php echo $enemy->getName(); ?></strong>
             <span class="type-badge"><?php echo $enemy->getType(); ?></span>
             <div class="stat-bar">
-                <div class="pv-bar enemy-pv" style="width: <?php echo ($enemy->getPv() / $enemy->getBasePv()) * 100; ?>%"></div>
+                <div class="pv-bar enemy-pv" id="enemyPvBar" style="width: 100%"></div>
             </div>
-            <span class="stat-numbers"><?php echo $enemy->getPv(); ?>/<?php echo $enemy->getBasePv(); ?> PV | <?php echo $enemy->getAtk(); ?> ATK | <?php echo $enemy->getDef(); ?> DEF | <?php echo $enemy->getSpeed(); ?> SPE</span>
+            <span class="stat-numbers" id="enemyStats">-- PV | -- ATK | -- DEF | -- SPE</span>
         </div>
     </div>
     
@@ -175,9 +184,10 @@ if (isset($_SESSION['combat'])):
             </form>
         
         <?php else: ?>
-            <div class="game-over">
+            <div class="game-over" id="gameOverSection" style="display: none;">
                 <?php if ($combat->getWinner() === $hero): ?>
                     <h3 class="victory-text">VICTOIRE !</h3>
+                    <br>
                 <?php else: ?>
                     <h3 class="defeat-text">DÉFAITE...</h3>
                     <br>
@@ -195,76 +205,163 @@ if (isset($_SESSION['combat'])):
 <script>
     document.getElementById("logBox").scrollTop = document.getElementById("logBox").scrollHeight;
 
-    // Récupération des actions du tour depuis PHP
+    // Récupération des données depuis PHP
     const turnActions = <?php echo json_encode($combat->getTurnActions()); ?>;
+    const initialStates = <?php echo json_encode($combat->getInitialStates()); ?>;
     const heroName = <?php echo json_encode($hero->getName()); ?>;
     const enemyName = <?php echo json_encode($enemy->getName()); ?>;
     
+    // Fonctions de mise à jour de l'UI
+    function updateStats(states, instant = false) {
+        if (!states) return;
+        
+        // Mise à jour Hero
+        const heroPvBar = document.getElementById('heroPvBar');
+        const heroStats = document.getElementById('heroStats');
+        if (heroPvBar && states.player) {
+            if (instant) heroPvBar.style.transition = 'none';
+            const pct = (states.player.pv / states.player.basePv) * 100;
+            heroPvBar.style.width = pct + '%';
+            if (instant) heroPvBar.offsetHeight; // Force reflow
+            if (instant) heroPvBar.style.transition = '';
+        }
+        if (heroStats && states.player) {
+            heroStats.textContent = `${states.player.pv}/${states.player.basePv} PV | ${states.player.atk} ATK | ${states.player.def} DEF | ${states.player.speed} SPE`;
+        }
+        
+        // Mise à jour Enemy
+        const enemyPvBar = document.getElementById('enemyPvBar');
+        const enemyStats = document.getElementById('enemyStats');
+        if (enemyPvBar && states.enemy) {
+            if (instant) enemyPvBar.style.transition = 'none';
+            const pct = (states.enemy.pv / states.enemy.basePv) * 100;
+            enemyPvBar.style.width = pct + '%';
+            if (instant) enemyPvBar.offsetHeight; // Force reflow
+            if (instant) enemyPvBar.style.transition = '';
+        }
+        if (enemyStats && states.enemy) {
+            enemyStats.textContent = `${states.enemy.pv}/${states.enemy.basePv} PV | ${states.enemy.atk} ATK | ${states.enemy.def} DEF | ${states.enemy.speed} SPE`;
+        }
+    }
+    
     async function playTurnAnimations() {
-        // Si aucune action (changement de page ou refresh), on ne fait rien
-        if (!turnActions || turnActions.length === 0) return;
-
-        const heroEmojiContainer = document.getElementById('heroEmojiContainer');
-        const enemyEmojiContainer = document.getElementById('enemyEmojiContainer');
+        if (!turnActions || turnActions.length === 0) {
+            // Pas d'animations, afficher directement le game-over si présent
+            showGameOver();
+            return;
+        }
 
         for (const action of turnActions) {
             await playAction(action);
+        }
+        
+        // Afficher le game-over après toutes les animations
+        showGameOver();
+    }
+    
+    function showGameOver() {
+        const gameOver = document.getElementById('gameOverSection');
+        if (gameOver) {
+            gameOver.style.display = 'block';
         }
     }
 
     function playAction(action) {
         return new Promise(resolve => {
             const isPlayer = action.actor === 'player';
-            const needsTarget = action.needsTarget;
             const emoji = action.emoji;
-            const actionName = action.label || action.action;
-            const actorName = isPlayer ? heroName : enemyName;
+            const actionName = action.label || 'Effet';
+            const phase = action.phase || 'action';
 
-            // Afficher le nom de l'attaque au-dessus de l'acteur (celui qui utilise l'action)
+            // Conteneurs
             const actorContainer = isPlayer 
                 ? document.getElementById('heroEmojiContainer') 
                 : document.getElementById('enemyEmojiContainer');
+            const targetContainer = isPlayer 
+                ? document.getElementById('enemyEmojiContainer') 
+                : document.getElementById('heroEmojiContainer');
+            const actorFighter = isPlayer 
+                ? document.getElementById('heroFighter') 
+                : document.getElementById('enemyFighter');
 
-            // Créer l'élément pour le nom de l'attaque
-            const nameElement = document.createElement('div');
-            nameElement.className = 'action-name-display';
-            nameElement.textContent = actionName;
-            if (actorContainer) {
-                actorContainer.appendChild(nameElement);
+            // --- ANIMATION DE MORT ---
+            if (action.isDeath || phase === 'death') {
+                const deathElement = document.createElement('div');
+                deathElement.className = 'action-name-display death-label';
+                deathElement.textContent = '💀 K.O.';
+                if (actorContainer) actorContainer.appendChild(deathElement);
+
+                // Faire disparaître l'image avec fondu
+                if (actorFighter) {
+                    actorFighter.classList.add('fighter-dead');
+                }
+                
+                // Mettre à jour les stats APRÈS l'animation
+                if (action.statesAfter) {
+                    updateStats(action.statesAfter);
+                }
+
+                setTimeout(() => {
+                    if (actorContainer && actorContainer.contains(deathElement)) {
+                        actorContainer.removeChild(deathElement);
+                    }
+                    resolve();
+                }, 2000);
+                return;
             }
 
-            // Déterminer où afficher l'emoji (sur la cible ou sur soi)
+            // --- ANIMATION STANDARD ---
+            
+            // 1. Afficher le nom au-dessus de l'acteur
+            const nameElement = document.createElement('div');
+            nameElement.className = 'action-name-display';
+            
+            // Style différent selon la phase
+            if (phase === 'damage_effect') {
+                nameElement.classList.add('effect-damage');
+            } else if (phase === 'stat_effect') {
+                nameElement.classList.add('effect-stats');
+            }
+            
+            nameElement.textContent = actionName;
+            if (actorContainer) actorContainer.appendChild(nameElement);
+
+            // 2. Déterminer où afficher l'emoji
             let emojiContainer = null;
             let cssClass = 'action-emoji';
 
-            if (isPlayer) {
-                if (needsTarget) {
-                    emojiContainer = document.getElementById('enemyEmojiContainer');
-                    cssClass += ' on-target'; 
-                } else {
-                    emojiContainer = document.getElementById('heroEmojiContainer');
-                    cssClass += ' on-self';
-                }
+            if (phase === 'damage_effect' || phase === 'stat_effect') {
+                emojiContainer = actorContainer;
+                cssClass += ' on-self';
             } else {
-                if (needsTarget) {
-                    emojiContainer = document.getElementById('heroEmojiContainer');
-                    cssClass += ' on-target enemy-action';
+                if (action.needsTarget) {
+                    emojiContainer = targetContainer;
+                    cssClass += ' on-target';
                 } else {
-                    emojiContainer = document.getElementById('enemyEmojiContainer');
-                    cssClass += ' on-self enemy-action';
+                    emojiContainer = actorContainer;
+                    cssClass += ' on-self';
                 }
             }
 
-            // Créer l'élément Emoji
+            if (!isPlayer) {
+                cssClass += ' enemy-action';
+            }
+
+            // 3. Créer l'emoji
             const emojiElement = document.createElement('div');
             emojiElement.className = cssClass;
             emojiElement.textContent = emoji;
             
-            if (emojiContainer) {
-                emojiContainer.appendChild(emojiElement);
-            }
+            if (emojiContainer) emojiContainer.appendChild(emojiElement);
 
-            // Nettoyer après l'animation
+            // 4. Mettre à jour les stats APRÈS l'animation (à mi-chemin)
+            setTimeout(() => {
+                if (action.statesAfter) {
+                    updateStats(action.statesAfter);
+                }
+            }, 750);
+
+            // 5. Nettoyer après animation
             setTimeout(() => {
                 if (actorContainer && actorContainer.contains(nameElement)) {
                     actorContainer.removeChild(nameElement);
@@ -275,6 +372,11 @@ if (isset($_SESSION['combat'])):
                 resolve();
             }, 1500);
         });
+    }
+
+    // Appliquer les états initiaux IMMÉDIATEMENT sans transition
+    if (initialStates && Object.keys(initialStates).length > 0) {
+        updateStats(initialStates, true);
     }
 
     // Lancer les animations au chargement

@@ -944,17 +944,6 @@ select option {
     }
 }
 
-/* Bouton Flèche Enflammée */
-.action-btn.flamearrow {
-    background: linear-gradient(180deg, #ff5722 0%, #d84315 100%);
-    border-color: #ff5722;
-}
-
-.action-btn.flamearrow:hover {
-    box-shadow: 0 0 25px rgba(255, 87, 34, 0.6);
-    background: linear-gradient(180deg, #ff7043 0%, #ff5722 100%);
-}
-
 /* Amélioration responsive pour les emojis */
 @media (max-width: 768px) {
     .action-emoji {
@@ -1024,53 +1013,6 @@ select option {
 .action-btn:disabled:hover {
     transform: none;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Styles pour les nouvelles capacités */
-.action-btn.charge {
-    background: linear-gradient(180deg, #ff7043 0%, #bf360c 100%);
-    border-color: #ff5722;
-}
-
-.action-btn.smite {
-    background: linear-gradient(180deg, #ffd54f 0%, #ff8f00 100%);
-    border-color: #ffb300;
-    color: var(--dark-bg);
-}
-
-.action-btn.barrier {
-    background: linear-gradient(180deg, #90caf9 0%, #1565c0 100%);
-    border-color: #42a5f5;
-}
-
-.action-btn.fury {
-    background: linear-gradient(180deg, #f44336 0%, #b71c1c 100%);
-    border-color: #f44336;
-}
-
-.action-btn.stomp {
-    background: linear-gradient(180deg, #8d6e63 0%, #4e342e 100%);
-    border-color: #8d6e63;
-}
-
-.action-btn.tsunami {
-    background: linear-gradient(180deg, #00bcd4 0%, #006064 100%);
-    border-color: #00bcd4;
-}
-
-.action-btn.mist {
-    background: linear-gradient(180deg, #b0bec5 0%, #546e7a 100%);
-    border-color: #b0bec5;
-}
-
-.action-btn.inferno {
-    background: linear-gradient(180deg, #ff5722 0%, #bf360c 100%);
-    border-color: #ff5722;
-}
-
-.action-btn.fireshield {
-    background: linear-gradient(180deg, #ff9800 0%, #e65100 100%);
-    border-color: #ff9800;
 }
 
 /* Victory/Defeat text */
@@ -1378,4 +1320,72 @@ select option {
         opacity: 0;
         transform: translateX(-50%) translateY(-15px) scale(0.9);
     }
+}
+
+/* ==============================================
+   ANIMATION DE MORT ET PHASES D'EFFETS
+   ============================================== */
+
+/* Animation de mort - Fondu */
+.fighter-dead {
+    animation: death-fade 1.5s ease-out forwards;
+}
+
+@keyframes death-fade {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+        filter: drop-shadow(0 0 15px rgba(0, 0, 0, 0.8));
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(0.95);
+        filter: drop-shadow(0 0 30px rgba(139, 0, 0, 0.8)) grayscale(0.5);
+    }
+    100% {
+        opacity: 0.15;
+        transform: scale(0.9);
+        filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.5)) grayscale(1);
+    }
+}
+
+/* Label de mort */
+.action-name-display.death-label {
+    background: linear-gradient(180deg, rgba(50, 0, 0, 0.95) 0%, rgba(80, 0, 0, 0.9) 100%);
+    border-color: #ff0000;
+    color: #ff4444;
+    font-size: 1.2rem;
+    animation: death-label-pop 2s ease-out forwards;
+}
+
+@keyframes death-label-pop {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) scale(0.5);
+    }
+    20% {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.3);
+    }
+    40% {
+        transform: translateX(-50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+}
+
+/* Label pour phase de dégâts d'effet (brûlure, poison) */
+.action-name-display.effect-damage {
+    background: linear-gradient(180deg, rgba(80, 20, 0, 0.95) 0%, rgba(50, 10, 0, 0.9) 100%);
+    border-color: #ff5722;
+    color: #ff8a50;
+}
+
+/* Label pour phase de stats d'effet (gel, buff) */
+.action-name-display.effect-stats {
+    background: linear-gradient(180deg, rgba(0, 40, 80, 0.95) 0%, rgba(0, 20, 50, 0.9) 100%);
+    border-color: #00bcd4;
+    color: #80deea;
 }

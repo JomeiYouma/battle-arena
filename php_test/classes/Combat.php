@@ -1,8 +1,21 @@
 <?php
 /**
- * COMBAT - Gestion du système de combat tour par tour
+ * =============================================================================
+ * COMBAT - Système de combat tour par tour avec phases structurées
+ * =============================================================================
  * 
- * Système de vitesse : le plus rapide agit en premier
+ * SÉQUENCE DE TOUR (7 phases) :
+ * 1. Déterminer qui est le plus rapide
+ * 2. Résoudre dégâts effets → Plus Rapide
+ * 3. Résoudre dégâts effets → Plus Lent
+ * 4. Résoudre effets stats → Plus Rapide
+ * 5. Résoudre effets stats → Plus Lent
+ * 6. Action choisie → Plus Rapide
+ * 7. Action choisie → Plus Lent
+ * 
+ * Vérification de mort à chaque phase.
+ * 
+ * =============================================================================
  */
 
 class Combat {
@@ -11,32 +24,59 @@ class Combat {
     private array $logs = [];
     private int $turn = 1;
 
-    // Actions du dernier tour (pour animations séquentielles)
+    // Actions du tour pour animations séquentielles par phase
     private array $turnActions = [];
     
-    // Tracking des emojis d'action
-    private ?string $lastPlayerActionEmoji = null;
-    private ?string $lastEnemyActionEmoji = null;
-    private bool $lastPlayerActionNeedsTarget = false;
-    private bool $lastEnemyActionNeedsTarget = false;
+    // États initiaux avant le tour (pour animations progressives)
+    private array $initialStates = [];
+    
+    // État du combat
+    private bool $isFinished = false;
+    private ?Personnage $winner = null;
 
     public function __construct(Personnage $player, Personnage $enemy) {
         $this->player = $player;
         $this->enemy = $enemy;
         $this->logs[] = "⚔️ Combat : " . $player->getName() . " VS " . $enemy->getName();
-        $this->logs[] = "⚡ Vitesse : " . $player->getName() . " (" . $player->getSpeed() . ") vs " . $enemy->getName() . " (" . $enemy->getSpeed() . ")";
+        $this->captureInitialStates();
     }
 
+    // --- GETTERS ---
     public function getPlayer(): Personnage { return $this->player; }
     public function getEnemy(): Personnage { return $this->enemy; }
     public function getLogs(): array { return $this->logs; }
     public function getTurn(): int { return $this->turn; }
     public function getTurnActions(): array { return $this->turnActions; }
-    
-    public function getLastPlayerActionEmoji(): ?string { return $this->lastPlayerActionEmoji; }
-    public function getLastEnemyActionEmoji(): ?string { return $this->lastEnemyActionEmoji; }
-    public function getLastPlayerActionNeedsTarget(): bool { return $this->lastPlayerActionNeedsTarget; }
-    public function getLastEnemyActionNeedsTarget(): bool { return $this->lastEnemyActionNeedsTarget; }
+    public function getInitialStates(): array { return $this->initialStates; }
+
+    /**
+     * Capture les états des deux combattants
+     */
+    private function captureInitialStates(): void {
+        $this->initialStates = $this->getStatesSnapshot();
+    }
+
+    /**
+     * Retourne un snapshot des états actuels
+     */
+    private function getStatesSnapshot(): array {
+        return [
+            'player' => [
+                'pv' => $this->player->getPv(),
+                'basePv' => $this->player->getBasePv(),
+                'atk' => $this->player->getAtk(),
+                'def' => $this->player->getDef(),
+                'speed' => $this->player->getSpeed()
+            ],
+            'enemy' => [
+                'pv' => $this->enemy->getPv(),
+                'basePv' => $this->enemy->getBasePv(),
+                'atk' => $this->enemy->getAtk(),
+                'def' => $this->enemy->getDef(),
+                'speed' => $this->enemy->getSpeed()
+            ]
+        ];
+    }
 
     public function getPlayerActions(): array {
         return $this->player->getAvailableActions();
@@ -46,51 +86,127 @@ class Combat {
      * Détermine qui est le plus rapide
      */
     public function playerIsFaster(): bool {
-        // En cas d'égalité, le joueur agit en premier
         return $this->player->getSpeed() >= $this->enemy->getSpeed();
     }
 
     /**
-     * Phase de résolution des effets (brûlure, poison, etc.)
+     * Retourne [premier, second] selon la vitesse
      */
-    private function resolveEffectsPhase(): void {
-        $playerEffects = $this->player->resolveEffects();
-        foreach ($playerEffects['logs'] as $log) {
+    private function getOrderedFighters(): array {
+        if ($this->playerIsFaster()) {
+            return [$this->player, $this->enemy];
+        }
+        return [$this->enemy, $this->player];
+    }
+
+    /**
+     * Vérifie si un personnage est mort et gère la fin de combat
+     */
+    private function checkDeath(Personnage $character): bool {
+        if ($character->isDead()) {
+            $isPlayer = ($character === $this->player);
+            $this->isFinished = true;
+            $this->winner = $isPlayer ? $this->enemy : $this->player;
+            
+            // Ajouter action de mort pour animation
+            $this->turnActions[] = [
+                'phase' => 'death',
+                'actor' => $isPlayer ? 'player' : 'enemy',
+                'emoji' => '💀',
+                'label' => 'K.O.',
+                'isDeath' => true,
+                'statesAfter' => $this->getStatesSnapshot()
+            ];
+
+            if ($isPlayer) {
+                $this->logs[] = "💀 " . $this->player->getName() . " a été vaincu...";
+            } else {
+                $this->logs[] = "🏆 " . $this->player->getName() . " remporte le combat !";
+            }
+            
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Phase de dégâts des effets pour un personnage
+     */
+    private function resolveDamageEffectsFor(Personnage $character): void {
+        $isPlayer = ($character === $this->player);
+        $results = $character->resolveDamagePhase();
+        
+        foreach ($results as $result) {
+            $this->logs[] = $result['log'];
+            $this->turnActions[] = [
+                'phase' => 'damage_effect',
+                'actor' => $isPlayer ? 'player' : 'enemy',
+                'emoji' => $result['emoji'],
+                'label' => $result['effectName'] ?? 'Effet',
+                'damage' => $result['damage'] ?? 0,
+                'type' => $result['type'],
+                'statesAfter' => $this->getStatesSnapshot()
+            ];
+        }
+    }
+
+    /**
+     * Phase de stats des effets pour un personnage
+     */
+    private function resolveStatEffectsFor(Personnage $character): void {
+        $isPlayer = ($character === $this->player);
+        $results = $character->resolveStatsPhase();
+        
+        foreach ($results as $result) {
+            $this->logs[] = $result['log'];
+            $this->turnActions[] = [
+                'phase' => 'stat_effect',
+                'actor' => $isPlayer ? 'player' : 'enemy',
+                'emoji' => $result['emoji'],
+                'label' => $result['effectName'] ?? 'Effet',
+                'statChanges' => $result['statChanges'] ?? [],
+                'type' => $result['type'],
+                'statesAfter' => $this->getStatesSnapshot()
+            ];
+        }
+    }
+
+    /**
+     * Décrémente les buffs d'un personnage
+     */
+    private function processBuffsFor(Personnage $character): void {
+        $logs = $character->decrementBuffDurations();
+        foreach ($logs as $log) {
             $this->logs[] = $log;
         }
-        if ($this->player->isDead()) {
-            $this->logs[] = "💀 " . $this->player->getName() . " succombe aux effets !";
-            return;
-        }
-
-        $enemyEffects = $this->enemy->resolveEffects();
-        foreach ($enemyEffects['logs'] as $log) {
-            $this->logs[] = $log;
-        }
-        if ($this->enemy->isDead()) {
-            $this->logs[] = "🏆 " . $this->enemy->getName() . " succombe aux effets !";
-            return;
-        }
-
-        // Décrémenter les buffs
-        foreach ($this->player->decrementBuffDurations() as $log) $this->logs[] = $log;
-        foreach ($this->enemy->decrementBuffDurations() as $log) $this->logs[] = $log;
     }
 
     /**
      * Exécute l'action du joueur
      */
-    private function doPlayerAction(string $actionKey): bool {
+    private function doPlayerAction(string $actionKey): void {
         $actions = $this->player->getAvailableActions();
         if (!isset($actions[$actionKey]) || !$this->player->canUseAction($actionKey)) {
-            return false;
+            return;
         }
 
         $action = $actions[$actionKey];
         $this->player->usePP($actionKey);
-        
-        $this->lastPlayerActionEmoji = $action['emoji'] ?? null;
-        $this->lastPlayerActionNeedsTarget = $action['needsTarget'] ?? false;
+
+        // Esquive de l'ennemi ?
+        if (($action['needsTarget'] ?? false) && $this->enemy->isEvading()) {
+            $this->logs[] = "💨 " . $this->enemy->getName() . " esquive !";
+            $this->enemy->setEvading(false);
+            $this->turnActions[] = [
+                'phase' => 'action',
+                'actor' => 'player',
+                'emoji' => '💨',
+                'label' => 'Esquivé !',
+                'needsTarget' => true,
+                'statesAfter' => $this->getStatesSnapshot()
+            ];
+            return;
+        }
 
         $method = $action['method'];
         $result = ($action['needsTarget'] ?? false) 
@@ -99,28 +215,37 @@ class Combat {
         
         $this->logs[] = "🎮 " . $this->player->getName() . " : " . $result;
         
-        // Ajouter à la liste des actions du tour
         $this->turnActions[] = [
+            'phase' => 'action',
             'actor' => 'player',
             'emoji' => $action['emoji'] ?? '⚔️',
+            'label' => $action['label'],
             'needsTarget' => $action['needsTarget'] ?? false,
-            'label' => $action['label']
+            'statesAfter' => $this->getStatesSnapshot()
         ];
-
-        return $this->enemy->isDead();
     }
 
     /**
      * Exécute l'action de l'ennemi (IA)
      */
-    private function doEnemyAction(): bool {
-        if ($this->enemy->isDead()) return false;
+    private function doEnemyAction(): void {
+        if ($this->enemy->isDead()) return;
 
-        // Esquive active ?
+        // Esquive du joueur ?
         if ($this->player->isEvading()) {
             $this->logs[] = "💨 " . $this->player->getName() . " esquive !";
             $this->player->setEvading(false);
-            return false;
+            
+            // L'ennemi fait quand même une action (mais elle est esquivée)
+            $this->turnActions[] = [
+                'phase' => 'action',
+                'actor' => 'enemy',
+                'emoji' => '💨',
+                'label' => 'Esquivé !',
+                'needsTarget' => true,
+                'statesAfter' => $this->getStatesSnapshot()
+            ];
+            return;
         }
 
         // IA : choisir une action
@@ -139,9 +264,6 @@ class Combat {
         
         $action = $available[$selectedKey];
         $this->enemy->usePP($selectedKey);
-        
-        $this->lastEnemyActionEmoji = $action['emoji'] ?? null;
-        $this->lastEnemyActionNeedsTarget = $action['needsTarget'] ?? false;
 
         $method = $action['method'];
         $result = ($action['needsTarget'] ?? false) 
@@ -150,19 +272,18 @@ class Combat {
         
         $this->logs[] = "🤖 " . $this->enemy->getName() . " : " . $result;
         
-        // Ajouter à la liste des actions du tour
         $this->turnActions[] = [
+            'phase' => 'action',
             'actor' => 'enemy',
             'emoji' => $action['emoji'] ?? '⚔️',
+            'label' => $action['label'],
             'needsTarget' => $action['needsTarget'] ?? false,
-            'label' => $action['label']
+            'statesAfter' => $this->getStatesSnapshot()
         ];
-
-        return $this->player->isDead();
     }
 
     /**
-     * Exécute un tour complet basé sur la vitesse
+     * MÉTHODE PRINCIPALE : Exécute un tour complet avec les 7 phases
      */
     public function executePlayerAction(string $actionKey): void {
         $actions = $this->player->getAvailableActions();
@@ -176,60 +297,68 @@ class Combat {
             return;
         }
 
-        // Reset
-        $this->lastPlayerActionEmoji = null;
-        $this->lastEnemyActionEmoji = null;
+        // Reset des actions du tour et capturer les états initiaux
         $this->turnActions = [];
-
+        $this->captureInitialStates();
         $this->logs[] = "--- Tour " . $this->turn . " ---";
 
-        // Résolution des effets (à partir du tour 2)
+        // Déterminer l'ordre
+        [$first, $second] = $this->getOrderedFighters();
+        $playerIsFirst = ($first === $this->player);
+
+        // ===== PHASE 2 : Dégâts Effets - Premier =====
         if ($this->turn > 1) {
-            $this->resolveEffectsPhase();
-            if ($this->isOver()) return;
+            $this->resolveDamageEffectsFor($first);
+            if ($this->checkDeath($first)) return;
         }
 
-        // Déterminer l'ordre selon la vitesse
-        $playerFirst = $this->playerIsFaster();
-        
-        if ($playerFirst) {
-            $this->logs[] = "⚡ " . $this->player->getName() . " agit en premier !";
-            
-            // Joueur agit
-            if ($this->doPlayerAction($actionKey)) {
-                $this->logs[] = "🏆 " . $this->player->getName() . " remporte le combat !";
-                return;
-            }
-            
-            // Ennemi agit
-            if ($this->doEnemyAction()) {
-                $this->logs[] = "💀 " . $this->player->getName() . " a été vaincu...";
-                return;
-            }
-        } else {
-            $this->logs[] = "⚡ " . $this->enemy->getName() . " agit en premier !";
-            
-            // Ennemi agit d'abord
-            if ($this->doEnemyAction()) {
-                $this->logs[] = "💀 " . $this->player->getName() . " a été vaincu...";
-                return;
-            }
-            
-            // Joueur agit ensuite
-            if ($this->doPlayerAction($actionKey)) {
-                $this->logs[] = "🏆 " . $this->player->getName() . " remporte le combat !";
-                return;
-            }
+        // ===== PHASE 3 : Dégâts Effets - Second =====
+        if ($this->turn > 1) {
+            $this->resolveDamageEffectsFor($second);
+            if ($this->checkDeath($second)) return;
         }
+
+        // ===== PHASE 4 : Effets Stats - Premier =====
+        if ($this->turn > 1) {
+            $this->resolveStatEffectsFor($first);
+            $this->processBuffsFor($first);
+        }
+
+        // ===== PHASE 5 : Effets Stats - Second =====
+        if ($this->turn > 1) {
+            $this->resolveStatEffectsFor($second);
+            $this->processBuffsFor($second);
+        }
+
+        // ===== PHASE 6 : Action - Premier =====
+        if ($playerIsFirst) {
+            $this->doPlayerAction($actionKey);
+        } else {
+            $this->doEnemyAction();
+        }
+        
+        $target = $playerIsFirst ? $this->enemy : $this->player;
+        if ($this->checkDeath($target)) return;
+
+        // ===== PHASE 7 : Action - Second =====
+        if ($playerIsFirst) {
+            $this->doEnemyAction();
+        } else {
+            $this->doPlayerAction($actionKey);
+        }
+        
+        $target2 = $playerIsFirst ? $this->player : $this->enemy;
+        if ($this->checkDeath($target2)) return;
 
         $this->turn++;
     }
 
     public function isOver(): bool {
-        return $this->player->isDead() || $this->enemy->isDead();
+        return $this->isFinished || $this->player->isDead() || $this->enemy->isDead();
     }
 
     public function getWinner(): ?Personnage {
+        if ($this->winner) return $this->winner;
         if ($this->enemy->isDead()) return $this->player;
         if ($this->player->isDead()) return $this->enemy;
         return null;
