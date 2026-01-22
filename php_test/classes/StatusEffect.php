@@ -108,6 +108,21 @@ abstract class StatusEffect {
     }
 
     /**
+     * L'effet empêche-t-il l'action ?
+     */
+    public function blocksAction(): bool {
+        return false;
+    }
+
+    /**
+     * Modificateurs de statistiques
+     * @return array ['speed' => int, 'atk' => int, 'def' => int]
+     */
+    public function getStatModifiers(): array {
+        return [];
+    }
+
+    /**
      * Sérialisation pour la session
      */
     public function toArray(): array {

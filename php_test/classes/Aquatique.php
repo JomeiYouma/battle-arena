@@ -1,8 +1,4 @@
 <?php
-/**
- * AQUATIQUE - Esquive et fluidité
- * Thème: Insaisissable et régénération - Survivre et contre-attaquer
- */
 class Aquatique extends Personnage {
     
     private $dodgeChance = 50;

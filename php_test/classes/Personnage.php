@@ -37,6 +37,20 @@ abstract class Personnage {
     // --- NOUVEAU SYSTÈME D'EFFETS DE STATUT (POO) ---
     /** @var StatusEffect[] */
     protected array $statusEffects = [];
+    
+
+    
+    public function receiveDamage(int $amount): void {
+        $this->pv -= $amount;
+        if ($this->pv < 0) $this->pv = 0;
+    }
+
+    public function getCurrentPP(string $actionKey): int {
+        return $this->pp[$actionKey]['current'] ?? 0;
+    }
+
+    // Compteur d'actions réussies (pour scaling Décharge)
+    protected int $successfulActionsCount = 0;
 
     // --- CONSTRUCTEUR ---
     public function __construct($pv, $atk, $name, $def = 5, $type = "Personnage", $speed = 10) {
@@ -80,11 +94,31 @@ abstract class Personnage {
     }
 
     public function getAtk() {
-        return $this->atk;
+        $atk = $this->atk;
+        
+        // Appliquer modificateurs effets
+        foreach ($this->statusEffects as $effect) {
+            $mods = $effect->getStatModifiers();
+            if (isset($mods['atk'])) {
+                $atk += $mods['atk'];
+            }
+        }
+        
+        return $atk;
     }
 
     public function getDef() {
-        return $this->def;
+        $def = $this->def;
+        
+        // Appliquer modificateurs effets
+        foreach ($this->statusEffects as $effect) {
+            $mods = $effect->getStatModifiers();
+            if (isset($mods['def'])) {
+                $def += $mods['def'];
+            }
+        }
+
+        return $def;
     }
 
     public function getName() {
@@ -104,7 +138,42 @@ abstract class Personnage {
     }
 
     public function getSpeed(): int {
-        return $this->speed;
+        $speed = $this->speed;
+        
+        // Appliquer les modificateurs des effets de statut
+        foreach ($this->statusEffects as $effect) {
+            $mods = $effect->getStatModifiers();
+            if (isset($mods['speed'])) {
+                $speed += $mods['speed'];
+            }
+        }
+        
+        return max(0, $speed);
+    }
+    
+    public function getSuccessfulActionsCount(): int {
+        return $this->successfulActionsCount;
+    }
+
+    public function incrementSuccessfulActions(): void {
+        $this->successfulActionsCount++;
+    }
+
+    public function resetSuccessfulActions(): void {
+        $this->successfulActionsCount = 0;
+    }
+
+    /**
+     * Vérifie si une action est bloquée par un effet de statut (ex: paralysie)
+     * @return string|null Nom de l'effet bloquant ou null si libre
+     */
+    public function checkActionBlock(): ?string {
+        foreach ($this->statusEffects as $effect) {
+            if ($effect->blocksAction()) {
+                return $effect->getName();
+            }
+        }
+        return null; // Pas de blocage
     }
 
     // --- SETTERS ---

@@ -82,5 +82,19 @@
             "p1": "media/sat_skol.png",
             "p2": "media/sat_skol_2.png"
         }
+    },
+    {
+        "id": "pikratchu",
+        "name": "Pikratchu",
+        "type": "Electrique",
+        "pv": 90,
+        "atk": 30,
+        "def": 3,
+        "speed": 15,
+        "description": "Vitesse extrême et dégâts électriques. Paralysie et charge dévastatrice.",
+        "images": {
+            "p1": "media/pikachu_skol.png",
+            "p2": "media/pikachu_skol_2.png"
+        }
     }
 ]

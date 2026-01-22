@@ -190,6 +190,24 @@ class Combat {
             return;
         }
 
+        // Vérification des blocages (Statuts comme Paralysie)
+        $blockEffect = $this->player->checkActionBlock();
+        if ($blockEffect) {
+            $this->logs[] = "🚫 " . $this->player->getName() . " est bloqué par " . $blockEffect . " !";
+            $this->turnActions[] = [
+                'phase' => 'action',
+                'actor' => 'player',
+                'emoji' => '🚫',
+                'label' => 'Bloqué',
+                'text' => 'Bloqué par ' . $blockEffect,
+                'statesAfter' => $this->getStatesSnapshot()
+            ];
+            // Le coût en PP est payé même si bloqué ? Généralement oui dans les RPG
+            // Mais ici on n'a pas encore appelé usePP
+            // On peut décider de payer ou non. Disons qu'on ne paie pas pour l'instant.
+            return;
+        }
+
         $action = $actions[$actionKey];
         $this->player->usePP($actionKey);
 
@@ -205,6 +223,10 @@ class Combat {
                 'needsTarget' => true,
                 'statesAfter' => $this->getStatesSnapshot()
             ];
+            // Action lancée mais esquivée = succès de lancement ou pas ?
+            // L'utilisateur a dit "quand le héros n'a pas pu lancer d'action".
+            // Ici il l'a lancée, donc ça compte comme succès.
+            $this->player->incrementSuccessfulActions();
             return;
         }
 
@@ -214,6 +236,9 @@ class Combat {
             : $this->player->$method();
         
         $this->logs[] = "🎮 " . $this->player->getName() . " : " . $result;
+        
+        // Action réussie !
+        $this->player->incrementSuccessfulActions();
         
         $this->turnActions[] = [
             'phase' => 'action',
@@ -231,10 +256,28 @@ class Combat {
     private function doEnemyAction(): void {
         if ($this->enemy->isDead()) return;
 
+        // Vérification des blocages (Paralysie, etc.)
+        $blockEffect = $this->enemy->checkActionBlock();
+        if ($blockEffect) {
+            $this->logs[] = "🚫 " . $this->enemy->getName() . " est bloqué par " . $blockEffect . " !";
+            $this->turnActions[] = [
+                'phase' => 'action',
+                'actor' => 'enemy',
+                'emoji' => '🚫',
+                'label' => 'Bloqué',
+                'text' => 'Bloqué par ' . $blockEffect,
+                'statesAfter' => $this->getStatesSnapshot()
+            ];
+            return;
+        }
+
         // Esquive du joueur ?
         if ($this->player->isEvading()) {
             $this->logs[] = "💨 " . $this->player->getName() . " esquive !";
             $this->player->setEvading(false);
+
+            // Action comptée comme lancée
+            $this->enemy->incrementSuccessfulActions();
             
             // L'ennemi fait quand même une action (mais elle est esquivée)
             $this->turnActions[] = [
@@ -271,6 +314,9 @@ class Combat {
             : $this->enemy->$method();
         
         $this->logs[] = "🤖 " . $this->enemy->getName() . " : " . $result;
+
+        // Action réussie
+        $this->enemy->incrementSuccessfulActions();
         
         $this->turnActions[] = [
             'phase' => 'action',
