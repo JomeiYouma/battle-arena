@@ -80,11 +80,6 @@ if (isset($_SESSION['combat'])):
 <div class="arena">
     <div class="turn-indicator">
         Tour <?php echo $combat->getTurn(); ?>
-        <?php if ($combat->playerIsFaster()): ?>
-            <span class="speed-indicator player-faster">⚡ <?php echo $hero->getName(); ?> plus rapide</span>
-        <?php else: ?>
-            <span class="speed-indicator enemy-faster">⚡ <?php echo $enemy->getName(); ?> plus rapide</span>
-        <?php endif; ?>
     </div>
     
     <!-- STATS -->
@@ -95,7 +90,7 @@ if (isset($_SESSION['combat'])):
             <div class="stat-bar">
                 <div class="pv-bar" style="width: <?php echo ($hero->getPv() / $hero->getBasePv()) * 100; ?>%"></div>
             </div>
-            <span class="stat-numbers"><?php echo $hero->getPv(); ?>/<?php echo $hero->getBasePv(); ?> PV | <?php echo $hero->getAtk(); ?> ATK | <?php echo $hero->getDef(); ?> DEF | ⚡<?php echo $hero->getSpeed(); ?></span>
+            <span class="stat-numbers"><?php echo $hero->getPv(); ?>/<?php echo $hero->getBasePv(); ?> PV | <?php echo $hero->getAtk(); ?> ATK | <?php echo $hero->getDef(); ?> DEF | <?php echo $hero->getSpeed(); ?> SPE</span>
         </div>
         
         <div class="stats enemy-stats">
@@ -104,7 +99,7 @@ if (isset($_SESSION['combat'])):
             <div class="stat-bar">
                 <div class="pv-bar enemy-pv" style="width: <?php echo ($enemy->getPv() / $enemy->getBasePv()) * 100; ?>%"></div>
             </div>
-            <span class="stat-numbers"><?php echo $enemy->getPv(); ?>/<?php echo $enemy->getBasePv(); ?> PV | <?php echo $enemy->getAtk(); ?> ATK | <?php echo $enemy->getDef(); ?> DEF | ⚡<?php echo $enemy->getSpeed(); ?></span>
+            <span class="stat-numbers"><?php echo $enemy->getPv(); ?>/<?php echo $enemy->getBasePv(); ?> PV | <?php echo $enemy->getAtk(); ?> ATK | <?php echo $enemy->getDef(); ?> DEF | <?php echo $enemy->getSpeed(); ?> SPE</span>
         </div>
     </div>
     
@@ -185,7 +180,7 @@ if (isset($_SESSION['combat'])):
                     <h3 class="victory-text">VICTOIRE !</h3>
                 <?php else: ?>
                     <h3 class="defeat-text">DÉFAITE...</h3>
-                    <p><?php echo $enemy->getName(); ?> vous a vaincu.</p>
+                    <br>
                 <?php endif; ?>
                 
                 <form method="POST">
@@ -202,6 +197,8 @@ if (isset($_SESSION['combat'])):
 
     // Récupération des actions du tour depuis PHP
     const turnActions = <?php echo json_encode($combat->getTurnActions()); ?>;
+    const heroName = <?php echo json_encode($hero->getName()); ?>;
+    const enemyName = <?php echo json_encode($enemy->getName()); ?>;
     
     async function playTurnAnimations() {
         // Si aucune action (changement de page ou refresh), on ne fait rien
@@ -220,29 +217,40 @@ if (isset($_SESSION['combat'])):
             const isPlayer = action.actor === 'player';
             const needsTarget = action.needsTarget;
             const emoji = action.emoji;
+            const actionName = action.label || action.action;
+            const actorName = isPlayer ? heroName : enemyName;
 
-            // Déterminer où afficher l'emoji
-            let container = null;
+            // Afficher le nom de l'attaque au-dessus de l'acteur (celui qui utilise l'action)
+            const actorContainer = isPlayer 
+                ? document.getElementById('heroEmojiContainer') 
+                : document.getElementById('enemyEmojiContainer');
+
+            // Créer l'élément pour le nom de l'attaque
+            const nameElement = document.createElement('div');
+            nameElement.className = 'action-name-display';
+            nameElement.textContent = actionName;
+            if (actorContainer) {
+                actorContainer.appendChild(nameElement);
+            }
+
+            // Déterminer où afficher l'emoji (sur la cible ou sur soi)
+            let emojiContainer = null;
             let cssClass = 'action-emoji';
 
             if (isPlayer) {
                 if (needsTarget) {
-                    // Le joueur attaque l'ennemi -> Emoji sur l'ennemi
-                    container = document.getElementById('enemyEmojiContainer');
+                    emojiContainer = document.getElementById('enemyEmojiContainer');
                     cssClass += ' on-target'; 
                 } else {
-                    // Le joueur se buff/heal -> Emoji sur le joueur
-                    container = document.getElementById('heroEmojiContainer');
+                    emojiContainer = document.getElementById('heroEmojiContainer');
                     cssClass += ' on-self';
                 }
-            } else { // Enemy
+            } else {
                 if (needsTarget) {
-                    // L'ennemi attaque le joueur -> Emoji sur le joueur
-                    container = document.getElementById('heroEmojiContainer');
+                    emojiContainer = document.getElementById('heroEmojiContainer');
                     cssClass += ' on-target enemy-action';
                 } else {
-                    // L'ennemi se buff/heal -> Emoji sur l'ennemi
-                    container = document.getElementById('enemyEmojiContainer');
+                    emojiContainer = document.getElementById('enemyEmojiContainer');
                     cssClass += ' on-self enemy-action';
                 }
             }
@@ -252,18 +260,20 @@ if (isset($_SESSION['combat'])):
             emojiElement.className = cssClass;
             emojiElement.textContent = emoji;
             
-            // Ajouter au conteneur
-            if (container) {
-                container.appendChild(emojiElement);
+            if (emojiContainer) {
+                emojiContainer.appendChild(emojiElement);
             }
 
-            // Attendre la fin de l'animation CSS (approx 1.5s) puis nettoyer
+            // Nettoyer après l'animation
             setTimeout(() => {
-                if (container && container.contains(emojiElement)) {
-                    container.removeChild(emojiElement);
+                if (actorContainer && actorContainer.contains(nameElement)) {
+                    actorContainer.removeChild(nameElement);
                 }
-                resolve(); // Passer à l'action suivante
-            }, 1500); // Durée égale ou légèrement sup à l'animation CSS
+                if (emojiContainer && emojiContainer.contains(emojiElement)) {
+                    emojiContainer.removeChild(emojiElement);
+                }
+                resolve();
+            }, 1500);
         });
     }
 
@@ -296,7 +306,7 @@ else:
                             <span class="type-badge"><?php echo $perso['type']; ?></span>
                             <p class="hero-theme"><?php echo $perso['description']; ?></p>
                             <div class="hero-stats-mini">
-                                <?php echo $perso['pv']; ?> PV | <?php echo $perso['atk']; ?> ATK | <?php echo $perso['def'] ?? 5; ?> DEF | ⚡<?php echo $perso['speed'] ?? 10; ?>
+                                <?php echo $perso['pv']; ?> PV | <?php echo $perso['atk']; ?> ATK | <?php echo $perso['def'] ?? 5; ?> DEF | <?php echo $perso['speed'] ?? 10; ?> SPE
                             </div>
                         </div>
                     </div>
