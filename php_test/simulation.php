@@ -257,7 +257,8 @@ function getBalanceClass(float $winRate): string {
                         <tr>
                             <th></th>
                             <?php foreach ($personnages as $p): ?>
-                            <th title="<?php echo $p['name']; ?>"><?php echo substr($p['name'], 0, 8); ?></th>
+                            <?php $shortName = explode(' ', $p['name'])[0]; ?>
+                            <th title="<?php echo $p['name']; ?>"><?php echo $shortName; ?></th>
                             <?php endforeach; ?>
                         </tr>
                     </thead>
