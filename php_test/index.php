@@ -100,6 +100,10 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
                     Multijoueur
                 </button>
             </form>
+            
+            <a href="simulation.php" class="menu-btn simulate-link">
+                Simuler
+            </a>
         </div>
 
         <script>

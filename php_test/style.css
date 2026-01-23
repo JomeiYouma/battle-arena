@@ -1658,3 +1658,380 @@ select option {
     border-color: #00bcd4;
     color: #80deea;
 }
+
+/* ==============================================
+   SIMULATION - Page de statistiques d'équilibrage
+   ============================================== */
+
+/* --- CONTAINER PRINCIPAL --- */
+.simulation-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* --- LIEN MENU SIMULER --- */
+.simulate-link {
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+    margin-top: 20px;
+    background: linear-gradient(180deg, #1a3a5c 0%, #0d1f33 100%) !important;
+    border-color: #2196f3 !important;
+}
+
+.simulate-link:hover {
+    background: linear-gradient(180deg, #2196f3 0%, #1565c0 100%) !important;
+    box-shadow: 0 0 25px rgba(33, 150, 243, 0.5) !important;
+}
+
+/* --- FORMULAIRE DE SIMULATION --- */
+.simulation-form {
+    background: linear-gradient(135deg, var(--dungeon-gray) 0%, var(--darker-bg) 100%);
+    border: 2px solid var(--primary-red);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    color: var(--gold-accent);
+}
+
+/* Input number pour combats */
+.form-group input[type="number"] {
+    width: 150px;
+    padding: 12px 18px;
+    font-size: 1.3rem;
+    font-family: inherit;
+    font-weight: bold;
+    text-align: center;
+    background: linear-gradient(180deg, var(--stone-gray) 0%, var(--dungeon-gray) 100%);
+    color: var(--text-light);
+    border: 2px solid var(--primary-red);
+    border-radius: 8px;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 
+        0 4px 10px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    -moz-appearance: textfield; /* Firefox: masquer les flèches */
+    appearance: textfield; /* Standard */
+}
+
+/* Masquer les flèches spin sur Chrome/Safari/Edge */
+.form-group input[type="number"]::-webkit-outer-spin-button,
+.form-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.form-group input[type="number"]:focus {
+    border-color: var(--accent-red);
+    box-shadow: 
+        0 0 20px rgba(196, 30, 58, 0.4),
+        0 4px 15px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.form-group input[type="number"]:hover {
+    border-color: var(--accent-red);
+    transform: translateY(-2px);
+}
+
+.form-info {
+    margin: 20px 0;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid var(--stone-gray);
+}
+
+.form-info p {
+    margin: 5px 0;
+    color: var(--text-dim);
+}
+
+.form-info strong {
+    color: var(--accent-red);
+}
+
+.simulate-btn {
+    background: linear-gradient(180deg, #1565c0 0%, #0d47a1 100%) !important;
+    border-color: #2196f3 !important;
+    font-size: 1.2rem;
+    padding: 18px 40px;
+}
+
+.simulate-btn:hover {
+    background: linear-gradient(180deg, #1976d2 0%, #1565c0 100%) !important;
+    box-shadow: 0 0 30px rgba(33, 150, 243, 0.6) !important;
+}
+
+/* --- RÉSULTATS --- */
+.simulation-results {
+    background: linear-gradient(135deg, var(--dungeon-gray) 0%, var(--darker-bg) 100%);
+    border: 2px solid var(--primary-red);
+    border-radius: 15px;
+    padding: 30px;
+}
+
+.simulation-results h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.simulation-results h3 {
+    text-align: center;
+    margin: 30px 0 15px;
+}
+
+.results-summary {
+    text-align: center;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+}
+
+/* --- LÉGENDE D'ÉQUILIBRAGE --- */
+.balance-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.legend-item {
+    font-size: 0.85rem;
+    padding: 5px 12px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.legend-item.overpowered { color: #ff5252; border-left: 3px solid #ff5252; }
+.legend-item.slightly-strong { color: #ff9800; border-left: 3px solid #ff9800; }
+.legend-item.balanced { color: #4caf50; border-left: 3px solid #4caf50; }
+.legend-item.slightly-weak { color: #ffeb3b; border-left: 3px solid #ffeb3b; }
+.legend-item.underpowered { color: #2196f3; border-left: 3px solid #2196f3; }
+
+/* --- TABLEAU DE RÉSULTATS --- */
+.results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.results-table th,
+.results-table td {
+    padding: 12px 15px;
+    text-align: center;
+    border-bottom: 1px solid var(--stone-gray);
+}
+
+.results-table th {
+    background: var(--blood-red);
+    color: var(--text-light);
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+}
+
+.results-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.results-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Classes d'équilibrage pour les lignes */
+.results-table tr.overpowered {
+    background: rgba(255, 82, 82, 0.15);
+    border-left: 4px solid #ff5252;
+}
+
+.results-table tr.slightly-strong {
+    background: rgba(255, 152, 0, 0.1);
+    border-left: 4px solid #ff9800;
+}
+
+.results-table tr.balanced {
+    background: rgba(76, 175, 80, 0.1);
+    border-left: 4px solid #4caf50;
+}
+
+.results-table tr.slightly-weak {
+    background: rgba(255, 235, 59, 0.08);
+    border-left: 4px solid #ffeb3b;
+}
+
+.results-table tr.underpowered {
+    background: rgba(33, 150, 243, 0.1);
+    border-left: 4px solid #2196f3;
+}
+
+.results-table .rank {
+    font-weight: bold;
+    color: var(--gold-accent);
+}
+
+.results-table .name {
+    text-align: left;
+}
+
+.results-table .wins {
+    color: #4caf50;
+}
+
+.results-table .losses {
+    color: #f44336;
+}
+
+/* Barre de winrate */
+.winrate-bar-container {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.winrate-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #4caf50, #8bc34a);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.winrate-text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+    z-index: 1;
+}
+
+/* --- MATRICE DE MATCHUPS --- */
+.matrix-help {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+.matchup-matrix-wrapper {
+    overflow-x: auto;
+    margin-bottom: 20px;
+}
+
+.matchup-matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.matchup-matrix th,
+.matchup-matrix td {
+    padding: 8px 6px;
+    text-align: center;
+    border: 1px solid var(--stone-gray);
+    min-width: 50px;
+}
+
+.matchup-matrix th {
+    background: var(--blood-red);
+    color: var(--text-light);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+}
+
+.matchup-matrix tbody th {
+    background: var(--dungeon-gray);
+    text-align: left;
+    padding-left: 10px;
+}
+
+.matchup-matrix td.self {
+    background: var(--darker-bg);
+    color: var(--text-dim);
+}
+
+.matchup-matrix td.strong-win {
+    background: rgba(76, 175, 80, 0.4);
+    color: #a5d6a7;
+    font-weight: bold;
+}
+
+.matchup-matrix td.slight-win {
+    background: rgba(76, 175, 80, 0.2);
+    color: #c8e6c9;
+}
+
+.matchup-matrix td.slight-loss {
+    background: rgba(244, 67, 54, 0.2);
+    color: #ffcdd2;
+}
+
+.matchup-matrix td.strong-loss {
+    background: rgba(244, 67, 54, 0.4);
+    color: #ef9a9a;
+    font-weight: bold;
+}
+
+/* --- RESPONSIVE SIMULATION --- */
+@media (max-width: 768px) {
+    .simulation-container {
+        padding: 10px;
+    }
+    
+    .simulation-form,
+    .simulation-results {
+        padding: 15px;
+    }
+    
+    .balance-legend {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .results-table {
+        font-size: 0.85rem;
+    }
+    
+    .results-table th,
+    .results-table td {
+        padding: 8px 6px;
+    }
+    
+    .matchup-matrix {
+        font-size: 0.7rem;
+    }
+    
+    .matchup-matrix th,
+    .matchup-matrix td {
+        padding: 5px 3px;
+        min-width: 40px;
+    }
+}
