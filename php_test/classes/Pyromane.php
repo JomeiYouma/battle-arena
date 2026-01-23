@@ -1,7 +1,6 @@
 <?php
 /**
- * PYROMANE - Feu et dégâts massifs
- * Thème: Risque et récompense - Sacrifier sa vie pour des dégâts dévastateurs
+ * PYROMANE - Feu et dégâts massifs. Sacrifie sa vie pour des dégâts dévastateurs.
  */
 class Pyromane extends Personnage {
     
@@ -73,10 +72,7 @@ class Pyromane extends Personnage {
     public function flameArrow(Personnage $target): string {
         $damage = $this->randomDamage(5, 2);
         $target->setPv($target->getPv() - $damage);
-        
-        // Brûlure avec dégâts basés sur l'ATK de l'attaquant (0.5 * ATK + 4)
         $target->addStatusEffect(new BurningEffect(3, $this->getAtk(), 1));
-        
         return $target->isDead() 
             ? "FLÈCHE ! $damage dégâts ! K.O. !"
             : "FLÈCHE ENFLAMMÉE ! $damage dég, brûlure imminente...";

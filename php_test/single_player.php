@@ -118,9 +118,11 @@ if (isset($_SESSION['combat'])):
             <img src="<?php echo $_SESSION['hero_img']; ?>" alt="Hero">
             <!-- Emojis and effects injected via JS -->
             <div id="heroEmojiContainer"></div>
-            <?php foreach ($hero->getActiveEffects() as $name => $effect): ?>
-                <div class="effect-indicator" title="<?php echo $name; ?>"><?php echo $effect['emoji']; ?></div>
-            <?php endforeach; ?>
+            <div class="effects-container hero-effects">
+                <?php foreach ($hero->getActiveEffects() as $name => $effect): ?>
+                    <div class="effect-indicator" title="<?php echo $name; ?>"><?php echo $effect['emoji']; ?></div>
+                <?php endforeach; ?>
+            </div>
         </div>
 
         <div class="vs-indicator">VS</div>
@@ -129,12 +131,14 @@ if (isset($_SESSION['combat'])):
             <img src="<?php echo $_SESSION['enemy_img']; ?>" alt="Enemy" class="enemy-img">
             <!-- Emojis and effects injected via JS -->
             <div id="enemyEmojiContainer"></div>
-            <?php foreach ($enemy->getActiveEffects() as $name => $effect): ?>
-                <div class="effect-indicator" title="<?php echo $name; ?>"><?php echo $effect['emoji']; ?></div>
-            <?php endforeach; ?>
-            <?php foreach ($enemy->getPendingEffects() as $name => $effect): ?>
-                <div class="effect-indicator pending" title="<?php echo $name; ?> (<?php echo $effect['turnsDelay']; ?> tour)"><?php echo $effect['emoji']; ?></div>
-            <?php endforeach; ?>
+            <div class="effects-container enemy-effects">
+                <?php foreach ($enemy->getActiveEffects() as $name => $effect): ?>
+                    <div class="effect-indicator" title="<?php echo $name; ?>"><?php echo $effect['emoji']; ?></div>
+                <?php endforeach; ?>
+                <?php foreach ($enemy->getPendingEffects() as $name => $effect): ?>
+                    <div class="effect-indicator pending" title="<?php echo $name; ?> (<?php echo $effect['turnsDelay']; ?> tour)"><?php echo $effect['emoji']; ?></div>
+                <?php endforeach; ?>
+            </div>
         </div>
     </div>
 

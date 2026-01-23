@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * SpeedModEffect - Modifie la vitesse (+/-) pendant la durée
+ */
 class SpeedModEffect extends StatusEffect {
     private int $amount;
 

@@ -1167,22 +1167,29 @@ select option {
     }
 }
 
-/* Indicateurs d'effets actifs (brûlure, etc.) */
-.effect-indicator {
+/* Conteneur des indicateurs d'effets */
+.effects-container {
     position: absolute;
-    bottom: -10px;
-    font-size: 1.5rem;
-    animation: pulse-effect 1s ease-in-out infinite;
-    text-shadow: 0 0 10px rgba(255, 100, 0, 0.8);
+    bottom: -15px;
+    display: flex;
+    gap: 5px;
     z-index: 50;
 }
 
-.fighter.hero .effect-indicator {
-    left: 10px;
+.effects-container.hero-effects {
+    left: 5px;
 }
 
-.fighter.enemy .effect-indicator {
-    right: 10px;
+.effects-container.enemy-effects {
+    right: 5px;
+    flex-direction: row-reverse;
+}
+
+/* Indicateurs d'effets actifs (brûlure, etc.) */
+.effect-indicator {
+    font-size: 1.4rem;
+    animation: pulse-effect 1s ease-in-out infinite;
+    text-shadow: 0 0 10px rgba(255, 100, 0, 0.8);
 }
 
 /* Effet en attente (brûlure à venir) */
