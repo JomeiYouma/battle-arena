@@ -55,7 +55,12 @@ if (isset($_POST['hero_choice']) && !isset($_SESSION['combat'])) {
         $heroClass = $heroStats['type'];
         $enemyClass = $enemyStats['type'];
 
-        $hero = new $heroClass($heroStats['pv'], $heroStats['atk'], $heroStats['name'], $heroStats['def'] ?? 5, $heroStats['speed'] ?? 10);
+        // Utiliser le display_name si fourni (depuis le multijoueur)
+        $heroDisplayName = isset($_POST['display_name']) && !empty(trim($_POST['display_name'])) 
+            ? trim($_POST['display_name']) 
+            : $heroStats['name'];
+
+        $hero = new $heroClass($heroStats['pv'], $heroStats['atk'], $heroDisplayName, $heroStats['def'] ?? 5, $heroStats['speed'] ?? 10);
         $enemy = new $enemyClass($enemyStats['pv'], $enemyStats['atk'], $enemyStats['name'], $enemyStats['def'] ?? 5, $enemyStats['speed'] ?? 10);
 
         $_SESSION['combat'] = new Combat($hero, $enemy);

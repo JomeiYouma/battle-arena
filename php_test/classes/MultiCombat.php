@@ -10,18 +10,46 @@ class MultiCombat extends Combat {
      */
     public static function load($filepath) {
         if (!file_exists($filepath)) return null;
-        $content = file_get_contents($filepath);
-        $obj = unserialize($content);
         
-        // Sécurité ou Cast si jamais on avait sérialisé un Combat simple par erreur
-        if ($obj instanceof Combat && !($obj instanceof MultiCombat)) {
-            // Conversion forcée (un peu hacky mais ça marche pour les propriétés identiques)
-            $serialized = serialize($obj);
-            $serialized = str_replace('O:6:"Combat"', 'O:11:"MultiCombat"', $serialized);
-            $obj = unserialize($serialized);
+        try {
+            $content = file_get_contents($filepath);
+            if ($content === false) {
+                error_log("MultiCombat::load - Impossible de lire le fichier: $filepath");
+                return null;
+            }
+            
+            // Vérifier que ce n'est pas du contenu vide ou invalide
+            if (empty($content)) {
+                error_log("MultiCombat::load - Fichier vide: $filepath");
+                return null;
+            }
+            
+            // Unserialize avec gestion d'erreur
+            $obj = @unserialize($content);
+            
+            if ($obj === false) {
+                error_log("MultiCombat::load - Erreur d'unserialize pour: $filepath");
+                return null;
+            }
+            
+            // Sécurité ou Cast si jamais on avait sérialisé un Combat simple par erreur
+            if ($obj instanceof Combat && !($obj instanceof MultiCombat)) {
+                // Conversion forcée (un peu hacky mais ça marche pour les propriétés identiques)
+                $serialized = serialize($obj);
+                $serialized = str_replace('O:6:"Combat"', 'O:11:"MultiCombat"', $serialized);
+                $obj = @unserialize($serialized);
+                
+                if ($obj === false) {
+                    error_log("MultiCombat::load - Erreur lors de la conversion de Combat vers MultiCombat: $filepath");
+                    return null;
+                }
+            }
+            
+            return $obj;
+        } catch (Exception $e) {
+            error_log("MultiCombat::load - Exception: " . $e->getMessage() . " pour: $filepath");
+            return null;
         }
-        
-        return $obj;
     }
     
     /**
@@ -39,14 +67,14 @@ class MultiCombat extends Combat {
     private static function createHeroFromData($data) {
         $type = $data['type'];
         if (class_exists($type)) {
-            $hero = new $type($data['name']);
-            
-            // Hydratation des stats
-             if (method_exists($hero, 'setPV')) $hero->setPV($data['pv']);
-            if (method_exists($hero, 'setMaxPV')) $hero->setMaxPV($data['pv']);
-            if (method_exists($hero, 'setAtk')) $hero->setAtk($data['atk']);
-            if (method_exists($hero, 'setDef')) $hero->setDef($data['def']);
-            if (method_exists($hero, 'setSpeed')) $hero->setSpeed($data['speed']);
+            // Passer tous les paramètres nécessaires au constructeur
+            $hero = new $type(
+                $data['pv'],              // pv
+                $data['atk'],             // atk
+                $data['name'],            // name
+                $data['def'] ?? 5,        // def (défaut 5)
+                $data['speed'] ?? 10      // speed (défaut 10)
+            );
             
             return $hero;
         }
@@ -54,7 +82,21 @@ class MultiCombat extends Combat {
     }
 
     public function save($filepath) {
-        file_put_contents($filepath, serialize($this));
+        try {
+            $dir = dirname($filepath);
+            if (!is_dir($dir)) {
+                mkdir($dir, 0755, true);
+            }
+            $result = file_put_contents($filepath, serialize($this));
+            if ($result === false) {
+                error_log("MultiCombat::save - Impossible d'écrire le fichier: $filepath");
+                return false;
+            }
+            return true;
+        } catch (Exception $e) {
+            error_log("MultiCombat::save - Exception: " . $e->getMessage() . " pour: $filepath");
+            return false;
+        }
     }
 
     /**
@@ -117,6 +159,51 @@ class MultiCombat extends Combat {
         $myChar = $isP1 ? $this->player : $this->enemy;
         $oppChar = $isP1 ? $this->enemy : $this->player;
         
+        // Récupérer les actions disponibles pour le joueur
+        $availableActions = [];
+        $actions = [];
+        
+        try {
+            if (method_exists($myChar, 'getAvailableActions')) {
+                $availableActions = $myChar->getAvailableActions();
+                
+                // Ajouter les statuts du PP pour chaque action
+                foreach ($availableActions as $key => $action) {
+                    $ppText = '';
+                    $canUse = true;
+                    
+                    if (method_exists($myChar, 'getPPText')) {
+                        $ppText = $myChar->getPPText($key);
+                    }
+                    if (method_exists($myChar, 'canUseAction')) {
+                        $canUse = $myChar->canUseAction($key);
+                    }
+                    
+                    $actions[$key] = array_merge($action, [
+                        'ppText' => $ppText,
+                        'canUse' => $canUse
+                    ]);
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Error getting available actions: " . $e->getMessage());
+        }
+        
+        // Récupérer les effets actifs
+        $myEffects = [];
+        $oppEffects = [];
+        
+        try {
+            if (method_exists($myChar, 'getActiveEffects')) {
+                $myEffects = $myChar->getActiveEffects();
+            }
+            if (method_exists($oppChar, 'getActiveEffects')) {
+                $oppEffects = $oppChar->getActiveEffects();
+            }
+        } catch (Exception $e) {
+            error_log("Error getting active effects: " . $e->getMessage());
+        }
+        
         // Renvoyer l'état
         return [
             'turn' => $this->turn,
@@ -129,15 +216,24 @@ class MultiCombat extends Combat {
                 'type' => $myChar->getType(),
                 'pv' => $myChar->getPv(),
                 'max_pv' => $myChar->getBasePv(),
-                'img' => $metaData[$isP1 ? 'player1' : 'player2']['hero']['images']['p1'] // Simplification: on prend l'image du JSON originel
+                'atk' => $myChar->getAtk(),
+                'def' => $myChar->getDef(),
+                'speed' => $myChar->getSpeed(),
+                'img' => $metaData[$isP1 ? 'player1' : 'player2']['hero']['images']['p1'],
+                'activeEffects' => $myEffects
             ],
             'opponent' => [
                 'name' => $oppChar->getName(),
                 'type' => $oppChar->getType(),
                 'pv' => $oppChar->getPv(),
                 'max_pv' => $oppChar->getBasePv(),
-                'img' => $metaData[$isP1 ? 'player2' : 'player1']['hero']['images']['p2'] // Image P2 pour l'adversaire
-            ]
+                'atk' => $oppChar->getAtk(),
+                'def' => $oppChar->getDef(),
+                'speed' => $oppChar->getSpeed(),
+                'img' => $metaData[$isP1 ? 'player2' : 'player1']['hero']['images']['p2'],
+                'activeEffects' => $oppEffects
+            ],
+            'actions' => $actions
         ];
     }
 }

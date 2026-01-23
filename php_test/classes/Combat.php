@@ -52,14 +52,14 @@ class Combat {
     /**
      * Capture les états des deux combattants
      */
-    private function captureInitialStates(): void {
+    protected function captureInitialStates(): void {
         $this->initialStates = $this->getStatesSnapshot();
     }
 
     /**
      * Retourne un snapshot des états actuels
      */
-    private function getStatesSnapshot(): array {
+    protected function getStatesSnapshot(): array {
         return [
             'player' => [
                 'pv' => $this->player->getPv(),

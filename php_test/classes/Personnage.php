@@ -12,7 +12,7 @@
 require_once __DIR__ . '/StatusEffect.php';
 
 abstract class Personnage {
-    const MAX_PV = 150;
+    const MAX_PV = 200;
     const MAX_DEF = 40;  // Cap de défense
 
     protected static $nbPersonnages = 0;

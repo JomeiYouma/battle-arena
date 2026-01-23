@@ -3,6 +3,10 @@
  * MULTIPLAYER API - Queue & Combat
  */
 
+// Disable error display output (prevent HTML in JSON responses)
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
 // Autoloader
 function chargerClasse($classe) {
     if (file_exists(__DIR__ . '/classes/' . $classe . '.php')) {
@@ -16,8 +20,12 @@ function chargerClasse($classe) {
 }
 spl_autoload_register('chargerClasse');
 
-session_start();
-header('Content-Type: application/json');
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Set JSON header AFTER error setup but BEFORE any processing
+header('Content-Type: application/json; charset=utf-8');
 
 $action = $_GET['action'] ?? '';
 $sessionId = session_id();
@@ -42,14 +50,17 @@ try {
             
             if (!$heroData) throw new Exception("Héros invalide");
             
-            // Store in session
+            // Store in session (including images for later use)
             $_SESSION['queueHeroId'] = $_POST['hero_id'];
             $_SESSION['queueStartTime'] = time();
             $_SESSION['queueHeroData'] = $heroData;
             
+            error_log("API join_queue - sessionId=$sessionId, hero=" . $heroData['name']);
+            
             $queue = new MatchQueue();
             $result = $queue->findMatch($sessionId, $heroData);
             
+            error_log("API join_queue - result=" . json_encode($result));
             echo json_encode($result);
             break;
         
@@ -70,7 +81,7 @@ try {
             
             $matchFile = __DIR__ . '/data/matches/' . $matchId . '.json';
             if (!file_exists($matchFile)) {
-                throw new Exception("Match non trouvé");
+                throw new Exception("Match non trouvé: $matchFile");
             }
             
             // Lire le fichier avec lock
@@ -80,32 +91,49 @@ try {
             flock($fp, LOCK_UN);
             fclose($fp);
             
+            if (!$metaData) {
+                throw new Exception("Impossible de décoder le match JSON");
+            }
+            
             // Déterminer le rôle
             $isP1 = ($metaData['player1']['session'] === $sessionId);
             $myRole = $isP1 ? 'p1' : 'p2';
             $oppRole = $isP1 ? 'p2' : 'p1';
             
             // Charger état du combat
-            $multiCombat = MultiCombat::load(__DIR__ . '/data/matches/' . $matchId . '.state');
+            $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+            $multiCombat = MultiCombat::load($stateFile);
             
             if (!$multiCombat) {
                 // Initialiser le combat
-                $multiCombat = MultiCombat::create($metaData['player1']['hero'], $metaData['player2']['hero']);
-                $multiCombat->save(__DIR__ . '/data/matches/' . $matchId . '.state');
+                try {
+                    $multiCombat = MultiCombat::create($metaData['player1']['hero'], $metaData['player2']['hero']);
+                    if (!$multiCombat->save($stateFile)) {
+                        throw new Exception("Impossible de sauvegarder l'état initial du combat");
+                    }
+                } catch (Exception $e) {
+                    error_log("Error creating MultiCombat: " . $e->getMessage());
+                    throw new Exception("Erreur lors de l'initialisation du combat: " . $e->getMessage());
+                }
             }
             
             // Construire la réponse
-            $response = $multiCombat->getStateForUser($sessionId, $metaData);
-            $response['status'] = 'active';
-            $response['turn'] = $metaData['turn'] ?? 1;
-            $response['isOver'] = $multiCombat->isOver();
-            
-            // Déterminer qui doit jouer
-            $actions = $metaData['current_turn_actions'] ?? [];
-            $response['waiting_for_me'] = !isset($actions[$myRole]);
-            $response['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && ($metaData['mode'] ?? '') !== 'bot';
-            
-            echo json_encode($response);
+            try {
+                $response = $multiCombat->getStateForUser($sessionId, $metaData);
+                $response['status'] = 'active';
+                $response['turn'] = $metaData['turn'] ?? 1;
+                $response['isOver'] = $multiCombat->isOver();
+                
+                // Déterminer qui doit jouer
+                $actions = $metaData['current_turn_actions'] ?? [];
+                $response['waiting_for_me'] = !isset($actions[$myRole]);
+                $response['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && ($metaData['mode'] ?? '') !== 'bot';
+                
+                echo json_encode($response);
+            } catch (Exception $e) {
+                error_log("Error building response: " . $e->getMessage());
+                throw new Exception("Erreur lors de la construction de la réponse: " . $e->getMessage());
+            }
             break;
         
         // ===== SUBMIT ACTION =====
@@ -127,6 +155,11 @@ try {
             }
             
             $metaData = json_decode(stream_get_contents($fp), true);
+            if (!$metaData) {
+                flock($fp, LOCK_UN);
+                fclose($fp);
+                throw new Exception("Impossible de décoder le match JSON");
+            }
             
             // Déterminer le rôle
             $isP1 = ($metaData['player1']['session'] === $sessionId);
@@ -149,13 +182,20 @@ try {
             
             if ($bothPlayed) {
                 // Résoudre le tour
-                $multiCombat = MultiCombat::load(__DIR__ . '/data/matches/' . $matchId . '.state');
+                $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+                $multiCombat = MultiCombat::load($stateFile);
+                
+                if (!$multiCombat) {
+                    throw new Exception("Impossible de charger l'état du combat");
+                }
                 
                 $p1Move = $metaData['current_turn_actions']['p1'];
                 $p2Move = $metaData['current_turn_actions']['p2'] ?? 'attack';
                 
                 $multiCombat->resolveMultiTurn($p1Move, $p2Move);
-                $multiCombat->save(__DIR__ . '/data/matches/' . $matchId . '.state');
+                if (!$multiCombat->save($stateFile)) {
+                    throw new Exception("Impossible de sauvegarder l'état du combat");
+                }
                 
                 // Avancer le tour
                 $metaData['turn'] = ($metaData['turn'] ?? 1) + 1;
@@ -183,6 +223,7 @@ try {
 
 } catch (Exception $e) {
     http_response_code(400);
+    error_log("API ERROR: " . $e->getMessage() . " - " . $e->getTraceAsString());
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 

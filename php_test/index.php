@@ -104,6 +104,18 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
             <a href="simulation.php" class="menu-btn simulate-link">
                 Simuler
             </a>
+            
+            <!-- DEBUG TOOLS (visible localement) -->
+            <?php if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false): ?>
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #444; display: flex; gap: 15px; justify-content: center;">
+                    <a href="debug.php" class="menu-btn" style="background: #1a1a1a; border-color: #333; text-decoration: none;">
+                        Debug
+                    </a>
+                    <a href="reset_session.php" class="menu-btn" style="background: #1a1a1a; border-color: #333; text-decoration: none;">
+                        Reset
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
 
         <script>

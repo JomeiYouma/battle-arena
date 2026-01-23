@@ -1,17 +1,19 @@
 <?php
 /**
  * MULTIPLAYER COMBAT PAGE
- * Miroir de single_player.php mais en multiplayer
- * Polling des updates de combat via api.php
+ * Interface complète de combat multiplayer avec polling en temps réel
+ * Basée sur la structure de single_player.php
  */
 
-// Autoloader
+// Autoloader (AVANT session_start pour la désérialisation)
 if (!function_exists('chargerClasse')) {
     function chargerClasse($classe) {
+        // Chercher dans classes/
         if (file_exists(__DIR__ . '/classes/' . $classe . '.php')) {
             require __DIR__ . '/classes/' . $classe . '.php';
             return;
         }
+        // Chercher dans classes/effects/
         if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
             require __DIR__ . '/classes/effects/' . $classe . '.php';
             return;
@@ -20,11 +22,20 @@ if (!function_exists('chargerClasse')) {
     spl_autoload_register('chargerClasse');
 }
 
+// Session (après autoloader pour que les classes soient chargées lors de unserialize)
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Récupérer le matchId depuis l'URL ou la session
+// --- RESET ---
+if (isset($_POST['abandon_multi'])) {
+    session_unset();
+    session_destroy();
+    header("Location: index.php");
+    exit;
+}
+
+// Récupérer le matchId depuis l'URL
 $matchId = $_GET['match_id'] ?? $_SESSION['matchId'] ?? null;
 
 if (!$matchId) {
@@ -34,84 +45,116 @@ if (!$matchId) {
 
 $_SESSION['matchId'] = $matchId;
 
-// Récupérer l'état initial du combat
+// Charger l'état initial du match directement depuis le fichier
+// (Plus fiable que file_get_contents avec URL relative)
 $matchFile = __DIR__ . '/data/matches/' . $matchId . '.json';
+
 if (!file_exists($matchFile)) {
-    die("Match non trouvé");
+    die("Erreur: Le match '$matchId' n'existe pas.");
 }
 
 $matchData = json_decode(file_get_contents($matchFile), true);
+
 if (!$matchData) {
-    die("Impossible de décoder le match JSON");
+    die("Erreur: Impossible de lire les données du match.");
 }
 
+// Charger l'état du combat via MultiCombat
+require_once __DIR__ . '/classes/MultiCombat.php';
+
+$stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+$multiCombat = MultiCombat::load($stateFile);
+
+if (!$multiCombat) {
+    // Initialiser le combat si pas encore créé
+    try {
+        $multiCombat = MultiCombat::create($matchData['player1']['hero'], $matchData['player2']['hero']);
+        if (!$multiCombat->save($stateFile)) {
+            die("Erreur: Impossible de sauvegarder l'état initial du combat.");
+        }
+    } catch (Exception $e) {
+        die("Erreur lors de l'initialisation du combat: " . $e->getMessage());
+    }
+}
+
+// Déterminer le rôle du joueur actuel
 $sessionId = session_id();
-
-// Déterminer si c'est le joueur 1 ou 2
 $isP1 = ($matchData['player1']['session'] === $sessionId);
-$isP2 = ($matchData['player2']['session'] === $sessionId);
+$myRole = $isP1 ? 'p1' : 'p2';
 
-if (!$isP1 && !$isP2) {
-    // Debug: afficher les infos
-    die("Non autorisé\n\nDebug:\nVotre session: $sessionId\nP1 session: " . $matchData['player1']['session'] . "\nP2 session: " . $matchData['player2']['session']);
+// Construire l'état du jeu pour l'affichage
+try {
+    $gameState = $multiCombat->getStateForUser($sessionId, $matchData);
+    $gameState['status'] = 'active';
+    $gameState['turn'] = $matchData['turn'] ?? 1;
+    $gameState['isOver'] = $multiCombat->isOver();
+    
+    // Déterminer qui doit jouer
+    $actions = $matchData['current_turn_actions'] ?? [];
+    $oppRole = $isP1 ? 'p2' : 'p1';
+    $gameState['waiting_for_me'] = !isset($actions[$myRole]);
+    $gameState['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && ($matchData['mode'] ?? '') !== 'bot';
+    
+} catch (Exception $e) {
+    die("Erreur lors de la construction de l'état du jeu: " . $e->getMessage());
 }
 
-// Images des héros
-$myHero = $isP1 ? $matchData['player1']['hero'] : $matchData['player2']['hero'];
-$oppHero = $isP1 ? $matchData['player2']['hero'] : $matchData['player1']['hero'];
-$myImg = $myHero['images']['p1'];
-$oppImg = $oppHero['images']['p1'];
-$isBotMatch = ($matchData['mode'] ?? '') === 'bot';
 ?>
 
 <link rel="stylesheet" href="./style.css">
 
 <div class="game-container">
     <div class="arena">
-        <div class="turn-indicator" id="turnIndicator">Tour --</div>
+        <div class="turn-indicator" id="turnIndicator">Tour <?php echo $gameState['turn']; ?></div>
         
         <!-- STATS -->
         <div class="stats-row">
             <div class="stats hero-stats">
-                <strong id="myName"><?php echo $myHero['name']; ?></strong>
-                <span class="type-badge" id="myType"><?php echo ucfirst($myHero['type']); ?></span>
+                <strong id="myName"><?php echo $gameState['me']['name']; ?></strong>
+                <span class="type-badge" id="myType"><?php echo $gameState['me']['type']; ?></span>
                 <div class="stat-bar">
                     <div class="pv-bar" id="myPvBar" style="width: 100%;"></div>
                 </div>
-                <span class="stat-numbers" id="myStats">-- / --</span>
+                <span class="stat-numbers" id="myStats"><?php echo round($gameState['me']['pv']); ?> / <?php echo $gameState['me']['max_pv']; ?> | ATK: <?php echo $gameState['me']['atk']; ?> | DEF: <?php echo $gameState['me']['def']; ?></span>
             </div>
             
             <div class="stats enemy-stats">
-                <strong id="oppName"><?php echo $oppHero['name']; ?></strong>
-                <span class="type-badge" id="oppType"><?php echo ucfirst($oppHero['type']); ?></span>
+                <strong id="oppName"><?php echo $gameState['opponent']['name']; ?></strong>
+                <span class="type-badge" id="oppType"><?php echo $gameState['opponent']['type']; ?></span>
                 <div class="stat-bar">
                     <div class="pv-bar enemy-pv" id="oppPvBar" style="width: 100%;"></div>
                 </div>
-                <span class="stat-numbers" id="oppStats">-- / --</span>
+                <span class="stat-numbers" id="oppStats"><?php echo round($gameState['opponent']['pv']); ?> / <?php echo $gameState['opponent']['max_pv']; ?> | ATK: <?php echo $gameState['opponent']['atk']; ?> | DEF: <?php echo $gameState['opponent']['def']; ?></span>
             </div>
         </div>
         
-        <!-- FIGHTERS -->
+        <!-- ZONE DE COMBAT -->
         <div class="fighters-area">
-            <div class="fighter hero" id="myFighter">
-                <img src="<?php echo $myImg; ?>" alt="<?php echo $myHero['name']; ?>">
-                <div id="myEmoji"></div>
+            <div class="fighter hero" id="heroFighter">
+                <img src="<?php echo $gameState['me']['img']; ?>" alt="Hero">
+                <div id="heroEmojiContainer"></div>
+                <div class="effects-container hero-effects" id="myEffects"></div>
             </div>
-            
+
             <div class="vs-indicator">VS</div>
-            
-            <div class="fighter enemy" id="oppFighter">
-                <img src="<?php echo $oppImg; ?>" alt="<?php echo $oppHero['name']; ?>" class="enemy-img">
-                <div id="oppEmoji"></div>
+
+            <div class="fighter enemy" id="enemyFighter">
+                <img src="<?php echo $gameState['opponent']['img']; ?>" alt="Opponent" class="enemy-img">
+                <div id="oppEmojiContainer"></div>
+                <div class="effects-container enemy-effects" id="oppEffects"></div>
             </div>
         </div>
-        
+
         <!-- BATTLE LOG -->
-        <div class="battle-log" id="battleLog"></div>
+        <div class="battle-log" id="battleLog">
+            <?php foreach ($gameState['logs'] as $log): ?>
+                <div class="log-line"><?php echo htmlspecialchars($log); ?></div>
+            <?php endforeach; ?>
+        </div>
         
         <!-- CONTROLS -->
         <div class="controls">
-            <div id="actionButtons" class="action-form">
+            <div id="actionButtons" class="action-list">
                 <!-- Actions générées dynamiquement par JS -->
             </div>
             <div id="waitingMessage" class="waiting-text" style="display:none; margin-top: 15px;">
@@ -121,20 +164,26 @@ $isBotMatch = ($matchData['mode'] ?? '') === 'bot';
                 <h3 id="gameOverText"></h3>
                 <button class="action-btn new-game" onclick="location.href='index.php'">Menu Principal</button>
             </div>
+            
+            <form method="POST" style="margin-top: 20px;">
+                <button type="submit" name="abandon_multi" class="action-btn abandon">Abandonner</button>
+            </form>
         </div>
     </div>
 </div>
 
 <script>
-const MATCH_ID = '<?php echo $matchId; ?>';
-const IS_P1 = <?php echo $isP1 ? 'true' : 'false'; ?>;
-const IS_BOT_MATCH = <?php echo $isBotMatch ? 'true' : 'false'; ?>;
+const MATCH_ID = '<?php echo addslashes($matchId); ?>';
+const INITIAL_STATE = <?php echo json_encode($gameState); ?>;
 
 let pollInterval = null;
-let lastLogCount = 0;
+let lastLogCount = <?php echo count($gameState['logs']); ?>;
+let currentGameState = INITIAL_STATE;
 
 function updateCombatState() {
-    fetch('api.php?action=poll_status&match_id=' + MATCH_ID)
+    fetch('api.php?action=poll_status&match_id=' + MATCH_ID, {
+        credentials: 'same-origin'
+    })
         .then(r => {
             if (!r.ok) {
                 throw new Error(`HTTP ${r.status}: ${r.statusText}`);
@@ -163,6 +212,8 @@ function updateCombatState() {
                 showErrorMessage("Erreur API: " + data.message);
                 return;
             }
+
+            currentGameState = data;
 
             // Update UI
             document.getElementById('turnIndicator').innerText = "Tour " + data.turn;
@@ -204,20 +255,24 @@ function updateCombatState() {
             }
             
             // Generate buttons from available actions
-            if (data.actions && data.waiting_for_me) {
+            if (data.actions && data.waiting_for_me && !data.isOver) {
                 btnContainer.innerHTML = '';
                 for (const [key, action] of Object.entries(data.actions)) {
                     const button = document.createElement('button');
+                    button.type = 'button';
                     button.className = `action-btn ${key}${action.canUse ? '' : ' disabled'}`;
                     button.title = action.description || '';
-                    button.disabled = !action.canUse || data.isOver;
+                    button.disabled = !action.canUse;
                     button.onclick = () => sendAction(key);
                     
-                    let buttonText = (action.emoji || '') + ' ' + action.label;
+                    // Structure comme en single player
+                    let buttonHTML = `<span class="action-emoji-icon">${action.emoji || '⚔️'}</span>`;
+                    buttonHTML += `<span class="action-label">${action.label}</span>`;
                     if (action.ppText) {
-                        buttonText += ' ' + action.ppText;
+                        buttonHTML += `<span class="action-pp">${action.ppText}</span>`;
                     }
-                    button.innerHTML = buttonText;
+                    
+                    button.innerHTML = buttonHTML;
                     btnContainer.appendChild(button);
                 }
             }
@@ -245,11 +300,7 @@ function updateCombatState() {
                 } else {
                     btnContainer.style.display = 'none';
                     waitMsg.style.display = 'block';
-                    if (IS_BOT_MATCH) {
-                        waitMsg.innerText = "Le bot joue...";
-                    } else {
-                        waitMsg.innerText = "En attente de l'adversaire...";
-                    }
+                    waitMsg.innerText = "En attente de l'adversaire...";
                 }
             }
         })
@@ -282,6 +333,7 @@ function sendAction(action) {
     
     fetch('api.php?action=submit_move', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'match_id=' + MATCH_ID + '&move=' + action
     })

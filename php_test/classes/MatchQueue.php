@@ -27,6 +27,7 @@ class MatchQueue {
      * Ajoute un joueur à la queue ou trouve un match existant
      */
     public function findMatch($sessionId, $heroData) {
+        error_log("MatchQueue::findMatch - Called with sessionId=$sessionId, heroName=" . ($heroData['name'] ?? 'UNKNOWN'));
         $fp = fopen($this->queueFile, 'r+');
         if (flock($fp, LOCK_EX)) { // Verrouillage exclusif
             $content = stream_get_contents($fp);
@@ -156,12 +157,16 @@ class MatchQueue {
         $queueContent = file_get_contents($this->queueFile);
         $queue = json_decode($queueContent, true) ?: [];
         
+        error_log("MatchQueue::checkMatchStatus - sessionId=$sessionId, queue_count=" . count($queue) . ", now=$now");
+        
         foreach ($queue as $item) {
             if ($item['sessionId'] === $sessionId) {
                 $timeInQueue = $now - $item['timestamp'];
+                error_log("MatchQueue::checkMatchStatus - Found player in queue. timeInQueue=$timeInQueue, timeout=$this->timeoutSeconds");
                 
                 // Timeout de 30 secondes
                 if ($timeInQueue >= $this->timeoutSeconds) {
+                    error_log("MatchQueue::checkMatchStatus - TIMEOUT REACHED! Creating bot match...");
                     // Créer un match bot
                     $matchId = uniqid('match_');
                     $heroData = $item['heroData'];
@@ -199,6 +204,7 @@ class MatchQueue {
                     ];
                     
                     file_put_contents($this->matchesDir . $matchId . '.json', json_encode($matchData, JSON_PRETTY_PRINT));
+                    error_log("MatchQueue::checkMatchStatus - Bot match created: $matchId");
                     
                     // Retirer du queue
                     $queue = array_filter($queue, function($item) use ($sessionId) {

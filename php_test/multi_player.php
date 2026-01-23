@@ -1,162 +1,429 @@
 <?php
 /**
- * MULTIPLAYER MODE - Sélection héros + Queue
+ * MULTIPLAYER MODE - Sélection héros + Queue 30s → Combat vs Bot
  */
 
-session_start();
+// Autoloader
+if (!function_exists('chargerClasse')) {
+    function chargerClasse($classe) {
+        if (file_exists(__DIR__ . '/classes/' . $classe . '.php')) {
+            require __DIR__ . '/classes/' . $classe . '.php';
+            return;
+        }
+        if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
+            require __DIR__ . '/classes/effects/' . $classe . '.php';
+            return;
+        }
+    }
+    spl_autoload_register('chargerClasse');
+}
 
-// Reset queue
-if (isset($_POST['leave_queue'])) {
-    unset($_SESSION['queueHeroId']);
-    unset($_SESSION['queueStartTime']);
-    header("Location: multi_player.php");
-    exit;
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
 
 // Charger la liste des héros
 $heros = json_decode(file_get_contents('heros.json'), true);
 ?>
 
+<style>
+/* ===== HERO SELECTION GRID AMÉLIORÉ ===== */
+.multi-container {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.multi-title {
+    text-align: center;
+    color: #ffd700;
+    font-size: 28px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+    letter-spacing: 2px;
+}
+
+.multi-subtitle {
+    text-align: center;
+    color: #b8860b;
+    font-size: 14px;
+    margin-bottom: 30px;
+    font-style: italic;
+}
+
+/* ===== DISPLAY NAME INPUT ===== */
+.display-name-section {
+    max-width: 400px;
+    margin: 0 auto 30px;
+    background: rgba(20, 20, 30, 0.8);
+    border: 2px solid #4a0000;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.display-name-section label {
+    display: block;
+    color: #b8860b;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.display-name-input {
+    width: 100%;
+    padding: 12px 15px;
+    background: rgba(10, 10, 15, 0.9);
+    border: 2px solid #4a0000;
+    border-radius: 8px;
+    color: #ffd700;
+    font-size: 16px;
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.display-name-input:focus {
+    outline: none;
+    border-color: #c41e3a;
+    box-shadow: 0 0 15px rgba(196, 30, 58, 0.3);
+}
+
+.display-name-input::placeholder {
+    color: #666;
+}
+
+.hero-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.hero-card-btn {
+    background: linear-gradient(145deg, rgba(30, 30, 40, 0.95), rgba(20, 15, 25, 0.98));
+    border: 2px solid #4a0000;
+    border-radius: 12px;
+    padding: 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.hero-card-btn:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: #c41e3a;
+    box-shadow: 0 15px 40px rgba(196, 30, 58, 0.4), 
+                0 0 30px rgba(255, 215, 0, 0.2),
+                inset 0 0 20px rgba(196, 30, 58, 0.1);
+}
+
+.hero-card-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #c41e3a, transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.hero-card-btn:hover::before {
+    opacity: 1;
+}
+
+.hero-card-content {
+    padding: 15px;
+    text-align: center;
+}
+
+.hero-card-content img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+    transition: transform 0.3s, filter 0.3s;
+}
+
+.hero-card-btn:hover .hero-card-content img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 8px 20px rgba(196, 30, 58, 0.5));
+}
+
+.hero-card-content h4 {
+    color: #e0e0e0;
+    font-size: 16px;
+    margin: 8px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.hero-card-content .type-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #c41e3a, #7a1226);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.hero-stats-preview {
+    color: #808080;
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.hero-stats-preview span {
+    color: #b8860b;
+}
+
+/* ===== QUEUE SCREEN ===== */
+.queue-screen {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.queue-screen.active {
+    display: block;
+}
+
+.queue-loader {
+    width: 80px;
+    height: 80px;
+    border: 4px solid #2a2a3a;
+    border-top: 4px solid #c41e3a;
+    border-radius: 50%;
+    margin: 0 auto 30px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.queue-title {
+    color: #ffd700;
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.queue-box {
+    background: rgba(20, 20, 30, 0.9);
+    border: 2px solid #c41e3a;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 400px;
+    margin: 0 auto 30px;
+}
+
+.queue-countdown {
+    font-size: 64px;
+    font-weight: bold;
+    color: #c41e3a;
+    font-family: monospace;
+    text-shadow: 0 0 30px rgba(196, 30, 58, 0.6);
+    margin-bottom: 10px;
+}
+
+.queue-countdown-label {
+    color: #808080;
+    font-size: 14px;
+}
+
+.queue-message {
+    color: #b8860b;
+    font-size: 15px;
+    margin: 25px 0;
+    line-height: 1.6;
+}
+
+.queue-hero-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+.queue-hero-preview img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.queue-hero-preview .info {
+    text-align: left;
+}
+
+.queue-hero-preview .info h4 {
+    color: #ffd700;
+    margin: 0 0 5px;
+}
+
+.queue-hero-preview .info span {
+    color: #808080;
+    font-size: 12px;
+}
+
+.cancel-queue-btn {
+    background: linear-gradient(135deg, #4a0000, #2a0000);
+    border: 2px solid #6a0000;
+    color: #ff6b6b;
+    padding: 12px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.cancel-queue-btn:hover {
+    background: linear-gradient(135deg, #6a0000, #4a0000);
+    border-color: #c41e3a;
+    transform: scale(1.05);
+}
+
+.selection-screen.hidden {
+    display: none;
+}
+</style>
+
 <link rel="stylesheet" href="./style.css">
 
 <div class="multi-container">
-    <?php if (!isset($_SESSION['queueHeroId'])): ?>
-        <!-- ÉCRAN 1: SÉLECTION DU HÉROS -->
-        <div class="screen active" id="screenSelection">
-            <h2 style="text-align: center; color: #e0e0e0; margin-bottom: 30px;">🎮 Choisissez votre Champion</h2>
-            
-            <div class="hero-select-grid">
-                <?php foreach ($heros as $h): ?>
-                <div class="hero-card" onclick="selectHero('<?php echo $h['id']; ?>')">
-                    <div class="hero-card-content">
-                        <img src="<?php echo $h['images']['p1']; ?>" alt="<?php echo $h['name']; ?>">
-                        <h4><?php echo $h['name']; ?></h4>
-                        <span class="type-badge"><?php echo ucfirst($h['type']); ?></span>
-                        <div class="hero-stats-preview">
-                            <span>❤️ <?php echo $h['pv']; ?></span> | 
-                            <span>⚔️ <?php echo $h['atk']; ?></span> |
-                            <span>⚡ <?php echo $h['speed']; ?></span>
-                        </div>
+    <!-- ÉCRAN 1: SÉLECTION DU HÉROS -->
+    <div class="selection-screen" id="selectionScreen">
+        <h2 class="multi-title">⚔️ CHOISISSEZ VOTRE CHAMPION ⚔️</h2>
+        <p class="multi-subtitle">Sélectionnez un héros pour entrer dans l'arène multijoueur</p>
+        
+        <!-- CHAMP DISPLAY NAME -->
+        <div class="display-name-section">
+            <label for="displayName">👤 Votre nom de joueur</label>
+            <input type="text" 
+                   id="displayName" 
+                   class="display-name-input" 
+                   placeholder="Entrez votre pseudo..." 
+                   maxlength="20">
+        </div>
+        
+        <div class="hero-select-grid">
+            <?php foreach ($heros as $h): ?>
+            <button type="button" class="hero-card-btn" onclick="selectHero('<?php echo $h['id']; ?>', '<?php echo addslashes($h['name']); ?>', '<?php echo $h['images']['p1']; ?>', '<?php echo ucfirst($h['type']); ?>')">
+                <div class="hero-card-content">
+                    <img src="<?php echo $h['images']['p1']; ?>" alt="<?php echo $h['name']; ?>">
+                    <h4><?php echo $h['name']; ?></h4>
+                    <span class="type-badge"><?php echo ucfirst($h['type']); ?></span>
+                    <div class="hero-stats-preview">
+                        <span>PV: <?php echo $h['pv']; ?></span> | 
+                        <span>ATK: <?php echo $h['atk']; ?></span> | 
+                        <span>DEF: <?php echo $h['def'] ?? 5; ?></span> | 
+                        <span>SPE: <?php echo $h['speed']; ?></span>
                     </div>
                 </div>
-                <?php endforeach; ?>
-            </div>
+            </button>
+            <?php endforeach; ?>
         </div>
-    <?php else: ?>
-        <!-- ÉCRAN 2: QUEUE D'ATTENTE -->
-        <div class="screen active" id="screenQueue">
-            <div class="queue-container" style="max-width: 600px; margin: 80px auto; text-align: center;">
-                <h2 style="color: #e0e0e0; margin-bottom: 40px;">⏳ Recherche d'adversaire...</h2>
-                
-                <div class="loader"></div>
-                
-                <!-- COMPTEUR QUEUE -->
-                <div style="background: rgba(20, 20, 30, 0.9); border: 2px solid #c41e3a; border-radius: 10px; padding: 20px; margin: 30px 0;">
-                    <div style="font-size: 14px; color: #b8860b; margin-bottom: 10px;">JOUEURS EN ATTENTE</div>
-                    <div style="font-size: 48px; font-weight: bold; color: #ffd700; font-family: monospace;" id="queueCount">--</div>
-                    <div style="font-size: 12px; color: #808080; margin-top: 10px;">Y compris vous</div>
+        
+<!--         <div style="text-align: center;">
+            <a href="index.php" class="action-btn abandon">Retour au menu</a>
+        </div> -->
+    </div>
+
+    <!-- ÉCRAN 2: QUEUE D'ATTENTE -->
+    <div class="queue-screen" id="queueScreen">
+        <div class="queue-loader"></div>
+        
+        <h2 class="queue-title">Recherche d'adversaire...</h2>
+        
+        <div class="queue-box">
+            <div class="queue-hero-preview" id="heroPreview">
+                <img src="" alt="Hero" id="previewImg">
+                <div class="info">
+                    <h4 id="previewName">-</h4>
+                    <span id="previewType">-</span>
                 </div>
-                
-                <!-- COUNTDOWN -->
-                <div style="color: #c41e3a; font-size: 18px; margin: 20px 0; font-weight: bold;">
-                    ⏰ Timeout dans <span id="countdownTimer">30</span>s
-                </div>
-                
-                <!-- MESSAGE -->
-                <p style="color: #b8860b; font-size: 16px; margin: 20px 0; line-height: 1.6;">
-                    Un combat contre <strong>un bot</strong> débutera si personne ne se présente.
-                </p>
-                
-                <!-- CANCEL BUTTON -->
-                <form method="POST" style="margin-top: 40px;">
-                    <button type="submit" name="leave_queue" class="action-btn abandon">❌ Annuler la Recherche</button>
-                </form>
             </div>
+            
+            <div class="queue-countdown" id="countdown">30</div>
+            <div class="queue-countdown-label">secondes restantes</div>
         </div>
-    <?php endif; ?>
+        
+        <p class="queue-message">
+            🎮 Si aucun joueur ne se présente,<br>
+            un <strong>bot</strong> vous affrontera !
+        </p>
+        
+        <button type="button" class="cancel-queue-btn" onclick="cancelQueue()">
+            ❌ Annuler la recherche
+        </button>
+    </div>
+    
+    <!-- Formulaire caché pour soumettre vers index.php -->
+    <form id="startCombatForm" method="POST" action="index.php" style="display: none;">
+        <input type="hidden" name="mode" value="single">
+        <input type="hidden" name="hero_choice" id="hiddenHeroChoice" value="">
+        <input type="hidden" name="display_name" id="hiddenDisplayName" value="">
+    </form>
 </div>
 
 <script>
-const QUEUE_HERO_ID = '<?php echo $_SESSION['queueHeroId'] ?? ''; ?>';
-
-function selectHero(heroId) {
-    // Store in backend via AJAX
-    fetch('api.php?action=join_queue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'hero_id=' + heroId
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (data.status === 'matched') {
-            // Direct match - go to combat
-            window.location.href = 'combat.php?match_id=' + data.matchId;
-        } else if (data.status === 'waiting') {
-            // Go to queue screen
-            document.getElementById('screenSelection').classList.remove('active');
-            document.getElementById('screenQueue').classList.add('active');
-            startQueue();
-        } else {
-            alert("Erreur: " + data.message);
-        }
-    })
-    .catch(err => {
-        alert("Erreur réseau: " + err);
-    });
-}
-
+let selectedHeroId = null;
 let countdownInterval = null;
-let queueStartTime = null;
-let pollInterval = null;
+let remainingTime = 30;
 
-function startQueue() {
-    queueStartTime = Date.now();
-    startCountdown();
-    pollQueue();
-    pollInterval = setInterval(pollQueue, 1000);
-}
-
-function startCountdown() {
-    const timerEl = document.getElementById('countdownTimer');
+function selectHero(heroId, heroName, heroImg, heroType) {
+    selectedHeroId = heroId;
+    
+    // Récupérer le display name
+    const displayNameInput = document.getElementById('displayName');
+    const displayName = displayNameInput.value.trim() || heroName;
+    
+    // Mettre à jour le formulaire caché
+    document.getElementById('hiddenHeroChoice').value = heroId;
+    document.getElementById('hiddenDisplayName').value = displayName;
+    
+    // Afficher l'aperçu du héros avec le display name
+    document.getElementById('previewImg').src = heroImg;
+    document.getElementById('previewName').textContent = displayName;
+    document.getElementById('previewType').textContent = heroType + ' (' + heroName + ')';
+    
+    // Basculer vers l'écran de queue
+    document.getElementById('selectionScreen').classList.add('hidden');
+    document.getElementById('queueScreen').classList.add('active');
+    
+    // Démarrer le compte à rebours
+    remainingTime = 30;
+    document.getElementById('countdown').textContent = remainingTime;
+    
     countdownInterval = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - queueStartTime) / 1000);
-        const remaining = Math.max(0, 30 - elapsed);
-        timerEl.innerText = remaining;
+        remainingTime--;
+        document.getElementById('countdown').textContent = remainingTime;
         
-        if (remaining === 0) {
+        if (remainingTime <= 0) {
             clearInterval(countdownInterval);
+            // Soumettre le formulaire
+            document.getElementById('startCombatForm').submit();
         }
-    }, 100);
+    }, 1000);
 }
 
-function pollQueue() {
-    fetch('api.php?action=poll_queue')
-        .then(r => r.json())
-        .then(data => {
-            // Update queue count
-            if (data.queue_count !== undefined) {
-                document.getElementById('queueCount').innerText = data.queue_count;
-            }
-            
-            // Check for match
-            if (data.status === 'matched') {
-                clearInterval(pollInterval);
-                clearInterval(countdownInterval);
-                window.location.href = 'combat.php?match_id=' + data.matchId;
-            } else if (data.status === 'timeout') {
-                clearInterval(pollInterval);
-                clearInterval(countdownInterval);
-                window.location.href = 'combat.php?match_id=' + data.matchId;
-            }
-        })
-        .catch(err => {
-            console.error('Poll error:', err);
-        });
+function cancelQueue() {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+    
+    // Retour à la sélection
+    document.getElementById('queueScreen').classList.remove('active');
+    document.getElementById('selectionScreen').classList.remove('hidden');
+    
+    selectedHeroId = null;
 }
-
-// Start if already in queue
-if (QUEUE_HERO_ID) {
-    document.getElementById('screenSelection').classList.remove('active');
-    document.getElementById('screenQueue').classList.add('active');
-    startQueue();
 </script>
