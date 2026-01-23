@@ -34,7 +34,7 @@
         "pv": 200,
         "atk": 14,
         "def": 3,
-        "speed": 10,
+        "speed": 13,
         "description": "Énergie divine pour soigner et infliger des dégâts qui ignorent les défenses.",
         "images": {
             "p1": "media/priest_skol.png",
@@ -88,13 +88,27 @@
         "name": "Pikratchu",
         "type": "Electrique",
         "pv": 90,
-        "atk": 15,
+        "atk": 18,
         "def": 3,
         "speed": 11,
         "description": "Vitesse extrême et dégâts électriques. Paralysie et charge dévastatrice.",
         "images": {
             "p1": "media/pikachu_skol.png",
             "p2": "media/pikachu_skol_2.png"
+        }
+    },
+    {
+        "id": "norgol",
+        "name": "Norgol Roi des Ombres",
+        "type": "Necromancien",
+        "pv": 145,
+        "atk": 17,
+        "def": 4,
+        "speed": 5,
+        "description": "Manipulateur d'âmes, copie les attaques et maudit ses ennemis.",
+        "images": {
+            "p1": "media/necro_skol.png",
+            "p2": "media/necro_skol_2.png"
         }
     }
 ]

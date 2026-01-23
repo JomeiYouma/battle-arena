@@ -83,9 +83,9 @@ class Electrique extends Personnage {
     public function decharge(Personnage $target) {
         // Scaling : Dégâts de base + 15 par action réussie
         $stacks = $this->getSuccessfulActionsCount();
-        $bonus = $stacks * 15;
+        $bonus = $stacks * 13;
         // Calcul dégâts bruts (atk + base sort + bonus)
-        $totalDmg = $this->getAtk() + 40 + $bonus; 
+        $totalDmg = $this->getAtk() + 5 + $bonus; 
         
         // Ignore partie de la défense
         $finalDmg = max(10, $totalDmg - ($target->getDef() / 2));
