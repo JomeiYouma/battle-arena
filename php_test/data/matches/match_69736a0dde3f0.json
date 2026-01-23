@@ -1,0 +1,52 @@
+{
+    "id": "match_69736a0dde3f0",
+    "created_at": 1769171469,
+    "status": "active",
+    "turn": 1,
+    "player1": {
+        "session": "fm9nr2j5qhfabpop55k1imjknf",
+        "hero": {
+            "id": "brutor",
+            "name": "Brutor le Br\u00fblant",
+            "type": "Pyromane",
+            "pv": 100,
+            "atk": 22,
+            "def": 5,
+            "speed": 12,
+            "description": "Ma\u00eetre des flammes, sacrifie sa vie pour des d\u00e9g\u00e2ts d\u00e9vastateurs.",
+            "images": {
+                "p1": "media\/fire_skol.png",
+                "p2": "media\/fire_skol_2.png"
+            }
+        },
+        "hp": 100,
+        "max_hp": 100
+    },
+    "player2": {
+        "session": "fqe0ihdn78tvkckk6b6p2jcsak",
+        "hero": {
+            "id": "ulroc",
+            "name": "Ulroc le Mastoc",
+            "type": "Guerrier",
+            "pv": 120,
+            "atk": 20,
+            "def": 10,
+            "speed": 8,
+            "description": "Tank puissant, alterne rage offensive et d\u00e9fense solide.",
+            "images": {
+                "p1": "media\/combat_skol.png",
+                "p2": "media\/combat_skol_2.png"
+            }
+        },
+        "hp": 120,
+        "max_hp": 120
+    },
+    "logs": [
+        "Le combat commence !"
+    ],
+    "current_player": "fm9nr2j5qhfabpop55k1imjknf",
+    "last_update": 1769171469,
+    "current_turn_actions": {
+        "p1": "attack"
+    }
+}

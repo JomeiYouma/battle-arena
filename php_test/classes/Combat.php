@@ -19,20 +19,20 @@
  */
 
 class Combat {
-    private Personnage $player;
-    private Personnage $enemy;
-    private array $logs = [];
-    private int $turn = 1;
+    protected Personnage $player;
+    protected Personnage $enemy;
+    protected array $logs = [];
+    protected int $turn = 1;
 
     // Actions du tour pour animations séquentielles par phase
-    private array $turnActions = [];
+    protected array $turnActions = [];
     
     // États initiaux avant le tour (pour animations progressives)
-    private array $initialStates = [];
+    protected array $initialStates = [];
     
     // État du combat
-    private bool $isFinished = false;
-    private ?Personnage $winner = null;
+    protected bool $isFinished = false;
+    protected ?Personnage $winner = null;
 
     public function __construct(Personnage $player, Personnage $enemy) {
         $this->player = $player;
@@ -182,67 +182,67 @@ class Combat {
     }
 
     /**
-     * Exécute l'action du joueur
+     * Exécute une action spécifique pour un personnage
      */
-    private function doPlayerAction(string $actionKey): void {
-        $actions = $this->player->getAvailableActions();
-        if (!isset($actions[$actionKey]) || !$this->player->canUseAction($actionKey)) {
-            return;
-        }
+    protected function performAction(Personnage $actor, Personnage $target, string $actionKey): void {
+        $actorType = ($actor === $this->player) ? 'player' : 'enemy';
+        $targetType = ($target === $this->player) ? 'player' : 'enemy';
 
         // Vérification des blocages (Statuts comme Paralysie)
-        $blockEffect = $this->player->checkActionBlock();
+        $blockEffect = $actor->checkActionBlock();
         if ($blockEffect) {
-            $this->logs[] = "🚫 " . $this->player->getName() . " est bloqué par " . $blockEffect . " !";
+            $this->logs[] = "🚫 " . $actor->getName() . " est bloqué par " . $blockEffect . " !";
             $this->turnActions[] = [
                 'phase' => 'action',
-                'actor' => 'player',
+                'actor' => $actorType,
                 'emoji' => '🚫',
                 'label' => 'Bloqué',
                 'text' => 'Bloqué par ' . $blockEffect,
                 'statesAfter' => $this->getStatesSnapshot()
             ];
-            // Le coût en PP est payé même si bloqué ? Généralement oui dans les RPG
-            // Mais ici on n'a pas encore appelé usePP
-            // On peut décider de payer ou non. Disons qu'on ne paie pas pour l'instant.
             return;
         }
 
+        $actions = $actor->getAvailableActions();
         $action = $actions[$actionKey];
-        $this->player->usePP($actionKey);
+        $actor->usePP($actionKey);
 
-        // Esquive de l'ennemi ?
-        if (($action['needsTarget'] ?? false) && $this->enemy->isEvading()) {
-            $this->logs[] = "💨 " . $this->enemy->getName() . " esquive !";
-            $this->enemy->setEvading(false);
+        // Esquive de la cible ?
+        if (($action['needsTarget'] ?? false) && $target->isEvading()) {
+            $this->logs[] = "💨 " . $target->getName() . " esquive !";
+            $target->setEvading(false);
+            
+            // Action comptée comme lancée (succès de l'invocation, échec du résultat)
+            $actor->incrementSuccessfulActions();
+
             $this->turnActions[] = [
                 'phase' => 'action',
-                'actor' => 'player',
+                'actor' => $actorType,
                 'emoji' => '💨',
                 'label' => 'Esquivé !',
                 'needsTarget' => true,
                 'statesAfter' => $this->getStatesSnapshot()
             ];
-            // Action lancée mais esquivée = succès de lancement ou pas ?
-            // L'utilisateur a dit "quand le héros n'a pas pu lancer d'action".
-            // Ici il l'a lancée, donc ça compte comme succès.
-            $this->player->incrementSuccessfulActions();
             return;
         }
 
         $method = $action['method'];
         $result = ($action['needsTarget'] ?? false) 
-            ? $this->player->$method($this->enemy) 
-            : $this->player->$method();
+            ? $actor->$method($target) 
+            : $actor->$method();
         
-        $this->logs[] = "🎮 " . $this->player->getName() . " : " . $result;
+        // Emojis différents selon qui joue
+        $icon = ($actor === $this->player) ? "🎮" : "🤖";
+        if ($actorType === 'enemy' && isset($this->isMulti) && $this->isMulti) $icon = "🎮"; // En multi, les deux sont des joueurs
+
+        $this->logs[] = $icon . " " . $actor->getName() . " : " . $result;
         
         // Action réussie !
-        $this->player->incrementSuccessfulActions();
+        $actor->incrementSuccessfulActions();
         
         $this->turnActions[] = [
             'phase' => 'action',
-            'actor' => 'player',
+            'actor' => $actorType,
             'emoji' => $action['emoji'] ?? '⚔️',
             'label' => $action['label'],
             'needsTarget' => $action['needsTarget'] ?? false,
@@ -251,45 +251,21 @@ class Combat {
     }
 
     /**
+     * Exécute l'action du joueur
+     */
+    private function doPlayerAction(string $actionKey): void {
+        $actions = $this->player->getAvailableActions();
+        if (!isset($actions[$actionKey]) || !$this->player->canUseAction($actionKey)) {
+            return;
+        }
+        $this->performAction($this->player, $this->enemy, $actionKey);
+    }
+
+    /**
      * Exécute l'action de l'ennemi (IA)
      */
     private function doEnemyAction(): void {
         if ($this->enemy->isDead()) return;
-
-        // Vérification des blocages (Paralysie, etc.)
-        $blockEffect = $this->enemy->checkActionBlock();
-        if ($blockEffect) {
-            $this->logs[] = "🚫 " . $this->enemy->getName() . " est bloqué par " . $blockEffect . " !";
-            $this->turnActions[] = [
-                'phase' => 'action',
-                'actor' => 'enemy',
-                'emoji' => '🚫',
-                'label' => 'Bloqué',
-                'text' => 'Bloqué par ' . $blockEffect,
-                'statesAfter' => $this->getStatesSnapshot()
-            ];
-            return;
-        }
-
-        // Esquive du joueur ?
-        if ($this->player->isEvading()) {
-            $this->logs[] = "💨 " . $this->player->getName() . " esquive !";
-            $this->player->setEvading(false);
-
-            // Action comptée comme lancée
-            $this->enemy->incrementSuccessfulActions();
-            
-            // L'ennemi fait quand même une action (mais elle est esquivée)
-            $this->turnActions[] = [
-                'phase' => 'action',
-                'actor' => 'enemy',
-                'emoji' => '💨',
-                'label' => 'Esquivé !',
-                'needsTarget' => true,
-                'statesAfter' => $this->getStatesSnapshot()
-            ];
-            return;
-        }
 
         // IA : choisir une action
         $actions = $this->enemy->getAvailableActions();
@@ -298,6 +274,8 @@ class Combat {
 
         // Priorité heal si PV bas
         $healthPct = $this->enemy->getPv() / $this->enemy->getBasePv();
+        $selectedKey = 'attack'; // Default
+
         if ($healthPct < 0.3 && isset($available['heal'])) {
             $selectedKey = 'heal';
         } else {
@@ -305,27 +283,8 @@ class Combat {
             $selectedKey = $keys[array_rand($keys)];
         }
         
-        $action = $available[$selectedKey];
-        $this->enemy->usePP($selectedKey);
-
-        $method = $action['method'];
-        $result = ($action['needsTarget'] ?? false) 
-            ? $this->enemy->$method($this->player) 
-            : $this->enemy->$method();
-        
-        $this->logs[] = "🤖 " . $this->enemy->getName() . " : " . $result;
-
-        // Action réussie
-        $this->enemy->incrementSuccessfulActions();
-        
-        $this->turnActions[] = [
-            'phase' => 'action',
-            'actor' => 'enemy',
-            'emoji' => $action['emoji'] ?? '⚔️',
-            'label' => $action['label'],
-            'needsTarget' => $action['needsTarget'] ?? false,
-            'statesAfter' => $this->getStatesSnapshot()
-        ];
+        // Exécution via la méthode partagée
+        $this->performAction($this->enemy, $this->player, $selectedKey);
     }
 
     /**
