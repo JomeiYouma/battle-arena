@@ -12,14 +12,14 @@ class Electrique extends Personnage {
         $actions = [
             'etincelle' => [
                 'label' => 'Étincelle',
-                'description' => 'Attaque électrique rapide et précise',
+                'description' => 'Attaque de base',
                 'method' => 'etincelle',
                 'needsTarget' => true,
                 'emoji' => '⚡'
             ],
             'acceleration' => [
                 'label' => 'Accélération',
-                'description' => 'Augmente la vitesse pendant 4 tours',
+                'description' => '+10 VIT (4 tours)',
                 'pp' => 5,
                 'method' => 'acceleration',
                 'needsTarget' => false,
@@ -27,7 +27,7 @@ class Electrique extends Personnage {
             ],
             'prise_foudre' => [
                 'label' => 'Prise Foudre',
-                'description' => 'Paralyse l\'ennemi et réduit sa vitesse (-5) pendant 4 tours',
+                'description' => 'Paralyse 2 tours, -5 VIT (4 tours)',
                 'pp' => 3,
                 'method' => 'priseFoudre',
                 'needsTarget' => true,
@@ -35,7 +35,7 @@ class Electrique extends Personnage {
             ],
             'decharge' => [
                 'label' => 'Décharge',
-                'description' => 'Libère l\'énergie accumulée. +13 par action réussie ! (Usage unique)',
+                'description' => 'ATK + 13/action réussie. Usage unique',
                 'pp' => 1,
                 'method' => 'decharge',
                 'needsTarget' => true,

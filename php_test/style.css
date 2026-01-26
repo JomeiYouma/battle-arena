@@ -205,7 +205,7 @@ h3 {
     border-right: 2px solid transparent;
     border-bottom: 2px solid var(--accent-red);
     border-left: 2px solid transparent;
-    animation: spin-fast 4s linear infinite;
+    animation: rotate-flat 4s linear infinite;
 }
 
 /* Particules orbitales */
@@ -295,10 +295,7 @@ h3 {
     to { transform: translate(-50%, -50%) rotate(360deg); }
 }
 
-@keyframes spin-fast {
-    from { transform: translate(-50%, -50%) rotate(0deg); }
-    to { transform: translate(-50%, -50%) rotate(360deg); }
-}
+/* spin-fast supprimé - identique à rotate-flat */
 
 @keyframes rotate-3d-1 {
     0% { transform: translate(-50%, -50%) rotateX(60deg) rotateZ(0deg); }
@@ -430,6 +427,7 @@ h3 {
     box-shadow: 
         0 10px 40px rgba(0, 0, 0, 0.8),
         inset 0 0 50px rgba(139, 0, 0, 0.1);
+    animation: pulse-glow 4s ease-in-out infinite;
 }
 
 /* --- STATS ROW (EN DEHORS DE LA ZONE DE COMBAT) --- */
@@ -484,6 +482,7 @@ h3 {
 }
 
 .fighter {
+    position: relative;
     text-align: center;
     width: 40%;
     z-index: 1;
@@ -711,9 +710,7 @@ select option {
     }
 }
 
-.arena {
-    animation: pulse-glow 4s ease-in-out infinite;
-}
+/* Animation pulse-glow définie ici, utilisée par .arena */
 
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
@@ -1110,9 +1107,7 @@ select option {
    ============================================== */
 
 /* Container pour les emojis d'action */
-.fighter {
-    position: relative;
-}
+/* .fighter position déjà définie plus haut */
 
 /* Emoji d'action - Animation pop */
 .action-emoji {
@@ -1267,14 +1262,7 @@ select option {
     font-size: 0.9rem;
 }
 
-.action-pp {
-    font-size: 0.75rem;
-    color: var(--parchment-text);
-    background: rgba(0, 0, 0, 0.4);
-    padding: 2px 8px;
-    border-radius: 10px;
-    border: 1px solid var(--blood-red);
-}
+/* .action-pp définie dans section action-list ci-dessous */
 
 /* Boutons désactivés (plus de PP) */
 .action-btn.disabled,

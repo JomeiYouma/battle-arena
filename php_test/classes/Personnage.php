@@ -1,12 +1,7 @@
 <?php
 /**
- * =============================================================================
- * CLASSE PERSONNAGE - Classe de base pour tous les personnages
- * =============================================================================
- * 
- * Système de buffs temporaires, effets de statut (POO), et PP (Power Points)
- * 
- * =============================================================================
+ * Classe abstraite de base pour tous les personnages
+ * Gère les PV, stats, buffs, effets et PP
  */
 
 require_once __DIR__ . '/StatusEffect.php';
@@ -281,9 +276,7 @@ abstract class Personnage {
         return $desc;
     }
 
-    // ==========================================================================
-    // SYSTÈME DE BUFFS TEMPORAIRES
-    // ==========================================================================
+    // --- BUFFS TEMPORAIRES ---
 
     /**
      * Ajoute un buff temporaire (ex: +10 ATK pendant 2 tours)
@@ -336,9 +329,7 @@ abstract class Personnage {
         return $this->activeBuffs;
     }
 
-    // ==========================================================================
-    // NOUVEAU SYSTÈME D'EFFETS DE STATUT (POO)
-    // ==========================================================================
+    // --- EFFETS DE STATUT ---
 
     /**
      * Ajoute un effet de statut au personnage
@@ -506,9 +497,7 @@ abstract class Personnage {
         return max(1, $base + rand(-$variance, $variance));
     }
 
-    // ==========================================================================
-    // SYSTÈME DE PP (Power Points)
-    // ==========================================================================
+    // --- PP (Power Points) ---
 
     /**
      * Retourne tous les PP

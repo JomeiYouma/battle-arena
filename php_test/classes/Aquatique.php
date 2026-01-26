@@ -12,7 +12,7 @@ class Aquatique extends Personnage {
             'attack' => [
                 'label' => 'Jet d\'eau',
                 'emoji' => '💧',
-                'description' => 'Projette un jet d\'eau puissant',
+                'description' => 'Attaque de base (ignore 3 DEF)',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
@@ -27,7 +27,7 @@ class Aquatique extends Personnage {
             'heal' => [
                 'label' => 'Régénération',
                 'emoji' => '🌊',
-                'description' => 'Se régénère, +12-18 PV',
+                'description' => '+12-18 PV',
                 'method' => 'heal',
                 'needsTarget' => false,
                 'pp' => 4

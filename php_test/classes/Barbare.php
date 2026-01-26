@@ -22,7 +22,7 @@ class Barbare extends Personnage {
             'attack' => [
                 'label' => 'Coup de hache',
                 'emoji' => '🪓',
-                'description' => '+15 dégâts si PV < 30% (Berserk)',
+                'description' => 'Attaque de base (+15 si PV < 30%)',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
@@ -37,7 +37,7 @@ class Barbare extends Personnage {
             'heal' => [
                 'label' => 'Dévorer',
                 'emoji' => '🍖',
-                'description' => 'Mange de la viande, +18-22 PV',
+                'description' => '+18-22 PV',
                 'method' => 'heal',
                 'needsTarget' => false,
                 'pp' => 3

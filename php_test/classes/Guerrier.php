@@ -15,9 +15,9 @@ class Guerrier extends Personnage {
     public function getAvailableActions(): array {
         return [
             'attack' => [
-                'label' => 'Attaquer',
+                'label' => 'Tranche',
                 'emoji' => '⚔️',
-                'description' => 'Frappe puissante au corps à corps',
+                'description' => 'Attaque de base au corps à corps',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
@@ -30,7 +30,7 @@ class Guerrier extends Personnage {
                 'pp' => 3
             ],
             'shield' => [
-                'label' => 'Bloquer',
+                'label' => 'Levée de bouclier',
                 'emoji' => '🛡️',
                 'description' => '+' . $this->shieldBonus . ' DEF pendant 2 tours',
                 'method' => 'shield',

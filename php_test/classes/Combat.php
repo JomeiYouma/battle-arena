@@ -1,21 +1,9 @@
 <?php
 /**
- * =============================================================================
- * COMBAT - Système de combat tour par tour avec phases structurées
- * =============================================================================
+ * Combat - Système de combat tour par tour
  * 
- * SÉQUENCE DE TOUR (7 phases) :
- * 1. Déterminer qui est le plus rapide
- * 2. Résoudre dégâts effets → Plus Rapide
- * 3. Résoudre dégâts effets → Plus Lent
- * 4. Résoudre effets stats → Plus Rapide
- * 5. Résoudre effets stats → Plus Lent
- * 6. Action choisie → Plus Rapide
- * 7. Action choisie → Plus Lent
- * 
- * Vérification de mort à chaque phase.
- * 
- * =============================================================================
+ * Séquence: Effets dégâts → Effets stats → Action rapide → Action lent
+ * Vérifie la mort à chaque phase
  */
 
 class Combat {

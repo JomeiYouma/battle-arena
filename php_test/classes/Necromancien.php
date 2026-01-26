@@ -24,14 +24,14 @@ class Necromancien extends Personnage {
         return [
             'attack' => [
                 'label' => 'Attaque Sombre',
-                'description' => 'Inflige des dégâts basés sur l\'ATK et ignore 50% de la DEF',
+                'description' => 'Attaque de base (ignore 50% DEF)',
                 'method' => 'attack',
                 'needsTarget' => true,
                 'emoji' => '🌑'
             ],
             'ordre_necrotique' => [
                 'label' => 'Ordre Nécrotique',
-                'description' => 'Force l\'ennemi à utiliser une de ses capacités contre lui-même',
+                'description' => 'Ennemi utilise une de ses attaques sur lui-même',
                 'pp' => 3,
                 'method' => 'ordreNecrotique',
                 'needsTarget' => true,
@@ -39,7 +39,7 @@ class Necromancien extends Personnage {
             ],
             'chaines_rituel' => [
                 'label' => 'Chaînes du Rituel',
-                'description' => 'Inflige 25% de la vie restante de chaque personnage à l\'autre',
+                'description' => 'Echange 25% PV restants entre combattants',
                 'pp' => 1,
                 'method' => 'chainesRituel',
                 'needsTarget' => true,
@@ -47,7 +47,7 @@ class Necromancien extends Personnage {
             ],
             'malediction' => [
                 'label' => 'Malédiction',
-                'description' => 'Inflige 5% de la vie max de l\'ennemi pendant 5 tours',
+                'description' => '5% PV max/tour (5 tours)',
                 'pp' => 2,
                 'method' => 'malediction',
                 'needsTarget' => true,
@@ -55,7 +55,7 @@ class Necromancien extends Personnage {
             ],
             'manipulation_ame' => [
                 'label' => 'Manipulation de l\'Âme',
-                'description' => 'Échange ATK et DEF de l\'adversaire pendant 2 tours',
+                'description' => 'Echange ATK/DEF ennemi (2 tours)',
                 'pp' => 2,
                 'method' => 'manipulationAme',
                 'needsTarget' => true,

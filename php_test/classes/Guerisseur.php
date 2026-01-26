@@ -15,16 +15,16 @@ class Guerisseur extends Personnage {
     public function getAvailableActions(): array {
         return [
             'attack' => [
-                'label' => 'Attaquer',
+                'label' => 'Rayon psychique',
                 'emoji' => '✨',
-                'description' => 'Frappe au bâton sacré',
+                'description' => 'Attaque de base à distance',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
             'heal' => [
                 'label' => 'Soigner',
                 'emoji' => '💚',
-                'description' => 'Restaure 22-28 PV',
+                'description' => '+22-28 PV',
                 'method' => 'heal',
                 'needsTarget' => false,
                 'pp' => 5
@@ -40,7 +40,7 @@ class Guerisseur extends Personnage {
             'smite' => [
                 'label' => 'Châtiment',
                 'emoji' => '⚡',
-                'description' => 'Ignore la défense adverse !',
+                'description' => 'Ignore DEF adverse',
                 'method' => 'smite',
                 'needsTarget' => true,
                 'pp' => 2

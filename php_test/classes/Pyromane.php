@@ -16,7 +16,7 @@ class Pyromane extends Personnage {
             'attack' => [
                 'label' => 'Boule de feu',
                 'emoji' => '🔥',
-                'description' => 'Lance du feu (ignore 3 DEF)',
+                'description' => 'Attaque de base (ignore 3 DEF)',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
@@ -31,7 +31,7 @@ class Pyromane extends Personnage {
             'flamearrow' => [
                 'label' => 'Flèche enflammée',
                 'emoji' => '🏹',
-                'description' => 'Brûle l\'ennemi 3 tours après impact',
+                'description' => 'Brulûre différée (3 tours)',
                 'method' => 'flameArrow',
                 'needsTarget' => true,
                 'pp' => 2
@@ -39,7 +39,7 @@ class Pyromane extends Personnage {
             'heal' => [
                 'label' => 'Chaleur vitale',
                 'emoji' => '❤️‍🔥',
-                'description' => 'Absorbe la chaleur, +12-18 PV',
+                'description' => '+12-18 PV',
                 'method' => 'heal',
                 'needsTarget' => false,
                 'pp' => 3
