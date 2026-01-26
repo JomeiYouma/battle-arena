@@ -27,8 +27,36 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// --- RESET ---
+// --- ABANDON ---
 if (isset($_POST['abandon_multi'])) {
+    $matchId = $_GET['match_id'] ?? $_SESSION['matchId'] ?? null;
+    
+    if ($matchId) {
+        $matchFile = __DIR__ . '/data/matches/' . $matchId . '.json';
+        if (file_exists($matchFile)) {
+            $fp = fopen($matchFile, 'r+');
+            if (flock($fp, LOCK_EX)) {
+                $metaData = json_decode(stream_get_contents($fp), true);
+                if ($metaData) {
+                    $sessionId = session_id();
+                    $isP1 = ($metaData['player1']['session'] === $sessionId);
+                    $winnerKey = $isP1 ? 'player2' : 'player1';
+                    $loserName = $isP1 ? ($metaData['player1']['display_name'] ?? 'Joueur 1') : ($metaData['player2']['display_name'] ?? 'Joueur 2');
+                    
+                    $metaData['status'] = 'finished';
+                    $metaData['winner'] = $winnerKey;
+                    $metaData['logs'][] = "🏳️ " . $loserName . " a abandonné !";
+                    
+                    ftruncate($fp, 0);
+                    rewind($fp);
+                    fwrite($fp, json_encode($metaData, JSON_PRETTY_PRINT));
+                }
+                flock($fp, LOCK_UN);
+            }
+            fclose($fp);
+        }
+    }
+    
     session_unset();
     session_destroy();
     header("Location: index.php");
@@ -103,6 +131,11 @@ try {
 
 <link rel="stylesheet" href="./style.css">
 
+<h1 style="margin-bottom: 5px;">Horus Battle Arena</h1>
+<div style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #0a0a15 100%); padding: 8px 25px; border-radius: 20px; border: 2px solid #b8860b; margin-bottom: 15px;">
+    <span style="color: #ffd700; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; font-size: 12px;">⚔️ Multijoueur ⚔️</span>
+</div>
+
 <div class="game-container">
     <div class="arena">
         <div class="turn-indicator" id="turnIndicator">Tour <?php echo $gameState['turn']; ?></div>
@@ -130,15 +163,15 @@ try {
         
         <!-- ZONE DE COMBAT -->
         <div class="fighters-area">
-            <div class="fighter hero" id="heroFighter">
+            <div class="fighter hero" id="myFighter" style="position: relative;">
                 <img src="<?php echo $gameState['me']['img']; ?>" alt="Hero">
-                <div id="heroEmojiContainer"></div>
+                <div id="myEmojiContainer"></div>
                 <div class="effects-container hero-effects" id="myEffects"></div>
             </div>
 
             <div class="vs-indicator">VS</div>
 
-            <div class="fighter enemy" id="enemyFighter">
+            <div class="fighter enemy" id="oppFighter" style="position: relative;">
                 <img src="<?php echo $gameState['opponent']['img']; ?>" alt="Opponent" class="enemy-img">
                 <div id="oppEmojiContainer"></div>
                 <div class="effects-container enemy-effects" id="oppEffects"></div>
@@ -175,10 +208,153 @@ try {
 <script>
 const MATCH_ID = '<?php echo addslashes($matchId); ?>';
 const INITIAL_STATE = <?php echo json_encode($gameState); ?>;
+const IS_P1 = <?php echo $isP1 ? 'true' : 'false'; ?>; // True if I am player1 in the match
 
 let pollInterval = null;
 let lastLogCount = <?php echo count($gameState['logs']); ?>;
 let currentGameState = INITIAL_STATE;
+let lastTurnProcessed = <?php echo $gameState['turn'] ?? 1; ?>;
+let isPlayingAnimations = false;
+
+// ============ ANIMATION SYSTEM ============
+
+async function playTurnAnimations(turnActions) {
+    if (!turnActions || turnActions.length === 0 || isPlayingAnimations) return;
+    
+    isPlayingAnimations = true;
+    console.log('Playing turn animations:', turnActions);
+    
+    for (const action of turnActions) {
+        await playAction(action);
+    }
+    
+    isPlayingAnimations = false;
+}
+
+function playAction(action) {
+    return new Promise(resolve => {
+        // In Combat.php: 'player' = P1, 'enemy' = P2
+        // If I'm P1, 'player' actions are mine. If I'm P2, 'player' actions are opponent's.
+        const actorIsP1 = action.actor === 'player';
+        const isMe = (actorIsP1 === IS_P1); // True if this action is from my perspective
+        
+        const emoji = action.emoji || '⚔️';
+        const actionName = action.label || 'Effet';
+        const phase = action.phase || 'action';
+        
+        // Get containers
+        const myContainer = document.getElementById('myEmojiContainer');
+        const oppContainer = document.getElementById('oppEmojiContainer');
+        const myFighter = document.getElementById('myFighter');
+        const oppFighter = document.getElementById('oppFighter');
+        
+        // Determine which side based on perspective
+        const actorContainer = isMe ? myContainer : oppContainer;
+        const targetContainer = isMe ? oppContainer : myContainer;
+        const actorFighter = isMe ? myFighter : oppFighter;
+        
+        // --- DEATH ANIMATION ---
+        if (action.isDeath || phase === 'death') {
+            const deathElement = document.createElement('div');
+            deathElement.className = 'action-name-display death-label';
+            deathElement.textContent = '💀 K.O.';
+            if (actorContainer) actorContainer.appendChild(deathElement);
+            
+            if (actorFighter) {
+                actorFighter.classList.add('fighter-dead');
+            }
+            
+            setTimeout(() => {
+                if (actorContainer && actorContainer.contains(deathElement)) {
+                    actorContainer.removeChild(deathElement);
+                }
+                resolve();
+            }, 2000);
+            return;
+        }
+        
+        // --- STANDARD ACTION ---
+        // 1. Show action name (on actor's emoji container)
+        const nameElement = document.createElement('div');
+        nameElement.className = 'action-name-display';
+        nameElement.textContent = actionName;
+        if (actorContainer) actorContainer.appendChild(nameElement);
+        
+        // 2. Determine where to show emoji
+        let emojiContainer = null;
+        let cssClass = 'action-emoji';
+        
+        if (phase === 'damage_effect' || phase === 'stat_effect') {
+            emojiContainer = actorContainer;
+            cssClass += ' on-self';
+        } else {
+            if (action.needsTarget !== false) {
+                emojiContainer = targetContainer;
+                cssClass += ' on-target';
+            } else {
+                emojiContainer = actorContainer;
+                cssClass += ' on-self';
+            }
+        }
+        
+        const emojiElement = document.createElement('div');
+        emojiElement.className = cssClass;
+        emojiElement.textContent = emoji;
+        if (emojiContainer) emojiContainer.appendChild(emojiElement);
+        
+        // 3. Update stats after delay
+        setTimeout(() => {
+            if (action.statesAfter) {
+                updateStatsFromAction(action.statesAfter);
+            }
+        }, 750);
+        
+        // 4. Clean up
+        setTimeout(() => {
+            if (actorContainer && actorContainer.contains(nameElement)) {
+                actorContainer.removeChild(nameElement);
+            }
+            if (emojiContainer && emojiContainer.contains(emojiElement)) {
+                emojiContainer.removeChild(emojiElement);
+            }
+            resolve();
+        }, 1500);
+    });
+}
+
+function updateStatsFromAction(states) {
+    // In Combat.php: 'player' = P1, 'enemy' = P2
+    // For P1: player -> my stats, enemy -> opponent stats
+    // For P2: player -> opponent stats, enemy -> my stats
+    
+    const myKey = IS_P1 ? 'player' : 'enemy';
+    const oppKey = IS_P1 ? 'enemy' : 'player';
+    
+    if (states[myKey]) {
+        const bar = document.getElementById('myPvBar');
+        const stats = document.getElementById('myStats');
+        if (bar) bar.style.width = (states[myKey].pv / states[myKey].basePv * 100) + '%';
+        if (stats) stats.innerText = Math.round(states[myKey].pv) + " / " + states[myKey].basePv + " | ATK: " + states[myKey].atk + " | DEF: " + states[myKey].def;
+    }
+    if (states[oppKey]) {
+        const bar = document.getElementById('oppPvBar');
+        const stats = document.getElementById('oppStats');
+        if (bar) bar.style.width = (states[oppKey].pv / states[oppKey].basePv * 100) + '%';
+        if (stats) stats.innerText = Math.round(states[oppKey].pv) + " / " + states[oppKey].basePv + " | ATK: " + states[oppKey].atk + " | DEF: " + states[oppKey].def;
+    }
+}
+
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes emojiPop {
+        0% { transform: scale(0.5); opacity: 1; }
+        50% { transform: scale(1.3); }
+        100% { transform: scale(1); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
 
 function updateCombatState() {
     fetch('api.php?action=poll_status&match_id=' + MATCH_ID, {
@@ -215,21 +391,31 @@ function updateCombatState() {
 
             currentGameState = data;
 
+            // Check if new turn - play animations
+            const hasNewAnimations = data.turn > lastTurnProcessed && data.turnActions && data.turnActions.length > 0;
+            if (hasNewAnimations) {
+                console.log('New turn detected! Playing animations for turn', data.turn);
+                lastTurnProcessed = data.turn;
+                // Don't update stats here - animations will handle it
+                playTurnAnimations(data.turnActions);
+            }
+
             // Update UI
             document.getElementById('turnIndicator').innerText = "Tour " + data.turn;
             
-            // Player stats
-            document.getElementById('myName').innerText = data.me.name;
-            document.getElementById('myType').innerText = data.me.type;
-            document.getElementById('myStats').innerText = Math.round(data.me.pv) + " / " + data.me.max_pv + " | ATK: " + data.me.atk + " | DEF: " + data.me.def;
-            document.getElementById('myPvBar').style.width = (data.me.pv / data.me.max_pv * 100) + "%";
-            
-            // Opponent stats
-            document.getElementById('oppName').innerText = data.opponent.name;
-            document.getElementById('oppType').innerText = data.opponent.type;
-            document.getElementById('oppStats').innerText = Math.round(data.opponent.pv) + " / " + data.opponent.max_pv + " | ATK: " + data.opponent.atk + " | DEF: " + data.opponent.def;
-            document.getElementById('oppPvBar').style.width = (data.opponent.pv / data.opponent.max_pv * 100) + "%";
-            
+            // Player stats - only update directly if no animations playing
+            if (!hasNewAnimations) {
+                document.getElementById('myName').innerText = data.me.name;
+                document.getElementById('myType').innerText = data.me.type;
+                document.getElementById('myStats').innerText = Math.round(data.me.pv) + " / " + data.me.max_pv + " | ATK: " + data.me.atk + " | DEF: " + data.me.def;
+                document.getElementById('myPvBar').style.width = (data.me.pv / data.me.max_pv * 100) + "%";
+                
+                // Opponent stats
+                document.getElementById('oppName').innerText = data.opponent.name;
+                document.getElementById('oppType').innerText = data.opponent.type;
+                document.getElementById('oppStats').innerText = Math.round(data.opponent.pv) + " / " + data.opponent.max_pv + " | ATK: " + data.opponent.atk + " | DEF: " + data.opponent.def;
+                document.getElementById('oppPvBar').style.width = (data.opponent.pv / data.opponent.max_pv * 100) + "%";
+            }            
             // Logs
             const logBox = document.getElementById('battleLog');
             if (data.logs && data.logs.length > lastLogCount) {
@@ -253,6 +439,15 @@ function updateCombatState() {
             if (errorMsg) {
                 errorMsg.style.display = 'none';
             }
+            
+            // DEBUG: Log action data
+            console.log('Poll response:', {
+                waiting_for_me: data.waiting_for_me,
+                waiting_for_opponent: data.waiting_for_opponent,
+                actions: data.actions,
+                actionsCount: data.actions ? Object.keys(data.actions).length : 0,
+                isOver: data.isOver
+            });
             
             // Generate buttons from available actions
             if (data.actions && data.waiting_for_me && !data.isOver) {
@@ -285,7 +480,11 @@ function updateCombatState() {
                 
                 const gameOverText = document.getElementById('gameOverText');
                 if (data.winner === 'you') {
-                    gameOverText.innerText = '🎉 VICTOIRE ! 🎉';
+                    if (data.forfeit) {
+                        gameOverText.innerText = '⚠️ VICTOIRE PAR FORFAIT ! ⚠️';
+                    } else {
+                        gameOverText.innerText = '🎉 VICTOIRE ! 🎉';
+                    }
                     gameOverText.className = 'victory-text';
                 } else {
                     gameOverText.innerText = '💀 DÉFAITE... 💀';
@@ -331,13 +530,27 @@ function sendAction(action) {
     waitMsg.style.display = 'block';
     waitMsg.innerText = 'Envoi de l\'action...';
     
+    console.log('Sending action:', action, 'for match:', MATCH_ID);
+    
     fetch('api.php?action=submit_move', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'match_id=' + MATCH_ID + '&move=' + action
     })
-        .then(r => r.json())
+        .then(r => {
+            console.log('Response status:', r.status);
+            return r.text(); // Get raw text first
+        })
+        .then(text => {
+            console.log('Raw response:', text);
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('JSON parse failed, raw response:', text);
+                throw new Error('Réponse invalide: ' + text.substring(0, 100));
+            }
+        })
         .then(data => {
             if (!data) {
                 showErrorMessage('Erreur: réponse vide du serveur');
@@ -356,7 +569,7 @@ function sendAction(action) {
         })
         .catch(err => {
             console.error('Action error:', err);
-            showErrorMessage('Erreur: Impossible d\'envoyer l\'action');
+            showErrorMessage('Erreur: ' + err.message);
             btnContainer.style.display = 'flex';
             waitMsg.style.display = 'none';
         });

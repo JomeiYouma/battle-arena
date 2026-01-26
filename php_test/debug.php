@@ -2,11 +2,11 @@
 /**
  * DEBUG PAGE - Affiche l'état des sessions, queue et matchs
  * Utile pour débugger le mode multijoueur
+ * PROTÉGÉ PAR MOT DE PASSE
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/auth_helper.php';
+requireDebugAuth();
 
 // Action: Clear All
 if (isset($_POST['clear_all'])) {

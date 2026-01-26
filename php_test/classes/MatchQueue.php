@@ -26,8 +26,9 @@ class MatchQueue {
     /**
      * Ajoute un joueur à la queue ou trouve un match existant
      */
-    public function findMatch($sessionId, $heroData) {
-        error_log("MatchQueue::findMatch - Called with sessionId=$sessionId, heroName=" . ($heroData['name'] ?? 'UNKNOWN'));
+    public function findMatch($sessionId, $heroData, $displayName = null) {
+        $displayName = $displayName ?? $heroData['name'];
+        error_log("MatchQueue::findMatch - Called with sessionId=$sessionId, heroName=" . ($heroData['name'] ?? 'UNKNOWN') . ", displayName=$displayName");
         $fp = fopen($this->queueFile, 'r+');
         if (flock($fp, LOCK_EX)) { // Verrouillage exclusif
             $content = stream_get_contents($fp);
@@ -82,21 +83,26 @@ class MatchQueue {
                     'id' => $matchId,
                     'created_at' => $now,
                     'status' => 'active',
+                    'mode' => 'pvp',  // Vrai PvP
                     'turn' => 1,
                     'player1' => [
                         'session' => $opponent['sessionId'],
                         'hero' => $opponent['heroData'],
-                        'hp' => $opponent['heroData']['pv'], // Initial HP
-                        'max_hp' => $opponent['heroData']['pv']
+                        'display_name' => $opponent['displayName'] ?? $opponent['heroData']['name'],
+                        'hp' => $opponent['heroData']['pv'],
+                        'max_hp' => $opponent['heroData']['pv'],
+                        'last_poll' => $now
                     ],
                     'player2' => [
                         'session' => $sessionId,
                         'hero' => $heroData,
+                        'display_name' => $displayName,
                         'hp' => $heroData['pv'],
-                        'max_hp' => $heroData['pv']
+                        'max_hp' => $heroData['pv'],
+                        'last_poll' => $now
                     ],
                     'logs' => ["Le combat commence !"],
-                    'current_player' => (rand(0, 1) === 0) ? $opponent['sessionId'] : $sessionId, // Premier joueur aléatoire
+                    'current_turn_actions' => [],
                     'last_update' => $now
                 ];
 
@@ -110,6 +116,7 @@ class MatchQueue {
                     $queue[] = [
                         'sessionId' => $sessionId,
                         'heroData' => $heroData,
+                        'displayName' => $displayName,
                         'timestamp' => $now
                     ];
                 }
@@ -187,18 +194,20 @@ class MatchQueue {
                         'player1' => [
                             'session' => $sessionId,
                             'hero' => $heroData,
+                            'display_name' => $item['displayName'] ?? $heroData['name'],
                             'hp' => $heroData['pv'],
-                            'max_hp' => $heroData['pv']
+                            'max_hp' => $heroData['pv'],
+                            'last_poll' => $now
                         ],
                         'player2' => [
                             'session' => 'bot_' . uniqid(),
                             'hero' => $enemyData,
+                            'display_name' => $enemyData['name'] . ' (Bot)',
                             'hp' => $enemyData['pv'],
                             'max_hp' => $enemyData['pv'],
                             'is_bot' => true
                         ],
                         'logs' => ["Le bot arrive en renfort !"],
-                        'current_player' => (rand(0, 1) === 0) ? $sessionId : 'bot',
                         'last_update' => $now,
                         'current_turn_actions' => []
                     ];

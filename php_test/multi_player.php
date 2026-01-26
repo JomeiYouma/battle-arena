@@ -354,6 +354,7 @@ $heros = json_decode(file_get_contents('heros.json'), true);
             
             <div class="queue-countdown" id="countdown">30</div>
             <div class="queue-countdown-label">secondes restantes</div>
+            <div id="queueInfo" style="margin-top: 15px; font-size: 14px; color: #b8860b;">Connexion...</div>
         </div>
         
         <p class="queue-message">
@@ -366,18 +367,14 @@ $heros = json_decode(file_get_contents('heros.json'), true);
         </button>
     </div>
     
-    <!-- Formulaire caché pour soumettre vers index.php -->
-    <form id="startCombatForm" method="POST" action="index.php" style="display: none;">
-        <input type="hidden" name="mode" value="single">
-        <input type="hidden" name="hero_choice" id="hiddenHeroChoice" value="">
-        <input type="hidden" name="display_name" id="hiddenDisplayName" value="">
-    </form>
 </div>
 
 <script>
 let selectedHeroId = null;
+let queuePollInterval = null;
 let countdownInterval = null;
 let remainingTime = 30;
+let isInQueue = false;
 
 function selectHero(heroId, heroName, heroImg, heroType) {
     selectedHeroId = heroId;
@@ -385,10 +382,6 @@ function selectHero(heroId, heroName, heroImg, heroType) {
     // Récupérer le display name
     const displayNameInput = document.getElementById('displayName');
     const displayName = displayNameInput.value.trim() || heroName;
-    
-    // Mettre à jour le formulaire caché
-    document.getElementById('hiddenHeroChoice').value = heroId;
-    document.getElementById('hiddenDisplayName').value = displayName;
     
     // Afficher l'aperçu du héros avec le display name
     document.getElementById('previewImg').src = heroImg;
@@ -399,25 +392,114 @@ function selectHero(heroId, heroName, heroImg, heroType) {
     document.getElementById('selectionScreen').classList.add('hidden');
     document.getElementById('queueScreen').classList.add('active');
     
-    // Démarrer le compte à rebours
+    // Démarrer le compte à rebours visuel
     remainingTime = 30;
     document.getElementById('countdown').textContent = remainingTime;
     
     countdownInterval = setInterval(() => {
         remainingTime--;
-        document.getElementById('countdown').textContent = remainingTime;
-        
-        if (remainingTime <= 0) {
-            clearInterval(countdownInterval);
-            // Soumettre le formulaire
-            document.getElementById('startCombatForm').submit();
-        }
+        document.getElementById('countdown').textContent = Math.max(0, remainingTime);
     }, 1000);
+    
+    // Rejoindre la queue via API
+    joinQueue(heroId, displayName);
+}
+
+function joinQueue(heroId, displayName) {
+    fetch('api.php?action=join_queue', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'hero_id=' + encodeURIComponent(heroId) + '&display_name=' + encodeURIComponent(displayName)
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'matched') {
+            // Match trouvé immédiatement !
+            goToMatch(data.matchId);
+        } else if (data.status === 'waiting') {
+            // En attente, commencer le polling
+            isInQueue = true;
+            updateQueueInfo(data.queue_count || 0);
+            queuePollInterval = setInterval(pollQueueStatus, 2000);
+        } else if (data.status === 'error') {
+            console.error('Join queue error:', data.message);
+            showQueueError(data.message);
+        }
+    })
+    .catch(err => {
+        console.error('Join queue failed:', err);
+        showQueueError('Erreur de connexion au serveur');
+    });
+}
+
+function pollQueueStatus() {
+    fetch('api.php?action=poll_queue', {
+        credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'matched' || data.status === 'timeout') {
+            // Match trouvé (PvP ou bot après timeout)
+            goToMatch(data.matchId);
+        } else if (data.status === 'waiting') {
+            updateQueueInfo(data.queue_count || 0);
+        } else if (data.status === 'error') {
+            console.error('Poll error:', data.message);
+        }
+    })
+    .catch(err => {
+        console.error('Poll failed:', err);
+    });
+}
+
+function goToMatch(matchId) {
+    // Arrêter les intervals
+    if (queuePollInterval) clearInterval(queuePollInterval);
+    if (countdownInterval) clearInterval(countdownInterval);
+    
+    // Rediriger vers le combat
+    window.location.href = 'multiplayer.php?match_id=' + matchId;
+}
+
+function updateQueueInfo(count) {
+    const queueInfo = document.getElementById('queueInfo');
+    if (queueInfo) {
+        if (count > 0) {
+            queueInfo.textContent = count + ' joueur(s) en recherche';
+            queueInfo.style.color = '#4ade80';
+        } else {
+            queueInfo.textContent = 'Recherche en cours...';
+            queueInfo.style.color = '#b8860b';
+        }
+    }
+}
+
+function showQueueError(message) {
+    if (countdownInterval) clearInterval(countdownInterval);
+    if (queuePollInterval) clearInterval(queuePollInterval);
+    
+    const countdown = document.getElementById('countdown');
+    if (countdown) {
+        countdown.textContent = '!';
+        countdown.style.color = '#ff4444';
+    }
+    
+    alert('Erreur: ' + message);
+    cancelQueue();
 }
 
 function cancelQueue() {
-    if (countdownInterval) {
-        clearInterval(countdownInterval);
+    if (countdownInterval) clearInterval(countdownInterval);
+    if (queuePollInterval) clearInterval(queuePollInterval);
+    
+    // Informer le serveur qu'on quitte la queue
+    if (isInQueue) {
+        fetch('api.php?action=leave_queue', {
+            method: 'POST',
+            credentials: 'same-origin'
+        }).catch(() => {});
+        isInQueue = false;
     }
     
     // Retour à la sélection

@@ -212,7 +212,7 @@ class MultiCombat extends Combat {
             'logs' => $this->logs,
             'turnActions' => $this->turnActions, // Important pour anims
             'me' => [
-                'name' => $myChar->getName(),
+                'name' => $metaData[$isP1 ? 'player1' : 'player2']['display_name'] ?? $myChar->getName(),
                 'type' => $myChar->getType(),
                 'pv' => $myChar->getPv(),
                 'max_pv' => $myChar->getBasePv(),
@@ -223,7 +223,7 @@ class MultiCombat extends Combat {
                 'activeEffects' => $myEffects
             ],
             'opponent' => [
-                'name' => $oppChar->getName(),
+                'name' => $metaData[$isP1 ? 'player2' : 'player1']['display_name'] ?? $oppChar->getName(),
                 'type' => $oppChar->getType(),
                 'pv' => $oppChar->getPv(),
                 'max_pv' => $oppChar->getBasePv(),

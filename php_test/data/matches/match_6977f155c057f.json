@@ -1,0 +1,54 @@
+{
+    "id": "match_6977f155c057f",
+    "created_at": 1769468245,
+    "status": "active",
+    "mode": "pvp",
+    "turn": 11,
+    "player1": {
+        "session": "qsqus4n94561shnv3hrovpf5nd",
+        "hero": {
+            "id": "krimus",
+            "name": "Krimus l'Astucieux",
+            "type": "Guerisseur",
+            "pv": 110,
+            "atk": 12,
+            "def": 9,
+            "speed": 9,
+            "description": "Gu\u00e9risseur rus\u00e9, combine soins puissants et attaques sacr\u00e9es.",
+            "images": {
+                "p1": "media\/sat_skol.png",
+                "p2": "media\/sat_skol_2.png"
+            }
+        },
+        "display_name": "Krimus l'Astucieux",
+        "hp": 110,
+        "max_hp": 110,
+        "last_poll": 1769469038
+    },
+    "player2": {
+        "session": "q211m6btqf0jblcs3nn1bqtctg",
+        "hero": {
+            "id": "poissard",
+            "name": "Poissard le Poisson",
+            "type": "Aquatique",
+            "pv": 85,
+            "atk": 20,
+            "def": 6,
+            "speed": 15,
+            "description": "Insaisissable et fluide, esquive et contre-attaque avec des tsunamis.",
+            "images": {
+                "p1": "media\/fish_skol.png",
+                "p2": "media\/fish_skol_2.png"
+            }
+        },
+        "display_name": "Poissard le Poisson",
+        "hp": 85,
+        "max_hp": 85,
+        "last_poll": 1769469037
+    },
+    "logs": [
+        "Le combat commence !"
+    ],
+    "current_turn_actions": [],
+    "last_update": 1769469023
+}

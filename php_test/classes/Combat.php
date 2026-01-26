@@ -92,7 +92,7 @@ class Combat {
     /**
      * Retourne [premier, second] selon la vitesse
      */
-    private function getOrderedFighters(): array {
+    protected function getOrderedFighters(): array {
         if ($this->playerIsFaster()) {
             return [$this->player, $this->enemy];
         }
@@ -102,7 +102,7 @@ class Combat {
     /**
      * Vérifie si un personnage est mort et gère la fin de combat
      */
-    private function checkDeath(Personnage $character): bool {
+    protected function checkDeath(Personnage $character): bool {
         if ($character->isDead()) {
             $isPlayer = ($character === $this->player);
             $this->isFinished = true;
@@ -132,7 +132,7 @@ class Combat {
     /**
      * Phase de dégâts des effets pour un personnage
      */
-    private function resolveDamageEffectsFor(Personnage $character): void {
+    protected function resolveDamageEffectsFor(Personnage $character): void {
         $isPlayer = ($character === $this->player);
         $results = $character->resolveDamagePhase();
         
@@ -153,7 +153,7 @@ class Combat {
     /**
      * Phase de stats des effets pour un personnage
      */
-    private function resolveStatEffectsFor(Personnage $character): void {
+    protected function resolveStatEffectsFor(Personnage $character): void {
         $isPlayer = ($character === $this->player);
         $results = $character->resolveStatsPhase();
         
@@ -174,7 +174,7 @@ class Combat {
     /**
      * Décrémente les buffs d'un personnage
      */
-    private function processBuffsFor(Personnage $character): void {
+    protected function processBuffsFor(Personnage $character): void {
         $logs = $character->decrementBuffDurations();
         foreach ($logs as $log) {
             $this->logs[] = $log;

@@ -50,15 +50,21 @@ try {
             
             if (!$heroData) throw new Exception("Héros invalide");
             
+            // Récupérer le display_name
+            $displayName = isset($_POST['display_name']) && !empty(trim($_POST['display_name'])) 
+                ? trim($_POST['display_name']) 
+                : $heroData['name'];
+            
             // Store in session (including images for later use)
             $_SESSION['queueHeroId'] = $_POST['hero_id'];
             $_SESSION['queueStartTime'] = time();
             $_SESSION['queueHeroData'] = $heroData;
+            $_SESSION['queueDisplayName'] = $displayName;
             
-            error_log("API join_queue - sessionId=$sessionId, hero=" . $heroData['name']);
+            error_log("API join_queue - sessionId=$sessionId, hero=" . $heroData['name'] . ", displayName=$displayName");
             
             $queue = new MatchQueue();
-            $result = $queue->findMatch($sessionId, $heroData);
+            $result = $queue->findMatch($sessionId, $heroData, $displayName);
             
             error_log("API join_queue - result=" . json_encode($result));
             echo json_encode($result);
@@ -69,6 +75,13 @@ try {
             $queue = new MatchQueue();
             $result = $queue->checkMatchStatus($sessionId);
             echo json_encode($result);
+            break;
+        
+        // ===== LEAVE QUEUE =====
+        case 'leave_queue':
+            $queue = new MatchQueue();
+            $queue->removeFromQueue($sessionId);
+            echo json_encode(['status' => 'ok']);
             break;
         
         // ===== POLL COMBAT STATE =====
@@ -84,14 +97,17 @@ try {
                 throw new Exception("Match non trouvé: $matchFile");
             }
             
-            // Lire le fichier avec lock
-            $fp = fopen($matchFile, 'r');
-            flock($fp, LOCK_SH);
+            // LOCK EXCLUSIF pour mise à jour last_poll
+            $fp = fopen($matchFile, 'r+');
+            if (!flock($fp, LOCK_EX)) {
+                throw new Exception("Impossible de verrouiller le match");
+            }
+            
             $metaData = json_decode(stream_get_contents($fp), true);
-            flock($fp, LOCK_UN);
-            fclose($fp);
             
             if (!$metaData) {
+                flock($fp, LOCK_UN);
+                fclose($fp);
                 throw new Exception("Impossible de décoder le match JSON");
             }
             
@@ -99,6 +115,34 @@ try {
             $isP1 = ($metaData['player1']['session'] === $sessionId);
             $myRole = $isP1 ? 'p1' : 'p2';
             $oppRole = $isP1 ? 'p2' : 'p1';
+            $myPlayerKey = $isP1 ? 'player1' : 'player2';
+            $oppPlayerKey = $isP1 ? 'player2' : 'player1';
+            
+            // Mettre à jour mon last_poll
+            $now = time();
+            $metaData[$myPlayerKey]['last_poll'] = $now;
+            
+            // Vérifier si l'adversaire est AFK (60 secondes sans poll) - seulement en mode PvP
+            $AFK_TIMEOUT = 60;
+            $opponentAFK = false;
+            if (($metaData['mode'] ?? '') === 'pvp' && $metaData['status'] === 'active') {
+                $oppLastPoll = $metaData[$oppPlayerKey]['last_poll'] ?? $metaData['created_at'];
+                if (($now - $oppLastPoll) > $AFK_TIMEOUT) {
+                    // Adversaire AFK! Victoire par forfait
+                    $opponentAFK = true;
+                    $metaData['status'] = 'finished';
+                    $metaData['winner'] = $myPlayerKey;
+                    $metaData['logs'][] = "⚠️ " . ($metaData[$oppPlayerKey]['display_name'] ?? 'Adversaire') . " est AFK. Victoire par forfait!";
+                    error_log("AFK DETECTED: Player $oppPlayerKey AFK for " . ($now - $oppLastPoll) . "s. Winner: $myPlayerKey");
+                }
+            }
+            
+            // Sauvegarder les changements
+            ftruncate($fp, 0);
+            rewind($fp);
+            fwrite($fp, json_encode($metaData, JSON_PRETTY_PRINT));
+            flock($fp, LOCK_UN);
+            fclose($fp);
             
             // Charger état du combat
             $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
@@ -122,12 +166,33 @@ try {
                 $response = $multiCombat->getStateForUser($sessionId, $metaData);
                 $response['status'] = 'active';
                 $response['turn'] = $metaData['turn'] ?? 1;
-                $response['isOver'] = $multiCombat->isOver();
+                
+                // Gérer la fin de partie (combat ou forfait ou abandon)
+                $isOver = $multiCombat->isOver() || $metaData['status'] === 'finished';
+                $response['isOver'] = $isOver;
+                
+                // Déterminer le gagnant
+                if ($isOver) {
+                    // Abandon ou AFK victory - winner stocké dans metaData
+                    if (isset($metaData['winner'])) {
+                        $winnerKey = $metaData['winner'];
+                        $iAmWinner = ($winnerKey === $myPlayerKey);
+                        $response['winner'] = $iAmWinner ? 'you' : 'opponent';
+                        $response['forfeit'] = true;
+                    } else if ($opponentAFK) {
+                        $response['winner'] = 'you';
+                        $response['forfeit'] = true;
+                    }
+                    // Combat victory - from MultiCombat
+                    else if ($multiCombat->isOver()) {
+                        // Le winner est déjà dans response via getStateForUser
+                    }
+                }
                 
                 // Déterminer qui doit jouer
                 $actions = $metaData['current_turn_actions'] ?? [];
-                $response['waiting_for_me'] = !isset($actions[$myRole]);
-                $response['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && ($metaData['mode'] ?? '') !== 'bot';
+                $response['waiting_for_me'] = !isset($actions[$myRole]) && !$isOver;
+                $response['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && ($metaData['mode'] ?? '') !== 'bot' && !$isOver;
                 
                 echo json_encode($response);
             } catch (Exception $e) {
@@ -161,13 +226,25 @@ try {
                 throw new Exception("Impossible de décoder le match JSON");
             }
             
-            // Déterminer le rôle
+            // Déterminer le rôle - AVEC VALIDATION
             $isP1 = ($metaData['player1']['session'] === $sessionId);
+            $isP2 = ($metaData['player2']['session'] === $sessionId);
+            
+            // Debug log
+            error_log("submit_move - sessionId=$sessionId, p1_session=" . $metaData['player1']['session'] . ", p2_session=" . $metaData['player2']['session'] . ", isP1=$isP1, isP2=$isP2");
+            
+            if (!$isP1 && !$isP2) {
+                flock($fp, LOCK_UN);
+                fclose($fp);
+                throw new Exception("Vous n'êtes pas un joueur de ce match");
+            }
+            
             $myRole = $isP1 ? 'p1' : 'p2';
             $oppRole = $isP1 ? 'p2' : 'p1';
             
             // Enregistrer l'action
             $metaData['current_turn_actions'][$myRole] = $move;
+            error_log("submit_move - Recorded action: $myRole -> $move");
             
             // Si c'est un match bot et que c'est le joueur qui joue, générer action bot
             if (($metaData['mode'] ?? '') === 'bot' && $myRole === 'p1') {

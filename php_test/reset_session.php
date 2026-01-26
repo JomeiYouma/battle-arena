@@ -2,11 +2,11 @@
 /**
  * RESET SESSION - Nettoie la session et retire de la queue
  * Endpoint simple pour débloquer rapidement lors des tests
+ * PROTÉGÉ PAR MOT DE PASSE
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/auth_helper.php';
+requireDebugAuth();
 
 // Retirer de la queue si présent
 $sessionId = session_id();
