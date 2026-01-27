@@ -140,7 +140,7 @@ try {
         <!-- STATS -->
         <div class="stats-row">
             <div class="stats hero-stats">
-                <strong id="myName"><?php echo $gameState['me']['name']; ?></strong>
+                <strong id="myName"><?php echo htmlspecialchars($gameState['me']['name']); ?></strong>
                 <span class="type-badge" id="myType"><?php echo $gameState['me']['type']; ?></span>
                 <div class="stat-bar">
                     <div class="pv-bar" id="myPvBar" style="width: 100%;"></div>
@@ -149,7 +149,7 @@ try {
             </div>
             
             <div class="stats enemy-stats">
-                <strong id="oppName"><?php echo $gameState['opponent']['name']; ?></strong>
+                <strong id="oppName"><?php echo htmlspecialchars($gameState['opponent']['name']); ?></strong>
                 <span class="type-badge" id="oppType"><?php echo $gameState['opponent']['type']; ?></span>
                 <div class="stat-bar">
                     <div class="pv-bar enemy-pv" id="oppPvBar" style="width: 100%;"></div>

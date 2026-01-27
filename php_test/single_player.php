@@ -99,7 +99,7 @@ if (isset($_SESSION['combat'])):
     <!-- STATS -->
     <div class="stats-row">
         <div class="stats hero-stats">
-            <strong><?php echo $hero->getName(); ?></strong>
+            <strong><?php echo htmlspecialchars($hero->getName()); ?></strong>
             <span class="type-badge"><?php echo $hero->getType(); ?></span>
             <div class="stat-bar">
                 <div class="pv-bar" id="heroPvBar" style="width: 100%"></div>
@@ -108,7 +108,7 @@ if (isset($_SESSION['combat'])):
         </div>
         
         <div class="stats enemy-stats">
-            <strong><?php echo $enemy->getName(); ?></strong>
+            <strong><?php echo htmlspecialchars($enemy->getName()); ?></strong>
             <span class="type-badge"><?php echo $enemy->getType(); ?></span>
             <div class="stat-bar">
                 <div class="pv-bar enemy-pv" id="enemyPvBar" style="width: 100%"></div>
@@ -217,8 +217,8 @@ if (isset($_SESSION['combat'])):
     // Récupération des données depuis PHP
     const turnActions = <?php echo json_encode($combat->getTurnActions()); ?>;
     const initialStates = <?php echo json_encode($combat->getInitialStates()); ?>;
-    const heroName = <?php echo json_encode($hero->getName()); ?>;
-    const enemyName = <?php echo json_encode($enemy->getName()); ?>;
+    const heroName = <?php echo json_encode(htmlspecialchars($hero->getName())); ?>;
+    const enemyName = <?php echo json_encode(htmlspecialchars($enemy->getName())); ?>;
     
     // Fonctions de mise à jour de l'UI
     function updateStats(states, instant = false) {
@@ -251,6 +251,12 @@ if (isset($_SESSION['combat'])):
         if (enemyStats && states.enemy) {
             enemyStats.textContent = `${states.enemy.pv}/${states.enemy.basePv} PV | ${states.enemy.atk} ATK | ${states.enemy.def} DEF | ${states.enemy.speed} SPE`;
         }
+    }
+    
+    function triggerHitAnimation(fighterElement) {
+        if (!fighterElement) return;
+        fighterElement.classList.add('fighter-hit');
+        setTimeout(() => fighterElement.classList.remove('fighter-hit'), 400);
     }
     
     async function playTurnAnimations() {
@@ -368,6 +374,14 @@ if (isset($_SESSION['combat'])):
             emojiElement.textContent = emoji;
             
             if (emojiContainer) emojiContainer.appendChild(emojiElement);
+
+            // Trigger hit animation on target if action targets them
+            if (action.needsTarget !== false && phase === 'action') {
+                 const targetFighter = isPlayer 
+                    ? document.getElementById('enemyFighter') 
+                    : document.getElementById('heroFighter');
+                triggerHitAnimation(targetFighter);
+            }
 
             // 4. Mettre à jour les stats APRÈS l'animation (à mi-chemin)
             setTimeout(() => {

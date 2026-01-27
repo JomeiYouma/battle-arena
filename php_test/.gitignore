@@ -1,0 +1,12 @@
+# Ignore runtime data
+/data/matches/*
+!/data/matches/.gitkeep
+/data/queue.json
+
+# Ignore system files
+Thumbs.db
+.DS_Store
+
+# Ignore IDE files
+.vscode/
+.idea/
