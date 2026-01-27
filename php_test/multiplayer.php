@@ -57,8 +57,24 @@ if (isset($_POST['abandon_multi'])) {
         }
     }
     
-    session_unset();
-    session_destroy();
+    // Préserver les données de connexion
+    $userId = $_SESSION['user_id'] ?? null;
+    $username = $_SESSION['username'] ?? null;
+    
+    // Nettoyer les données de combat/match
+    unset($_SESSION['combat']);
+    unset($_SESSION['matchId']);
+    unset($_SESSION['queueHeroId']);
+    unset($_SESSION['queueStartTime']);
+    unset($_SESSION['queueHeroData']);
+    unset($_SESSION['queueDisplayName']);
+    
+    // Restaurer les données de connexion
+    if ($userId !== null) {
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['username'] = $username;
+    }
+    
     header("Location: index.php");
     exit;
 }
@@ -504,6 +520,27 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+// Update effect indicators (active effects displayed as emojis)
+function updateEffectIndicators(effects, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // Clear existing indicators
+    container.innerHTML = '';
+    
+    // If no effects, nothing to show
+    if (!effects || typeof effects !== 'object') return;
+    
+    // Add effect indicators
+    for (const [name, effect] of Object.entries(effects)) {
+        const indicator = document.createElement('div');
+        indicator.className = 'effect-indicator';
+        indicator.title = name;
+        indicator.textContent = effect.emoji || '✨';
+        container.appendChild(indicator);
+    }
+}
+
 
 function updateCombatState() {
     fetch('api.php?action=poll_status&match_id=' + MATCH_ID, {
@@ -553,7 +590,9 @@ function updateCombatState() {
             document.getElementById('turnIndicator').innerText = "Tour " + data.turn;
             
             // Player stats - only update directly if no animations playing
-            if (!hasNewAnimations) {
+            // IMPORTANT: Check both hasNewAnimations AND isPlayingAnimations to prevent
+            // polling from overwriting stats while animations are in progress
+            if (!hasNewAnimations && !isPlayingAnimations) {
                 document.getElementById('myName').innerText = data.me.name;
                 document.getElementById('myType').innerText = data.me.type;
                 document.getElementById('myStats').innerText = Math.round(data.me.pv) + " / " + data.me.max_pv + " | ATK: " + data.me.atk + " | DEF: " + data.me.def;
@@ -564,6 +603,10 @@ function updateCombatState() {
                 document.getElementById('oppType').innerText = data.opponent.type;
                 document.getElementById('oppStats').innerText = Math.round(data.opponent.pv) + " / " + data.opponent.max_pv + " | ATK: " + data.opponent.atk + " | DEF: " + data.opponent.def;
                 document.getElementById('oppPvBar').style.width = (data.opponent.pv / data.opponent.max_pv * 100) + "%";
+                
+                // Update effect indicators
+                updateEffectIndicators(data.me.activeEffects, 'myEffects');
+                updateEffectIndicators(data.opponent.activeEffects, 'oppEffects');
             }            
             // Logs
             const logBox = document.getElementById('battleLog');

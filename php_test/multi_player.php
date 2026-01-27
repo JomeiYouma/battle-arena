@@ -305,14 +305,24 @@ $heros = json_decode(file_get_contents('heros.json'), true);
         <p class="multi-subtitle">Sélectionnez un héros pour entrer dans l'arène multijoueur</p>
         
         <!-- CHAMP DISPLAY NAME -->
-        <div class="display-name-section">
-            <label for="displayName">👤 Votre nom de joueur</label>
-            <input type="text" 
-                   id="displayName" 
-                   class="display-name-input" 
-                   placeholder="Entrez votre pseudo..." 
-                   maxlength="20">
-        </div>
+        <?php if (User::isLoggedIn()): ?>
+            <div class="display-name-section" style="background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(184, 134, 11, 0.1)); border-color: #b8860b;">
+                <label style="margin-bottom: 12px;">👤 Vous jouez en tant que</label>
+                <div style="color: #ffd700; font-size: 20px; font-weight: bold; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);">
+                    <?php echo htmlspecialchars(User::getCurrentUsername()); ?>
+                </div>
+            </div>
+            <input type="hidden" id="displayName" value="<?php echo htmlspecialchars(User::getCurrentUsername()); ?>">
+        <?php else: ?>
+            <div class="display-name-section">
+                <label for="displayName">👤 Votre nom de joueur</label>
+                <input type="text" 
+                       id="displayName" 
+                       class="display-name-input" 
+                       placeholder="Entrez votre pseudo..." 
+                       maxlength="20">
+            </div>
+        <?php endif; ?>
         
         <div class="hero-select-grid">
             <?php foreach ($heros as $h): ?>
