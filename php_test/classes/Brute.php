@@ -13,14 +13,14 @@ class Brute extends Personnage {
             'attack' => [
                 'label' => 'Coup Écrasant',
                 'emoji' => '👊',
-                'description' => 'Frappe massive qui ignore 30% de la DEF',
+                'description' => 'Attaque de base, ignore 30% de la DEF',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
             'charge' => [
                 'label' => 'Charge Brutale',
                 'emoji' => '💀',
-                'description' => 'Charge dévastatrice : x1.5 dégâts, se blesse de 15 PV',
+                'description' => 'Inflige x1.5 ATK, perd 15 PV',
                 'method' => 'charge',
                 'needsTarget' => true,
                 'pp' => 2
@@ -28,7 +28,7 @@ class Brute extends Personnage {
             'stomp' => [
                 'label' => 'Piétinement',
                 'emoji' => '🦶',
-                'description' => 'Écrase l\'ennemi et réduit sa vitesse (-10) pendant 3 tours',
+                'description' => 'Réduit la vitesse de l\'adversaire de 10 pendant 3 tours',
                 'method' => 'stomp',
                 'needsTarget' => true,
                 'pp' => 2
@@ -49,7 +49,7 @@ class Brute extends Personnage {
             $actions['deathbomb'] = [
                 'label' => '💣 BOMBE FINALE',
                 'emoji' => '💣',
-                'description' => 'Prépare une explosion massive qui inflige 60% de ses PV max au tour suivant !',
+                'description' => 'Dans 1 tour : inflige 60% de ses PV max à votre adversaire !',
                 'method' => 'deathBomb',
                 'needsTarget' => true,
                 'pp' => 1

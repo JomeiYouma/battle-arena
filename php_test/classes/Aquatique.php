@@ -35,7 +35,7 @@ class Aquatique extends Personnage {
             'tsunami' => [
                 'label' => 'Tsunami',
                 'emoji' => '🌀',
-                'description' => 'Vague dévastatrice : x1.8 dégâts',
+                'description' => 'Inflige x1.8 atk',
                 'method' => 'tsunami',
                 'needsTarget' => true,
                 'pp' => 2

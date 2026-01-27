@@ -131,10 +131,7 @@ try {
 
 <link rel="stylesheet" href="./style.css">
 
-<h1 style="margin-bottom: 5px;">Horus Battle Arena</h1>
-<div style="display: inline-block; background: linear-gradient(135deg, #1a1a2e 0%, #0a0a15 100%); padding: 8px 25px; border-radius: 20px; border: 2px solid #b8860b; margin-bottom: 15px;">
-    <span style="color: #ffd700; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; font-size: 12px;">⚔️ Multijoueur ⚔️</span>
-</div>
+<h1 style="margin-bottom: 20px;">Horus Battle Arena</h1>
 
 <div class="game-container">
     <div class="arena">
@@ -187,14 +184,34 @@ try {
         
         <!-- CONTROLS -->
         <div class="controls">
-            <div id="actionButtons" class="action-list">
-                <!-- Actions générées dynamiquement par JS -->
+            <div class="controls-row">
+                <!-- LEFT: Action list -->
+                <div id="actionButtons" class="action-list">
+                    <!-- Actions générées dynamiquement par JS -->
+                </div>
+                
+                <!-- RIGHT: Info panel (timer + description) -->
+                <div id="infoPanel" class="info-panel" style="display:none;">
+                    <div id="actionTimer" class="action-timer-circle">
+                        <!-- SVG Ring -->
+                        <svg class="timer-svg" viewBox="0 0 70 70">
+                            <circle class="timer-circle-bg" cx="35" cy="35" r="32"></circle>
+                            <circle id="timerProgress" class="timer-circle-progress" cx="35" cy="35" r="32"></circle>
+                        </svg>
+                        <span id="timerValue">60</span>
+                    </div>
+                    <div id="actionDescription" class="action-description">
+                        Survolez une action pour voir sa description
+                    </div>
+                </div>
             </div>
+            
             <div id="waitingMessage" class="waiting-text" style="display:none; margin-top: 15px;">
                 En attente de l'adversaire...
             </div>
             <div id="gameOverMessage" style="display:none; text-align:center; margin-top: 30px;">
                 <h3 id="gameOverText"></h3>
+                <br>
                 <button class="action-btn new-game" onclick="location.href='index.php'">Menu Principal</button>
             </div>
             
@@ -215,6 +232,131 @@ let lastLogCount = <?php echo count($gameState['logs']); ?>;
 let currentGameState = INITIAL_STATE;
 let lastTurnProcessed = <?php echo $gameState['turn'] ?? 1; ?>;
 let isPlayingAnimations = false;
+
+// Timer system
+let actionTimer = null;
+let timeRemaining = 60;
+let isTimerRunning = false;
+const RANDOM_ACTION_THRESHOLD = 0; // Trigger random action when time reaches 0
+const FORFEIT_THRESHOLD = -65; // Trigger forfeit 65s after timeout (125s total)
+
+function startActionTimer() {
+    if (isTimerRunning) return; // Don't restart if already running
+    isTimerRunning = true;
+    timeRemaining = 60;
+    updateTimerDisplay();
+    document.getElementById('infoPanel').style.display = 'flex'; // Use flex for info panel
+    
+    actionTimer = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay();
+        
+        // Thresholds
+        if (timeRemaining === RANDOM_ACTION_THRESHOLD) {
+            playRandomAction();
+        }
+        if (timeRemaining <= FORFEIT_THRESHOLD) {
+            triggerForfeit();
+        }
+    }, 1000);
+}
+
+function stopActionTimer() {
+    if (actionTimer) {
+        clearInterval(actionTimer);
+        actionTimer = null;
+    }
+    isTimerRunning = false;
+    document.getElementById('infoPanel').style.display = 'none';
+}
+
+function updateTimerDisplay() {
+    const timerValue = document.getElementById('timerValue');
+    const timerContainer = document.getElementById('actionTimer');
+    const timerProgress = document.getElementById('timerProgress');
+    
+    // Display logic: show 0 if negative
+    const displayTime = Math.max(0, timeRemaining);
+    timerValue.textContent = displayTime;
+    
+    // SVG Progress Animation
+    // Circumference ~200 (2 * PI * 32)
+    const circumference = 200; 
+    const offset = circumference - (timeRemaining / 60) * circumference;
+    
+    // Clamp offset between 0 and 200
+    const clampedOffset = Math.max(0, Math.min(circumference, offset));
+    
+    if (timerProgress) {
+        timerProgress.style.strokeDashoffset = clampedOffset;
+    }
+    
+    if (timeRemaining <= 10) {
+        timerContainer.classList.add('timer-critical');
+    } else {
+        timerContainer.classList.remove('timer-critical');
+    }
+}
+
+// Logic to play a random action
+function playRandomAction() {
+    console.log("Time's up! Triggering random action...");
+    const availableButtons = document.querySelectorAll('.action-btn:not(.disabled)');
+    if (availableButtons.length > 0) {
+        const randomIndex = Math.floor(Math.random() * availableButtons.length);
+        availableButtons[randomIndex].click();
+    } else {
+        console.warn("No available actions for random selection.");
+    }
+}
+
+// Logic to trigger forfeit
+function triggerForfeit() {
+    console.log("AFK Limit reached! Triggering forfeit...");
+    stopActionTimer();
+    // Create and submit a form to abandon
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.style.display = 'none';
+    const input = document.createElement('input');
+    input.name = 'abandon_multi';
+    input.value = '1';
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+}
+
+// Hit animation on hero
+function triggerHitAnimation(fighterElement) {
+    if (!fighterElement) return;
+    fighterElement.classList.add('fighter-hit');
+    setTimeout(() => fighterElement.classList.remove('fighter-hit'), 400);
+}
+
+// Description handling for action buttons
+function setupActionTooltips() {
+    const descBox = document.getElementById('actionDescription');
+    const defaultText = "Survolez une action pour voir sa description";
+    const defaultColor = "#e0e0e0"; // Theme light text color
+    const highlightColor = "#ffd700"; // Theme gold accent
+    
+    // Reset style initially
+    descBox.style.color = defaultColor;
+    
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        btn.addEventListener('mouseenter', (e) => {
+            const desc = btn.getAttribute('data-description');
+            if (desc) {
+                descBox.textContent = desc;
+                descBox.style.color = highlightColor;
+            }
+        });
+        btn.addEventListener('mouseleave', () => {
+            descBox.textContent = defaultText;
+            descBox.style.color = defaultColor;
+        });
+    });
+}
 
 // ============ ANIMATION SYSTEM ============
 
@@ -301,6 +443,12 @@ function playAction(action) {
         emojiElement.className = cssClass;
         emojiElement.textContent = emoji;
         if (emojiContainer) emojiContainer.appendChild(emojiElement);
+        
+        // Trigger hit animation on target if action targets them
+        if (action.needsTarget !== false && phase === 'action') {
+            const targetFighter = isMe ? oppFighter : myFighter;
+            triggerHitAnimation(targetFighter);
+        }
         
         // 3. Update stats after delay
         setTimeout(() => {
@@ -456,11 +604,10 @@ function updateCombatState() {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = `action-btn ${key}${action.canUse ? '' : ' disabled'}`;
-                    button.title = action.description || '';
+                    button.setAttribute('data-description', action.description || '');
                     button.disabled = !action.canUse;
                     button.onclick = () => sendAction(key);
                     
-                    // Structure comme en single player
                     let buttonHTML = `<span class="action-emoji-icon">${action.emoji || '⚔️'}</span>`;
                     buttonHTML += `<span class="action-label">${action.label}</span>`;
                     if (action.ppText) {
@@ -470,10 +617,13 @@ function updateCombatState() {
                     button.innerHTML = buttonHTML;
                     btnContainer.appendChild(button);
                 }
+                setupActionTooltips();
+                startActionTimer();
             }
             
             if (data.isOver) {
                 clearInterval(pollInterval);
+                stopActionTimer();
                 btnContainer.style.display = 'none';
                 waitMsg.style.display = 'none';
                 gameOverMsg.style.display = 'block';
@@ -481,7 +631,7 @@ function updateCombatState() {
                 const gameOverText = document.getElementById('gameOverText');
                 if (data.winner === 'you') {
                     if (data.forfeit) {
-                        gameOverText.innerText = '⚠️ VICTOIRE PAR FORFAIT ! ⚠️';
+                        gameOverText.innerText = ' VICTOIRE PAR FORFAIT ! ';
                     } else {
                         gameOverText.innerText = '🎉 VICTOIRE ! 🎉';
                     }
@@ -526,6 +676,7 @@ function sendAction(action) {
     const btnContainer = document.getElementById('actionButtons');
     const waitMsg = document.getElementById('waitingMessage');
     
+    stopActionTimer();
     btnContainer.style.display = 'none';
     waitMsg.style.display = 'block';
     waitMsg.innerText = 'Envoi de l\'action...';

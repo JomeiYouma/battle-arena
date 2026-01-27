@@ -17,7 +17,7 @@ class Guerrier extends Personnage {
             'attack' => [
                 'label' => 'Tranche',
                 'emoji' => '⚔️',
-                'description' => 'Attaque de base au corps à corps',
+                'description' => 'Attaque de base',
                 'method' => 'attack',
                 'needsTarget' => true
             ],

@@ -111,9 +111,6 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
                     <a href="debug.php" class="menu-btn" style="background: #1a1a1a; border-color: #333; text-decoration: none;">
                         Debug
                     </a>
-                    <a href="reset_session.php" class="menu-btn" style="background: #1a1a1a; border-color: #333; text-decoration: none;">
-                        Reset
-                    </a>
                 </div>
             <?php endif; ?>
         </div>

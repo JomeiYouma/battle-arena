@@ -1655,6 +1655,219 @@ select option {
 }
 
 /* ==============================================
+   MULTIPLAYER - Custom Interface
+   ============================================== */
+
+/* Main split container */
+.controls-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    align-items: stretch; /* Aligner la hauteur */
+    margin-top: 20px;
+    height: 320px; /* Fixer une hauteur globale pour la zone de contrôles */
+}
+
+/* LEFT COLUMN: Action List */
+.action-list {
+    flex: 1; /* 50% width */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%; /* Fill container height */
+    overflow-y: auto; /* Scroll always available if needed */
+    padding-right: 10px;
+    
+    /* Custom Scrollbar Styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-red) var(--dungeon-gray);
+}
+
+.action-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.action-list::-webkit-scrollbar-track {
+    background: var(--dungeon-gray);
+}
+
+.action-list::-webkit-scrollbar-thumb {
+    background-color: var(--primary-red);
+    border-radius: 4px;
+}
+
+/* Buttons in list */
+.action-list .action-btn {
+    width: 100%;
+    margin: 0;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 3px solid #b71c1c; 
+    background: linear-gradient(90deg, #1a1a1a 0%, #2d2d2d 100%);
+    position: relative;
+    border-radius: 8px;
+    transition: all 0.2s;
+    min-height: 60px; /* Ensure buttons have good touch target */
+}
+
+.action-list .action-btn:hover {
+    background: linear-gradient(90deg, #2d2d2d 0%, #3e3e3e 100%);
+    border-color: #ff5252;
+    transform: translateX(5px);
+}
+
+.action-emoji-icon {
+    font-size: 1.5rem;
+    margin-right: 15px;
+    min-width: 30px;
+    text-align: center;
+}
+
+.action-label {
+    flex-grow: 1;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    text-transform: uppercase;
+}
+
+.action-pp {
+    font-size: 0.8rem;
+    color: #aaa;
+    background: rgba(0,0,0,0.5);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+/* RIGHT COLUMN: Info Panel */
+.info-panel {
+    flex: 1; /* 50% width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    height: 100%;
+}
+
+/* Circular Timer (Red/Gold Theme) */
+.action-timer-circle {
+    width: 70px; /* Smaller size */
+    height: 70px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* SVG Progress Ring */
+.timer-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.timer-circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.1);
+    stroke-width: 6;
+}
+
+.timer-circle-progress {
+    fill: none;
+    stroke: var(--primary-red);
+    stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 200; /* Approx 2*PI*R (R=32) */
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.3s;
+}
+
+/* Timer visual text */
+.action-timer-circle span {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--text-light);
+    z-index: 2;
+    text-shadow: 0 0 5px rgba(0,0,0,0.8);
+}
+
+.action-timer-circle.timer-critical .timer-circle-progress {
+    stroke: #ff3d00;
+    filter: drop-shadow(0 0 5px #ff3d00);
+}
+
+.action-timer-circle.timer-critical span {
+    color: #ff3d00;
+    animation: pulse-text 0.5s infinite;
+}
+
+/* Description Box (Themed) */
+.action-description {
+    width: 100%;
+    min-height: 120px;
+    background: linear-gradient(135deg, rgba(20, 10, 10, 0.95) 0%, rgba(40, 10, 10, 0.9) 100%);
+    border: 2px solid var(--primary-red);
+    border-radius: 8px;
+    padding: 15px;
+    color: var(--text-light);
+    font-size: 0.9rem;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 15px rgba(139, 0, 0, 0.15), inset 0 0 20px rgba(0,0,0,0.5);
+    position: relative;
+}
+
+/* Petit ornement doré pour la description */
+.action-description::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 4px;
+    background: var(--gold-accent);
+    box-shadow: 0 0 10px var(--gold-accent);
+    border-radius: 0 0 4px 4px;
+}
+
+@keyframes pulse-text {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Hit animation on hero PNG */
+.fighter-hit {
+    animation: fighter-shake 0.4s ease-out;
+}
+
+.fighter-hit img {
+    filter: drop-shadow(0 0 15px rgba(255, 0, 0, 0.8)) brightness(1.2) !important;
+}
+
+@keyframes fighter-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+}
+
+/* ==============================================
    SIMULATION - Page de statistiques d'équilibrage
    ============================================== */
 

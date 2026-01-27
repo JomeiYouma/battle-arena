@@ -45,7 +45,7 @@ class Barbare extends Personnage {
             'fury' => [
                 'label' => 'Fureur',
                 'emoji' => '💢',
-                'description' => 'Double attaque mais perd 15 PV',
+                'description' => 'Inflige 2x ATK et perd 15 PV',
                 'method' => 'fury',
                 'needsTarget' => true,
                 'pp' => 2

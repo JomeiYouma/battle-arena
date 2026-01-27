@@ -152,6 +152,7 @@ $matchFiles = is_dir($matchesDir) ? glob($matchesDir . 'match_*.json') : [];
             <form method="POST" style="display: inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir tout nettoyer ?');">
                 <button type="submit" name="clear_all" class="btn btn-danger">Clear All</button>
             </form>
+            <a href="reset_session.php" class="btn btn-danger" style="text-decoration: none; display: inline-block;">Reset Session</a>
             <button onclick="location.reload()" class="btn btn-primary">Refresh</button>
             <button onclick="location.href='index.php'" class="btn btn-primary">Menu</button>
         </div>
