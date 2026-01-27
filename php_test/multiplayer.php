@@ -129,6 +129,7 @@ try {
 
 ?>
 
+<link rel="icon" href="./media/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="./style.css">
 
 <h1 style="margin-bottom: 20px;">Horus Battle Arena</h1>
