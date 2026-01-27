@@ -27,8 +27,27 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // --- RESET ---
 if (isset($_POST['logout']) || isset($_POST['new_game'])) {
-    session_unset();
-    session_destroy();
+    // Note: Pas d'enregistrement de stats en mode solo (vs bot)
+    // Seuls les combats PvP sont enregistrés dans l'API
+    
+    // Préserver les données de connexion
+    $userId = $_SESSION['user_id'] ?? null;
+    $username = $_SESSION['username'] ?? null;
+    
+    // Nettoyer les données de combat
+    unset($_SESSION['combat']);
+    unset($_SESSION['hero_img']);
+    unset($_SESSION['enemy_img']);
+    unset($_SESSION['hero_id']);
+    unset($_SESSION['enemy_id']);
+    unset($_SESSION['combat_recorded']);
+    
+    // Restaurer les données de connexion si elles existaient
+    if ($userId !== null) {
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['username'] = $username;
+    }
+    
     header("Location: index.php");
     exit;
 }
@@ -66,6 +85,9 @@ if (isset($_POST['hero_choice']) && !isset($_SESSION['combat'])) {
         $_SESSION['combat'] = new Combat($hero, $enemy);
         $_SESSION['hero_img'] = $heroStats['images']['p1'];
         $_SESSION['enemy_img'] = $enemyStats['images']['p1'];
+        $_SESSION['hero_id'] = $heroStats['id'];
+        $_SESSION['enemy_id'] = $enemyStats['id'];
+        $_SESSION['combat_recorded'] = false;
     }
 }
 
@@ -192,7 +214,10 @@ if (isset($_SESSION['combat'])):
                 <button type="submit" name="logout" class="action-btn abandon" <?php echo $combat->isOver() ? 'disabled' : ''; ?>>Abandonner</button>
             </form>
         
-        <?php if ($combat->isOver()): ?>
+        <?php if ($combat->isOver()): 
+            // Note: Les stats ne sont pas enregistrées en mode solo (vs bot)
+            // Seuls les combats PvP sont enregistrés
+        ?>
             <div class="game-over" id="gameOverSection" style="display: none;">
                 <?php if ($combat->getWinner() === $hero): ?>
                     <h3 class="victory-text">VICTOIRE !</h3>

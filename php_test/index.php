@@ -18,10 +18,24 @@ session_start();
 // --- LOGIQUE DE RESET GLOBALE ---
 // Doit être ici car les formulaires de reset sont soumis vers index.php
 if (isset($_POST['logout']) || isset($_POST['new_game'])) {
-    session_unset();
-    session_destroy();
-    // Redémarrer une nouvelle session vide
-    session_start();
+    // Préserver les données de connexion
+    $userId = $_SESSION['user_id'] ?? null;
+    $username = $_SESSION['username'] ?? null;
+    
+    // Nettoyer les données de combat
+    unset($_SESSION['combat']);
+    unset($_SESSION['hero_img']);
+    unset($_SESSION['enemy_img']);
+    unset($_SESSION['hero_id']);
+    unset($_SESSION['enemy_id']);
+    unset($_SESSION['combat_recorded']);
+    
+    // Restaurer les données de connexion si elles existaient
+    if ($userId !== null) {
+        $_SESSION['user_id'] = $userId;
+        $_SESSION['username'] = $username;
+    }
+    
     // Afficher le menu principal (pas de mode choisi)
     $modeChoisi = null;
 } else {
@@ -44,6 +58,11 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
 <body>
 
     <h1>Horus Battle Arena</h1>
+    <?php if (User::isLoggedIn()): ?>
+        <div class="user-badge">
+            ⚔️ <?php echo htmlspecialchars(User::getCurrentUsername()); ?>
+        </div>
+    <?php endif; ?>
 
     <?php if ($modeChoisi === null): ?>
 
@@ -105,6 +124,16 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
             <a href="simulation.php" class="menu-btn simulate-link">
                 Simuler
             </a>
+            
+            <?php if (User::isLoggedIn()): ?>
+                <a href="account.php" class="menu-btn account-link">
+                    Mon compte
+                </a>
+            <?php else: ?>
+                <a href="login.php" class="menu-btn account-link">
+                    Connexion
+                </a>
+            <?php endif; ?>
             
             <!-- DEBUG TOOLS (visible localement) -->
             <?php if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false): ?>

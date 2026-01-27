@@ -61,10 +61,13 @@ try {
             $_SESSION['queueHeroData'] = $heroData;
             $_SESSION['queueDisplayName'] = $displayName;
             
-            error_log("API join_queue - sessionId=$sessionId, hero=" . $heroData['name'] . ", displayName=$displayName");
+            // Récupérer l'ID utilisateur si connecté
+            $userId = User::isLoggedIn() ? User::getCurrentUserId() : null;
+            
+            error_log("API join_queue - sessionId=$sessionId, hero=" . $heroData['name'] . ", displayName=$displayName, userId=$userId");
             
             $queue = new MatchQueue();
-            $result = $queue->findMatch($sessionId, $heroData, $displayName);
+            $result = $queue->findMatch($sessionId, $heroData, $displayName, $userId);
             
             error_log("API join_queue - result=" . json_encode($result));
             echo json_encode($result);
@@ -281,6 +284,43 @@ try {
                 
                 if ($multiCombat->isOver()) {
                     $metaData['status'] = 'finished';
+                    
+                    // Enregistrer les stats pour PvP seulement (pas pour les bots)
+                    if (($metaData['mode'] ?? '') === 'pvp') {
+                        $winnerId = $multiCombat->getWinnerId(); // 'p1' ou 'p2'
+                        
+                        // Récupérer les infos utilisateur si disponibles
+                        $p1UserId = $metaData['player1']['user_id'] ?? null;
+                        $p2UserId = $metaData['player2']['user_id'] ?? null;
+                        
+                        if ($p1UserId || $p2UserId) {
+                            $p1HeroId = $metaData['player1']['hero']['id'] ?? null;
+                            $p2HeroId = $metaData['player2']['hero']['id'] ?? null;
+                            $userModel = new User();
+                            
+                            // Enregistrer pour P1
+                            if ($p1UserId && $p1HeroId) {
+                                $userModel->recordCombat(
+                                    $p1UserId,
+                                    $p1HeroId,
+                                    $winnerId === 'p1',
+                                    $p2HeroId,
+                                    'multi'
+                                );
+                            }
+                            
+                            // Enregistrer pour P2
+                            if ($p2UserId && $p2HeroId) {
+                                $userModel->recordCombat(
+                                    $p2UserId,
+                                    $p2HeroId,
+                                    $winnerId === 'p2',
+                                    $p1HeroId,
+                                    'multi'
+                                );
+                            }
+                        }
+                    }
                 }
             }
             

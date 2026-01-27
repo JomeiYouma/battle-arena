@@ -100,6 +100,18 @@ class MultiCombat extends Combat {
     }
 
     /**
+     * Retourne l'identifiant du gagnant ('p1' ou 'p2') pour les stats
+     */
+    public function getWinnerId() {
+        $winner = $this->getWinner();
+        if ($winner === null) {
+            return null;
+        }
+        // player = P1, enemy = P2 dans la structure interne
+        return ($winner === $this->player) ? 'p1' : 'p2';
+    }
+
+    /**
      * Résout un tour en utilisant les actions des deux joueurs
      */
     public function resolveMultiTurn($p1ActionKey, $p2ActionKey) {

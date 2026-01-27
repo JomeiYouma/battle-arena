@@ -26,9 +26,9 @@ class MatchQueue {
     /**
      * Ajoute un joueur à la queue ou trouve un match existant
      */
-    public function findMatch($sessionId, $heroData, $displayName = null) {
+    public function findMatch($sessionId, $heroData, $displayName = null, $userId = null) {
         $displayName = $displayName ?? $heroData['name'];
-        error_log("MatchQueue::findMatch - Called with sessionId=$sessionId, heroName=" . ($heroData['name'] ?? 'UNKNOWN') . ", displayName=$displayName");
+        error_log("MatchQueue::findMatch - Called with sessionId=$sessionId, heroName=" . ($heroData['name'] ?? 'UNKNOWN') . ", displayName=$displayName, userId=$userId");
         $fp = fopen($this->queueFile, 'r+');
         if (flock($fp, LOCK_EX)) { // Verrouillage exclusif
             $content = stream_get_contents($fp);
@@ -89,6 +89,7 @@ class MatchQueue {
                         'session' => $opponent['sessionId'],
                         'hero' => $opponent['heroData'],
                         'display_name' => $opponent['displayName'] ?? $opponent['heroData']['name'],
+                        'user_id' => $opponent['userId'] ?? null,
                         'hp' => $opponent['heroData']['pv'],
                         'max_hp' => $opponent['heroData']['pv'],
                         'last_poll' => $now
@@ -97,6 +98,7 @@ class MatchQueue {
                         'session' => $sessionId,
                         'hero' => $heroData,
                         'display_name' => $displayName,
+                        'user_id' => $userId,
                         'hp' => $heroData['pv'],
                         'max_hp' => $heroData['pv'],
                         'last_poll' => $now
@@ -117,6 +119,7 @@ class MatchQueue {
                         'sessionId' => $sessionId,
                         'heroData' => $heroData,
                         'displayName' => $displayName,
+                        'userId' => $userId,
                         'timestamp' => $now
                     ];
                 }
