@@ -11,6 +11,16 @@ function chargerClasse($classe) {
         require __DIR__ . '/classes/effects/' . $classe . '.php';
         return;
     }
+    // Chercher dans classes/blessings/
+    if (file_exists(__DIR__ . '/classes/blessings/' . $classe . '.php')) {
+        require __DIR__ . '/classes/blessings/' . $classe . '.php';
+        return;
+    }
+    // Chercher dans classes/heroes/
+    if (file_exists(__DIR__ . '/classes/heroes/' . $classe . '.php')) {
+        require __DIR__ . '/classes/heroes/' . $classe . '.php';
+        return;
+    }
 }
 spl_autoload_register('chargerClasse');
 session_start();

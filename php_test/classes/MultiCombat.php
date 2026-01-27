@@ -1,6 +1,33 @@
 <?php
 require_once __DIR__ . '/Combat.php';
 
+// Ensure autoloader is registered for unserialize() to work
+if (!function_exists('chargerClasseMultiCombat')) {
+    function chargerClasseMultiCombat($classe) {
+        // Chercher dans classes/
+        if (file_exists(__DIR__ . '/' . $classe . '.php')) {
+            require_once __DIR__ . '/' . $classe . '.php';
+            return;
+        }
+        // Chercher dans classes/effects/
+        if (file_exists(__DIR__ . '/effects/' . $classe . '.php')) {
+            require_once __DIR__ . '/effects/' . $classe . '.php';
+            return;
+        }
+        // Chercher dans classes/blessings/
+        if (file_exists(__DIR__ . '/blessings/' . $classe . '.php')) {
+            require_once __DIR__ . '/blessings/' . $classe . '.php';
+            return;
+        }
+        // Chercher dans classes/heroes/
+        if (file_exists(__DIR__ . '/heroes/' . $classe . '.php')) {
+            require_once __DIR__ . '/heroes/' . $classe . '.php';
+            return;
+        }
+    }
+    spl_autoload_register('chargerClasseMultiCombat');
+}
+
 class MultiCombat extends Combat {
     // Flag pour indiquer que c'est du multi (utilisé pour les icones)
     public $isMulti = true;
@@ -65,16 +92,43 @@ class MultiCombat extends Combat {
     }
 
     private static function createHeroFromData($data) {
-        $type = $data['type'];
+        // Handle nested hero data structure if present (when passed from match meta where hero is sub-array)
+        // But here specific usage seems to pass the hero array directly.
+        // Wait, from api.php: create($meta['player1']['hero'], ...) 
+        // But blessing_id is in $meta['player1']['blessing_id'].
+        // API needs to pass the WHOLE player array to create, not just hero, OR pass blessing separately.
+        
+        // I will assume the caller (api.php) will be updated to pass the full player array including 'hero' and 'blessing_id'.
+        // Let's enable support for both formats to be safe.
+        
+        $heroData = isset($data['hero']) ? $data['hero'] : $data;
+        $blessingId = $data['blessing_id'] ?? null;
+        
+        $type = $heroData['type'];
+        
         if (class_exists($type)) {
             // Passer tous les paramètres nécessaires au constructeur
             $hero = new $type(
-                $data['pv'],              // pv
-                $data['atk'],             // atk
-                $data['name'],            // name
-                $data['def'] ?? 5,        // def (défaut 5)
-                $data['speed'] ?? 10      // speed (défaut 10)
+                $heroData['pv'],              // pv
+                $heroData['atk'],             // atk
+                $heroData['name'],            // name
+                $heroData['def'] ?? 5,        // def (défaut 5)
+                $heroData['speed'] ?? 10      // speed (défaut 10)
             );
+            
+            // Apply Blessing if present
+            if ($blessingId) {
+                // Determine class name from ID (e.g. WheelOfFortune)
+                // We trust ID matches class name exactly as we set in index.php
+                $blessingClass = $blessingId;
+                $blessingPath = __DIR__ . '/blessings/' . $blessingClass . '.php';
+                if (file_exists($blessingPath)) {
+                     require_once $blessingPath;
+                     if (class_exists($blessingClass)) {
+                         $hero->addBlessing(new $blessingClass());
+                     }
+                }
+            }
             
             return $hero;
         }
@@ -176,8 +230,8 @@ class MultiCombat extends Combat {
         $actions = [];
         
         try {
-            if (method_exists($myChar, 'getAvailableActions')) {
-                $availableActions = $myChar->getAvailableActions();
+            if (method_exists($myChar, 'getAllActions')) {
+                $availableActions = $myChar->getAllActions();
                 
                 // Ajouter les statuts du PP pour chaque action
                 foreach ($availableActions as $key => $action) {

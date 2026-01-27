@@ -5,6 +5,9 @@
  */
 
 require_once __DIR__ . '/StatusEffect.php';
+require_once __DIR__ . '/Blessing.php';
+// Autoload blessings if needed or rely on manual require in addBlessing
+// For simplicity, we assume index.php autoloader handles it or we require specific files when strings are passed.
 
 abstract class Personnage {
     const MAX_PV = 200;
@@ -32,12 +35,28 @@ abstract class Personnage {
     // --- NOUVEAU SYSTÈME D'EFFETS DE STATUT (POO) ---
     /** @var StatusEffect[] */
     protected array $statusEffects = [];
+
+
+    // --- SYSTÈME DE BÉNÉDICTIONS ---
+    /** @var Blessing[] */
+    protected array $blessings = [];
     
 
     
-    public function receiveDamage(int $amount): void {
+    public function receiveDamage(int $amount, ?Personnage $attacker = null): void {
+        // Hook: Blessings modifying incoming damage
+        foreach ($this->blessings as $blessing) {
+            $amount = $blessing->onReceiveDamage($this, $attacker ?? $this, $amount); 
+            // If attacker null, we pass self as fallback or need to handle null in Blessing
+        }
         $this->pv -= $amount;
         if ($this->pv < 0) $this->pv = 0;
+    }
+
+    public function triggerHealHooks(int $amount): void {
+        foreach ($this->blessings as $blessing) {
+            $blessing->onHeal($this, $amount);
+        }
     }
 
     public function getCurrentPP(string $actionKey): int {
@@ -97,8 +116,16 @@ abstract class Personnage {
             if (isset($mods['atk'])) {
                 $atk += $mods['atk'];
             }
+            if (isset($mods['atk'])) {
+                $atk += $mods['atk'];
+            }
         }
         
+        // Apply Blessings
+        foreach ($this->blessings as $blessing) {
+            $atk = $blessing->modifyStat('atk', $atk, $this);
+        }
+
         return $atk;
     }
 
@@ -111,6 +138,14 @@ abstract class Personnage {
             if (isset($mods['def'])) {
                 $def += $mods['def'];
             }
+            if (isset($mods['def'])) {
+                $def += $mods['def'];
+            }
+        }
+
+        // Apply Blessings
+        foreach ($this->blessings as $blessing) {
+            $def = $blessing->modifyStat('def', $def, $this);
         }
 
         return $def;
@@ -141,6 +176,14 @@ abstract class Personnage {
             if (isset($mods['speed'])) {
                 $speed += $mods['speed'];
             }
+            if (isset($mods['speed'])) {
+                $speed += $mods['speed'];
+            }
+        }
+
+        // Apply Blessings
+        foreach ($this->blessings as $blessing) {
+            $speed = $blessing->modifyStat('speed', $speed, $this);
         }
         
         return max(0, $speed);
@@ -164,7 +207,7 @@ abstract class Personnage {
      */
     public function checkActionBlock(): ?string {
         foreach ($this->statusEffects as $effect) {
-            if ($effect->blocksAction()) {
+            if ($effect->blocksAction($this)) {
                 return $effect->getName();
             }
         }
@@ -214,6 +257,10 @@ abstract class Personnage {
         $this->isEvading = $value;
     }
 
+    public function setSpeed(int $value): void {
+        $this->speed = $value;
+    }
+
     // --- MÉTHODES DE BASE ---
     public function cri() {
         return "YOU SHALL NOT PASS !";
@@ -230,7 +277,7 @@ abstract class Personnage {
     public function attack(Personnage $target): string {
         // Dégâts aléatoires (+/- 2 de la valeur de base)
         $baseDamage = max(1, $this->atk - $target->getDef());
-        $damage = $baseDamage + rand(-2, 2);
+        $damage = $baseDamage + $this->roll(-2, 2);
         $damage = max(1, $damage);  // Minimum 1 dégât
         
         $target->setPv($target->getPv() - $damage);
@@ -335,16 +382,26 @@ abstract class Personnage {
      * Ajoute un effet de statut au personnage
      */
     public function addStatusEffect(StatusEffect $effect): void {
+        // Check immunity
+        foreach ($this->statusEffects as $e) {
+            if ($e instanceof ImmunityEffect && $effect->getName() !== 'Immunité') {
+                // Immunisé ! Si fonction onResist existe?
+                return; 
+            }
+        }
+
         // Éviter les doublons du même type
         $effectClass = get_class($effect);
         foreach ($this->statusEffects as $key => $existing) {
             if (get_class($existing) === $effectClass) {
                 // Remplace l'ancien effet par le nouveau
                 $this->statusEffects[$key] = $effect;
+                $effect->onActivate($this); // Reactivate?
                 return;
             }
         }
         $this->statusEffects[] = $effect;
+        $effect->onActivate($this);
     }
 
     /**
@@ -494,7 +551,86 @@ abstract class Personnage {
      * Calcule les dégâts aléatoires dans une fourchette
      */
     protected function randomDamage(int $base, int $variance = 2): int {
-        return max(1, $base + rand(-$variance, $variance));
+        return max(1, $base + $this->roll(-$variance, $variance));
+    }
+
+    /**
+     * Génère un nombre aléatoire en prenant en compte les bénédictions (ex: Roue de Fortune)
+     */
+    public function roll(int $min, int $max): int {
+        foreach ($this->blessings as $blessing) {
+            $mod = $blessing->modifyRoll($min, $max);
+            if ($mod !== null) {
+                $min = $mod['min'];
+                $max = $mod['max'];
+            }
+        }
+        return rand((int)$min, (int)$max);
+    }
+
+    // --- GESTION DES BÉNÉDICTIONS ---
+
+    public function addBlessing(Blessing $blessing): void {
+        $this->blessings[$blessing->getId()] = $blessing;
+    }
+
+    public function removeBlessing(string $id): void {
+        if (isset($this->blessings[$id])) {
+            unset($this->blessings[$id]);
+        }
+    }
+
+    public function hasBlessing(string $id): bool {
+        return isset($this->blessings[$id]);
+    }
+
+    public function getBlessings(): array {
+        return $this->blessings;
+    }
+    
+    /** 
+     * Récupère la liste des actions disponibles, y compris celles des bénédictions 
+     */
+    public function getAllActions(): array {
+        $actions = $this->getAvailableActions();
+        foreach ($this->blessings as $blessing) {
+            $extra = $blessing->getExtraActions();
+            $actions = array_merge($actions, $extra);
+        }
+        return $actions;
+    }
+
+    // --- EXECUTION ACTIONS SPECIALES BENEDICTIONS ---
+    
+    /**
+     * Exécute une action blessing par son clé
+     * @param string $actionKey La clé de l'action (ex: 'grand_conseil')
+     * @param ?Personnage $target La cible optionnelle
+     * @return string Le message de résultat
+     */
+    public function executeBlessingAction(string $actionKey, ?Personnage $target = null): string {
+        foreach ($this->blessings as $blessing) {
+            $actions = $blessing->getExtraActions();
+            if (isset($actions[$actionKey])) {
+                return $blessing->executeAction($actionKey, $this, $target);
+            }
+        }
+        throw new Exception("Action blessing '$actionKey' introuvable pour " . $this->getName());
+    }
+
+    // Dynamic dispatch for blessing actions (fallback pour compatibilité)
+    public function __call($name, $arguments) {
+        // Try to find and execute a blessing action
+        foreach ($this->blessings as $blessing) {
+            $actions = $blessing->getExtraActions();
+            foreach ($actions as $key => $data) {
+                if ($data['method'] === $name) {
+                    $target = $arguments[0] ?? null;
+                    return $blessing->executeAction($key, $this, $target);
+                }
+            }
+        }
+        throw new Exception("Méthode $name inexistante sur " . get_class($this));
     }
 
     // --- PP (Power Points) ---

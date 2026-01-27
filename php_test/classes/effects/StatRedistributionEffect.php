@@ -1,0 +1,61 @@
+<?php
+/**
+ * StatRedistributionEffect - Répartit équitablement les stats (ATK, DEF, SPEED)
+ */
+class StatRedistributionEffect extends StatusEffect {
+    private bool $applied = false;
+    private array $originalStats = [];
+    
+    public function __construct(int $duration) {
+        parent::__construct('Jugement', '⚖️', $duration);
+    }
+    
+    public function resolveDamage(Personnage $target): ?array {
+        return null;
+    }
+
+    public function resolveStats(Personnage $target): ?array {
+        if (!$this->applied) {
+            $this->originalStats = [
+                'atk' => $target->getAtk(),
+                'def' => $target->getDef(),
+                'speed' => $target->getSpeed()
+            ];
+            
+            $total = array_sum($this->originalStats);
+            $avg = (int)($total / 3);
+            
+            $target->setAtk($avg);
+            $target->setDef($avg);
+            // Speed can't be easily set via setter if it doesn't exist, need to check Personnage
+            // Personnage doesn't have setSpeed? Let's check Personnage.php.
+            // ... Personnage DOES NOT have setSpeed. It has protected $speed.
+            // We need to add setSpeed or use reflection (dirty).
+            // Let's assume we will add setSpeed to Personnage.
+            if (method_exists($target, 'setSpeed')) {
+                $target->setSpeed($avg);
+            }
+            
+            $this->applied = true;
+            
+            return [
+                'log' => "⚖️ Le Jugement tombe ! Stats égalisées à $avg !",
+                'emoji' => $this->emoji,
+                'effectName' => $this->name,
+                'type' => 'stat_redistribution'
+            ];
+        }
+        return null;
+    }
+
+    public function onExpire(Personnage $target): string {
+        if ($this->applied) {
+            $target->setAtk($this->originalStats['atk']);
+            $target->setDef($this->originalStats['def']);
+            if (method_exists($target, 'setSpeed')) {
+                $target->setSpeed($this->originalStats['speed']);
+            }
+        }
+        return "✨ Le jugement prend fin. Stats restaurées.";
+    }
+}

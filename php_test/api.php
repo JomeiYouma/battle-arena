@@ -17,6 +17,14 @@ function chargerClasse($classe) {
         require_once __DIR__ . '/classes/effects/' . $classe . '.php';
         return;
     }
+    if (file_exists(__DIR__ . '/classes/heroes/' . $classe . '.php')) {
+        require_once __DIR__ . '/classes/heroes/' . $classe . '.php';
+        return;
+    }
+    if (file_exists(__DIR__ . '/classes/blessings/' . $classe . '.php')) {
+        require_once __DIR__ . '/classes/blessings/' . $classe . '.php';
+        return;
+    }
 }
 spl_autoload_register('chargerClasse');
 
@@ -60,6 +68,8 @@ try {
             $_SESSION['queueStartTime'] = time();
             $_SESSION['queueHeroData'] = $heroData;
             $_SESSION['queueDisplayName'] = $displayName;
+            $blessingId = $_POST['blessing_id'] ?? null;
+            $_SESSION['queueBlessingId'] = $blessingId;
             
             // Récupérer l'ID utilisateur si connecté
             $userId = User::isLoggedIn() ? User::getCurrentUserId() : null;
@@ -67,7 +77,7 @@ try {
             error_log("API join_queue - sessionId=$sessionId, hero=" . $heroData['name'] . ", displayName=$displayName, userId=$userId");
             
             $queue = new MatchQueue();
-            $result = $queue->findMatch($sessionId, $heroData, $displayName, $userId);
+            $result = $queue->findMatch($sessionId, $heroData, $displayName, $userId, $blessingId);
             
             error_log("API join_queue - result=" . json_encode($result));
             echo json_encode($result);
@@ -154,7 +164,7 @@ try {
             if (!$multiCombat) {
                 // Initialiser le combat
                 try {
-                    $multiCombat = MultiCombat::create($metaData['player1']['hero'], $metaData['player2']['hero']);
+                    $multiCombat = MultiCombat::create($metaData['player1'], $metaData['player2']);
                     if (!$multiCombat->save($stateFile)) {
                         throw new Exception("Impossible de sauvegarder l'état initial du combat");
                     }

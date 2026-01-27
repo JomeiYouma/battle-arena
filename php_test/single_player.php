@@ -12,8 +12,19 @@ if (!function_exists('chargerClasse')) {
             return;
         }
         // Chercher dans classes/effects/
+        // Chercher dans classes/effects/
         if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
             require __DIR__ . '/classes/effects/' . $classe . '.php';
+            return;
+        }
+        // Chercher dans classes/heroes/
+        if (file_exists(__DIR__ . '/classes/heroes/' . $classe . '.php')) {
+            require __DIR__ . '/classes/heroes/' . $classe . '.php';
+            return;
+        }
+        // Chercher dans classes/blessings/
+        if (file_exists(__DIR__ . '/classes/blessings/' . $classe . '.php')) {
+            require __DIR__ . '/classes/blessings/' . $classe . '.php';
             return;
         }
     }
@@ -81,7 +92,20 @@ if (isset($_POST['hero_choice']) && !isset($_SESSION['combat'])) {
 
         $hero = new $heroClass($heroStats['pv'], $heroStats['atk'], $heroDisplayName, $heroStats['def'] ?? 5, $heroStats['speed'] ?? 10);
         $enemy = new $enemyClass($enemyStats['pv'], $enemyStats['atk'], $enemyStats['name'], $enemyStats['def'] ?? 5, $enemyStats['speed'] ?? 10);
-
+        
+        // --- APPLIQUER LA BÉNÉDICTION ---
+        $blessingId = $_POST['blessing_choice'] ?? null;
+        if ($blessingId) {
+            $blessingClass = $blessingId;
+            // On fait confiance à l'input car via liste prédéfinie, mais check file exists
+            if (file_exists(__DIR__ . '/classes/blessings/' . $blessingClass . '.php')) {
+                require_once __DIR__ . '/classes/blessings/' . $blessingClass . '.php';
+                if (class_exists($blessingClass)) {
+                    $hero->addBlessing(new $blessingClass());
+                }
+            }
+        }
+        
         $_SESSION['combat'] = new Combat($hero, $enemy);
         $_SESSION['hero_img'] = $heroStats['images']['p1'];
         $_SESSION['enemy_img'] = $enemyStats['images']['p1'];
@@ -190,8 +214,12 @@ if (isset($_SESSION['combat'])):
                 
                 <!-- LISTE D'ACTIONS DÉFILANTE -->
                 <div class="action-list">
-                    <?php foreach ($hero->getAvailableActions() as $key => $action): 
-                        $ppText = $hero->getPPText($key);
+                    <?php 
+                    foreach ($hero->getAllActions() as $key => $action):
+                        $ppText = '';
+                        if (method_exists($hero, 'getPPText')) {
+                             $ppText = $hero->getPPText($key);
+                        }
                         $canUse = $hero->canUseAction($key);
                         $hasPP = isset($action['pp']);
                         $isGameOver = $combat->isOver();
@@ -237,7 +265,6 @@ if (isset($_SESSION['combat'])):
 </div>
 
 <script>
-    document.getElementById("logBox").scrollTop = document.getElementById("logBox").scrollHeight;
 
     // Récupération des données depuis PHP
     const turnActions = <?php echo json_encode($combat->getTurnActions()); ?>;
@@ -443,34 +470,79 @@ if (isset($_SESSION['combat'])):
 // ============================================================
 else: 
     $personnages = json_decode(file_get_contents('heros.json'), true);
+    $blessingsList = [
+        ['id' => 'WheelOfFortune', 'name' => 'Roue de Fortune', 'emoji' => '🎰', 'desc' => 'Portée aléatoire doublée + Action "Concoction Maladroite"'],
+        ['id' => 'LoversCharm', 'name' => 'Charmes Amoureux', 'emoji' => '💘', 'desc' => 'Renvoie 25% des dégâts + Action "Foudre de l\'Amour"'],
+        ['id' => 'JudgmentOfDamned', 'name' => 'Jugement des Maudits', 'emoji' => '⚖️', 'desc' => 'Soin baisse DEF. Actions "Grand Conseil" & "Sentence"'],
+        ['id' => 'StrengthFavor', 'name' => 'Faveur de Force', 'emoji' => '💪', 'desc' => 'DEF -75%, ATK +33%. Action "Transe Guerrière"'],
+        ['id' => 'MoonCall', 'name' => 'Appel de la Lune', 'emoji' => '🌙', 'desc' => 'Cycle 4 tours : Boost stats, coût PP double.'],
+        ['id' => 'WatchTower', 'name' => 'La Tour de Garde', 'emoji' => '🏰', 'desc' => 'ATK utilise DEF. Action "Fortifications" (+5 DEF)'],
+        ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'emoji' => '☀️', 'desc' => '+50% VIT. Bonus durées effets. Action "Jour Nouveau"'],
+        ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'emoji' => '🪢', 'desc' => 'Action "Nœud de Destin" (Lien de dégâts)']
+    ];
 ?>
 
 <div class="select-screen">
-    <h2>Choisissez votre Champion</h2>
+    <h2>Choisissez votre Champion et votre Bénédiction</h2>
     
     <form method="POST">
         <input type="hidden" name="mode" value="single">
-        <!-- LISTE DES HÉROS (avec images) -->
-        <div class="hero-list">
-            <?php foreach ($personnages as $perso): ?>
-                <label class="hero-row">
-                    <input type="radio" name="hero_choice" value="<?php echo $perso['id']; ?>" required>
-                    <div class="hero-row-content">
-                        <img src="<?php echo $perso['images']['p1']; ?>" alt="<?php echo $perso['name']; ?>" class="hero-thumb">
-                        <div class="hero-info">
-                            <h4><?php echo $perso['name']; ?></h4>
-                            <span class="type-badge"><?php echo $perso['type']; ?></span>
-                            <p class="hero-theme"><?php echo $perso['description']; ?></p>
-                            <div class="hero-stats-mini">
-                                <?php echo $perso['pv']; ?> PV | <?php echo $perso['atk']; ?> ATK | <?php echo $perso['def'] ?? 5; ?> DEF | <?php echo $perso['speed'] ?? 10; ?> SPE
+        
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+            <!-- HEROES -->
+            <div style="flex: 1; min-width: 300px;">
+                <h3 style="color:#b8860b;">Héros</h3>
+                <div class="hero-list" style="height: 400px; overflow-y: auto;">
+                    <?php foreach ($personnages as $perso): ?>
+                        <label class="hero-row">
+                            <input type="radio" name="hero_choice" value="<?php echo $perso['id']; ?>" required checked>
+                            <div class="hero-row-content">
+                                <img src="<?php echo $perso['images']['p1']; ?>" alt="<?php echo $perso['name']; ?>" class="hero-thumb">
+                                <div class="hero-info">
+                                    <h4><?php echo $perso['name']; ?></h4>
+                                    <span class="type-badge"><?php echo $perso['type']; ?></span>
+                                    <div class="hero-stats-mini">
+                                        <?php echo $perso['pv']; ?> PV | <?php echo $perso['atk']; ?> ATK | <?php echo $perso['speed'] ?? 10; ?> SPE
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <!-- BLESSINGS -->
+            <div style="flex: 1; min-width: 300px;">
+                <h3 style="color:#b8860b;">Bénédiction (Optionnel)</h3>
+                <div class="hero-list" style="height: 400px; overflow-y: auto;">
+                    <label class="hero-row">
+                        <input type="radio" name="blessing_choice" value="" checked>
+                        <div class="hero-row-content">
+                            <div class="hero-info">
+                                <h4>Aucune</h4>
+                                <p class="hero-theme">Combat classique sans bonus.</p>
                             </div>
                         </div>
-                    </div>
-                </label>
-            <?php endforeach; ?>
+                    </label>
+                    <?php foreach ($blessingsList as $b): ?>
+                        <label class="hero-row">
+                            <input type="radio" name="blessing_choice" value="<?php echo $b['id']; ?>">
+                            <div class="hero-row-content">
+                                <div style="font-size: 30px; margin-right: 15px;"><?php echo $b['emoji']; ?></div>
+                                <div class="hero-info">
+                                    <h4><?php echo $b['name']; ?></h4>
+                                    <p class="hero-theme" style="font-size: 12px;"><?php echo $b['desc']; ?></p>
+                                </div>
+                            </div>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </div>
         
-        <button type="submit" class="action-btn enter-arena">Entrer dans l'arène</button>
+        <div style="text-align: center; margin-top: 20px;">
+            <button type="submit" class="action-btn enter-arena" style="width: 50%;">Entrer dans l'arène</button>
+        </div>
     </form>
 </div>
 

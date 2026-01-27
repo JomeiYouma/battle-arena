@@ -14,6 +14,10 @@ if (!function_exists('chargerClasse')) {
             require __DIR__ . '/classes/effects/' . $classe . '.php';
             return;
         }
+        if (file_exists(__DIR__ . '/classes/blessings/' . $classe . '.php')) {
+            require __DIR__ . '/classes/blessings/' . $classe . '.php';
+            return;
+        }
     }
     spl_autoload_register('chargerClasse');
 }
@@ -22,8 +26,19 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Charger la liste des héros
+// Charger la liste des héros et définitions des bénédictions (temporaire, idéalement en DB ou JSON)
 $heros = json_decode(file_get_contents('heros.json'), true);
+
+$blessingsList = [
+    ['id' => 'WheelOfFortune', 'name' => 'Roue de Fortune', 'emoji' => '🎰', 'desc' => 'Portée aléatoire doublée (ex: 1-10 → -4-15) + Action "Concoction Maladroite"'],
+    ['id' => 'LoversCharm', 'name' => 'Charmes Amoureux', 'emoji' => '💘', 'desc' => 'Renvoie 25% des dégâts reçus + Action "Foudre de l\'Amour" (Paralysie)'],
+    ['id' => 'JudgmentOfDamned', 'name' => 'Jugement des Maudits', 'emoji' => '⚖️', 'desc' => 'Se soigner baisse la DEF. Actions "Grand Conseil" & "Sentence"'],
+    ['id' => 'StrengthFavor', 'name' => 'Faveur de Force', 'emoji' => '💪', 'desc' => 'DEF -75%, ATK +33%. Action "Transe Guerrière" (Immunité)'],
+    ['id' => 'MoonCall', 'name' => 'Appel de la Lune', 'emoji' => '🌙', 'desc' => 'Cycle 4 tours : Stats boostées mais coût PP double.'],
+    ['id' => 'WatchTower', 'name' => 'La Tour de Garde', 'emoji' => '🏰', 'desc' => 'ATK utilise DEF. Action "Fortifications" (+5 DEF)'],
+    ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'emoji' => '☀️', 'desc' => '+50% VIT. Durée effets: Ennemis +2, Soi -1. Action "Jour Nouveau"'],
+    ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'emoji' => '🪢', 'desc' => 'Action "Nœud de Destin" (Lien de dégâts)']
+];
 ?>
 
 <style>
@@ -294,6 +309,61 @@ $heros = json_decode(file_get_contents('heros.json'), true);
 .selection-screen.hidden {
     display: none;
 }
+
+/* Blessings Grid */
+.blessing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.blessing-card {
+    background: rgba(30, 30, 40, 0.9);
+    border: 2px solid #555;
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+}
+
+.blessing-card:hover {
+    border-color: #ffd700;
+    transform: translateY(-3px);
+}
+
+.blessing-card.selected {
+    border-color: #ffd700;
+    background: rgba(80, 60, 20, 0.9);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.blessing-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    color: #ffd700;
+    font-weight: bold;
+}
+
+.blessing-desc {
+    font-size: 12px;
+    color: #aaa;
+    line-height: 1.4;
+}
+
+.step-indicator {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #888;
+    font-size: 14px;
+}
+.step-indicator span.active {
+    color: #ffd700;
+    font-weight: bold;
+}
 </style>
 
 <link rel="stylesheet" href="./style.css">
@@ -324,22 +394,57 @@ $heros = json_decode(file_get_contents('heros.json'), true);
             </div>
         <?php endif; ?>
         
-        <div class="hero-select-grid">
-            <?php foreach ($heros as $h): ?>
-            <button type="button" class="hero-card-btn" onclick="selectHero('<?php echo $h['id']; ?>', '<?php echo addslashes($h['name']); ?>', '<?php echo $h['images']['p1']; ?>', '<?php echo ucfirst($h['type']); ?>')">
-                <div class="hero-card-content">
-                    <img src="<?php echo $h['images']['p1']; ?>" alt="<?php echo $h['name']; ?>">
-                    <h4><?php echo $h['name']; ?></h4>
-                    <span class="type-badge"><?php echo ucfirst($h['type']); ?></span>
-                    <div class="hero-stats-preview">
-                        <span>PV: <?php echo $h['pv']; ?></span> | 
-                        <span>ATK: <?php echo $h['atk']; ?></span> | 
-                        <span>DEF: <?php echo $h['def'] ?? 5; ?></span> | 
-                        <span>SPE: <?php echo $h['speed']; ?></span>
+        <div class="step-indicator" id="stepIndicator">
+            <span class="active">1. HÉROS</span> &nbsp;➡️&nbsp; <span>2. BÉNÉDICTION</span>
+        </div>
+
+        <!-- STEP 1: HEROES -->
+        <div id="heroStep">
+            <div class="hero-select-grid">
+                <?php foreach ($heros as $h): ?>
+                <button type="button" class="hero-card-btn" onclick="preSelectHero('<?php echo $h['id']; ?>', '<?php echo addslashes($h['name']); ?>', '<?php echo $h['images']['p1']; ?>', '<?php echo ucfirst($h['type']); ?>')">
+                    <div class="hero-card-content">
+                        <img src="<?php echo $h['images']['p1']; ?>" alt="<?php echo $h['name']; ?>">
+                        <h4><?php echo $h['name']; ?></h4>
+                        <span class="type-badge"><?php echo ucfirst($h['type']); ?></span>
+                        <div class="hero-stats-preview">
+                            <span>PV: <?php echo $h['pv']; ?></span> | 
+                            <span>ATK: <?php echo $h['atk']; ?></span> | 
+                            <span>DEF: <?php echo $h['def'] ?? 5; ?></span> | 
+                            <span>SPE: <?php echo $h['speed']; ?></span>
+                        </div>
+                    </div>
+                </button>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- STEP 2: BLESSINGS (Hidden initially) -->
+        <div id="blessingStep" style="display: none;">
+            <h3 style="color: #ffd700; text-align: center; margin-bottom: 20px;">Choisissez une Bénédiction de départ</h3>
+            
+            <div class="blessing-grid">
+                <?php foreach ($blessingsList as $b): ?>
+                <div class="blessing-card" onclick="selectBlessing('<?php echo $b['id']; ?>', this)">
+                    <div class="blessing-header">
+                        <span style="font-size: 24px;"><?php echo $b['emoji']; ?></span>
+                        <span><?php echo $b['name']; ?></span>
+                    </div>
+                    <div class="blessing-desc">
+                        <?php echo $b['desc']; ?>
                     </div>
                 </div>
-            </button>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; display: flex; gap: 20px; justify-content: center;">
+                <button type="button" class="cancel-queue-btn" onclick="backToHero()" style="border-color: #555; color: #aaa;">
+                    ⬅️ Retour
+                </button>
+                <button type="button" class="cancel-queue-btn" onclick="confirmSelection()" style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; font-weight: bold; border-color: #ffd700;">
+                    COMBATTRE ⚔️
+                </button>
+            </div>
         </div>
         
 <!--         <div style="text-align: center;">
@@ -381,19 +486,67 @@ $heros = json_decode(file_get_contents('heros.json'), true);
 
 <script>
 let selectedHeroId = null;
+let selectedHeroData = {}; // {name, img, type}
+let selectedBlessingId = null;
 let queuePollInterval = null;
 let countdownInterval = null;
 let remainingTime = 30;
 let isInQueue = false;
 
-function selectHero(heroId, heroName, heroImg, heroType) {
+function preSelectHero(heroId, heroName, heroImg, heroType) {
     selectedHeroId = heroId;
+    selectedHeroData = { name: heroName, img: heroImg, type: heroType };
     
+    // Switch to step 2
+    document.getElementById('heroStep').style.display = 'none';
+    document.getElementById('blessingStep').style.display = 'block';
+    
+    // Update indicator
+    const spans = document.getElementById('stepIndicator').querySelectorAll('span');
+    spans[0].classList.remove('active');
+    spans[1].classList.add('active');
+}
+
+function backToHero() {
+    document.getElementById('heroStep').style.display = 'block';
+    document.getElementById('blessingStep').style.display = 'none';
+    
+    selectedHeroId = null;
+    selectedBlessingId = null;
+    
+    // Reset selection logic visual if needed
+    document.querySelectorAll('.blessing-card').forEach(c => c.classList.remove('selected'));
+    
+    const spans = document.getElementById('stepIndicator').querySelectorAll('span');
+    spans[0].classList.add('active');
+    spans[1].classList.remove('active');
+}
+
+function selectBlessing(id, cardElement) {
+    selectedBlessingId = id;
+    
+    document.querySelectorAll('.blessing-card').forEach(c => c.classList.remove('selected'));
+    cardElement.classList.add('selected');
+}
+
+function confirmSelection() {
+    if (!selectedHeroId) {
+        alert("Veuillez choisir un héros !");
+        backToHero();
+        return;
+    }
+    // Si pas de bénédiction sélectionnée, on pourrait dire que c'est optionnel ou en forcer une ?
+    // Optionnel pour l'instant (null)
+    
+    finalizeSelection(selectedHeroId, selectedHeroData.name, selectedHeroData.img, selectedHeroData.type, selectedBlessingId);
+}
+
+function finalizeSelection(heroId, heroName, heroImg, heroType, blessingId) {
     // Récupérer le display name
     const displayNameInput = document.getElementById('displayName');
     const displayName = displayNameInput.value.trim() || heroName;
     
-    // Afficher l'aperçu du héros avec le display name
+    // Afficher l'aperçu
     document.getElementById('previewImg').src = heroImg;
     document.getElementById('previewName').textContent = displayName;
     document.getElementById('previewType').textContent = heroType + ' (' + heroName + ')';
@@ -402,7 +555,7 @@ function selectHero(heroId, heroName, heroImg, heroType) {
     document.getElementById('selectionScreen').classList.add('hidden');
     document.getElementById('queueScreen').classList.add('active');
     
-    // Démarrer le compte à rebours visuel
+    // Démarrer compte à rebours
     remainingTime = 30;
     document.getElementById('countdown').textContent = remainingTime;
     
@@ -412,15 +565,20 @@ function selectHero(heroId, heroName, heroImg, heroType) {
     }, 1000);
     
     // Rejoindre la queue via API
-    joinQueue(heroId, displayName);
+    joinQueue(heroId, displayName, blessingId);
 }
 
-function joinQueue(heroId, displayName) {
+function joinQueue(heroId, displayName, blessingId) {
+    let body = 'hero_id=' + encodeURIComponent(heroId) + '&display_name=' + encodeURIComponent(displayName);
+    if (blessingId) {
+        body += '&blessing_id=' + encodeURIComponent(blessingId);
+    }
+
     fetch('api.php?action=join_queue', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'hero_id=' + encodeURIComponent(heroId) + '&display_name=' + encodeURIComponent(displayName)
+        body: body
     })
     .then(r => r.json())
     .then(data => {

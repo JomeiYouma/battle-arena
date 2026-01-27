@@ -58,7 +58,7 @@ abstract class StatusEffect {
         return "✨ " . $this->name . " sur " . $target->getName() . " s'est dissipé.";
     }
 
-    public function blocksAction(): bool {
+    public function blocksAction(Personnage $target): bool {
         return false;
     }
 

@@ -67,7 +67,7 @@ class Combat {
     }
 
     public function getPlayerActions(): array {
-        return $this->player->getAvailableActions();
+        return $this->player->getAllActions();
     }
 
     /**
@@ -191,7 +191,7 @@ class Combat {
             return;
         }
 
-        $actions = $actor->getAvailableActions();
+        $actions = $actor->getAllActions();
         $action = $actions[$actionKey];
         $actor->usePP($actionKey);
 
@@ -215,9 +215,20 @@ class Combat {
         }
 
         $method = $action['method'];
-        $result = ($action['needsTarget'] ?? false) 
-            ? $actor->$method($target) 
-            : $actor->$method();
+        
+        // Vérifier si c'est une action blessing
+        $isBlessingAction = $this->isActionFromBlessing($actor, $actionKey);
+        
+        // Exécuter l'action
+        if ($isBlessingAction) {
+            $result = ($action['needsTarget'] ?? false) 
+                ? $actor->executeBlessingAction($actionKey, $target) 
+                : $actor->executeBlessingAction($actionKey, null);
+        } else {
+            $result = ($action['needsTarget'] ?? false) 
+                ? $actor->$method($target) 
+                : $actor->$method();
+        }
         
         // Emojis différents selon qui joue
         $icon = ($actor === $this->player) ? "🎮" : "🤖";
@@ -227,6 +238,19 @@ class Combat {
         
         // Action réussie !
         $actor->incrementSuccessfulActions();
+        
+        // === DÉCLENCHER LES HOOKS DE BLESSINGS ===
+        // onAttack si c'est une attaque
+        if ($actionKey === 'attack' || strpos($action['method'] ?? '', 'attack') !== false) {
+            foreach ($actor->getBlessings() as $blessing) {
+                $blessing->onAttack($actor, $target, 0); // On passe 0 car on ne connaît pas les dégâts exacts ici
+            }
+        }
+        
+        // onTurnEnd pour l'acteur
+        foreach ($actor->getBlessings() as $blessing) {
+            $blessing->onTurnEnd($actor, $this);
+        }
         
         $this->turnActions[] = [
             'phase' => 'action',
@@ -239,10 +263,23 @@ class Combat {
     }
 
     /**
+     * Vérifie si une action vient d'une bénédiction
+     */
+    protected function isActionFromBlessing(Personnage $actor, string $actionKey): bool {
+        foreach ($actor->getBlessings() as $blessing) {
+            $actions = $blessing->getExtraActions();
+            if (isset($actions[$actionKey])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Exécute l'action du joueur
      */
     private function doPlayerAction(string $actionKey): void {
-        $actions = $this->player->getAvailableActions();
+        $actions = $this->player->getAllActions();
         if (!isset($actions[$actionKey]) || !$this->player->canUseAction($actionKey)) {
             return;
         }
@@ -256,7 +293,7 @@ class Combat {
         if ($this->enemy->isDead()) return;
 
         // IA : choisir une action
-        $actions = $this->enemy->getAvailableActions();
+        $actions = $this->enemy->getAllActions();
         $available = array_filter($actions, fn($k) => $this->enemy->canUseAction($k), ARRAY_FILTER_USE_KEY);
         if (empty($available)) $available = ['attack' => $actions['attack']];
 
@@ -279,7 +316,7 @@ class Combat {
      * MÉTHODE PRINCIPALE : Exécute un tour complet avec les 7 phases
      */
     public function executePlayerAction(string $actionKey): void {
-        $actions = $this->player->getAvailableActions();
+        $actions = $this->player->getAllActions();
         
         if (!isset($actions[$actionKey])) {
             $this->logs[] = "❌ Action invalide !";
@@ -298,6 +335,14 @@ class Combat {
         // Déterminer l'ordre
         [$first, $second] = $this->getOrderedFighters();
         $playerIsFirst = ($first === $this->player);
+
+        // === HOOKS onTurnStart pour les blessings ===
+        foreach ($this->player->getBlessings() as $blessing) {
+            $blessing->onTurnStart($this->player, $this);
+        }
+        foreach ($this->enemy->getBlessings() as $blessing) {
+            $blessing->onTurnStart($this->enemy, $this);
+        }
 
         // ===== PHASE 2 : Dégâts Effets - Premier =====
         if ($this->turn > 1) {

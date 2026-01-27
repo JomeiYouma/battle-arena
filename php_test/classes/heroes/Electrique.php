@@ -51,9 +51,9 @@ class Electrique extends Personnage {
     }
 
     public function etincelle(Personnage $target) {
-        $dmg = $this->getAtk() + rand(2, 5);
+        $dmg = $this->getAtk() + $this->roll(2, 5);
         $dmg = max(1, $dmg - $target->getDef());
-        $target->receiveDamage($dmg);
+        $target->receiveDamage($dmg, $this);
         return "lance une étincelle vive et inflige " . $dmg . " dégâts !";
     }
 
@@ -64,7 +64,7 @@ class Electrique extends Personnage {
 
     public function priseFoudre(Personnage $target) {
         $dmg = max(1, $this->getAtk() - $target->getDef());
-        $target->receiveDamage($dmg);
+        $target->receiveDamage($dmg, $this);
         $target->addStatusEffect(new ParalysisEffect(2));
         $target->addStatusEffect(new SpeedModEffect(4, -5));
         return "effectue une prise foudre ! " . $dmg . " dégâts et paralyse l'ennemi !";
@@ -75,7 +75,7 @@ class Electrique extends Personnage {
         $bonus = $stacks * 13;
         $totalDmg = $this->getAtk() + 5 + $bonus; 
         $finalDmg = max(10, $totalDmg - ($target->getDef() / 2));
-        $target->receiveDamage((int)$finalDmg);
+        $target->receiveDamage((int)$finalDmg, $this);
         $this->resetSuccessfulActions();
         return "libère toute son énergie accumulée ($stacks charges) !! C'est DEVASTATEUR ! " . (int)$finalDmg . " dégâts !";
     }

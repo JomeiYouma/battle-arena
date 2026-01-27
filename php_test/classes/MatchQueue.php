@@ -26,9 +26,9 @@ class MatchQueue {
     /**
      * Ajoute un joueur à la queue ou trouve un match existant
      */
-    public function findMatch($sessionId, $heroData, $displayName = null, $userId = null) {
+    public function findMatch($sessionId, $heroData, $displayName = null, $userId = null, $blessingId = null) {
         $displayName = $displayName ?? $heroData['name'];
-        error_log("MatchQueue::findMatch - Called with sessionId=$sessionId, heroName=" . ($heroData['name'] ?? 'UNKNOWN') . ", displayName=$displayName, userId=$userId");
+        error_log("MatchQueue::findMatch - Called with sessionId=$sessionId, heroName=" . ($heroData['name'] ?? 'UNKNOWN') . ", displayName=$displayName, userId=$userId, blessing=$blessingId");
         $fp = fopen($this->queueFile, 'r+');
         if (flock($fp, LOCK_EX)) { // Verrouillage exclusif
             $content = stream_get_contents($fp);
@@ -92,6 +92,7 @@ class MatchQueue {
                         'user_id' => $opponent['userId'] ?? null,
                         'hp' => $opponent['heroData']['pv'],
                         'max_hp' => $opponent['heroData']['pv'],
+                        'blessing_id' => $opponent['blessingId'] ?? null,
                         'last_poll' => $now
                     ],
                     'player2' => [
@@ -101,6 +102,7 @@ class MatchQueue {
                         'user_id' => $userId,
                         'hp' => $heroData['pv'],
                         'max_hp' => $heroData['pv'],
+                        'blessing_id' => $blessingId,
                         'last_poll' => $now
                     ],
                     'logs' => ["Le combat commence !"],
@@ -120,6 +122,7 @@ class MatchQueue {
                         'heroData' => $heroData,
                         'displayName' => $displayName,
                         'userId' => $userId,
+                        'blessingId' => $blessingId,
                         'timestamp' => $now
                     ];
                 }
@@ -200,6 +203,7 @@ class MatchQueue {
                             'display_name' => $item['displayName'] ?? $heroData['name'],
                             'hp' => $heroData['pv'],
                             'max_hp' => $heroData['pv'],
+                            'blessing_id' => $item['blessingId'] ?? null,
                             'last_poll' => $now
                         ],
                         'player2' => [

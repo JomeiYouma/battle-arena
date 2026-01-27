@@ -58,7 +58,7 @@ class Barbare extends Personnage {
         $berserkText = $this->isBerserk() ? " [BERSERK!]" : "";
         $baseDamage = max(1, $this->atk + $bonusDamage - $target->getDef());
         $damage = $this->randomDamage($baseDamage, 4);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() 
             ? "DÉCAPITE !$berserkText $damage dégâts ! K.O. !"
             : "frappe !$berserkText $damage dégâts";
@@ -72,7 +72,9 @@ class Barbare extends Personnage {
 
     public function heal($x = null): string {
         $oldPv = $this->pv;
-        $this->setPv($this->pv + rand(18, 22));
+        $amount = $this->roll(18, 22);
+        $this->setPv($this->pv + $amount);
+        $this->triggerHealHooks($amount);
         return "dévore de la viande ! +" . ($this->pv - $oldPv) . " PV";
     }
 
@@ -82,7 +84,7 @@ class Barbare extends Personnage {
         $damage1 = $this->randomDamage($baseDamage, 3);
         $damage2 = $this->randomDamage($baseDamage, 3);
         $total = $damage1 + $damage2;
-        $target->setPv($target->getPv() - $total);
+        $target->receiveDamage($total, $this);
         return $target->isDead() 
             ? "FUREUR ! $total dégâts ! K.O. !"
             : "FUREUR ! $damage1+$damage2=$total dég (-15 PV)";

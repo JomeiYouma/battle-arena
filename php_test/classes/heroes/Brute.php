@@ -63,7 +63,7 @@ class Brute extends Personnage {
     public function attack(Personnage $target): string {
         $effectiveDef = (int) ($target->getDef() * 0.7);
         $damage = $this->randomDamage(max(1, $this->atk - $effectiveDef), 4);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() 
             ? "ÉCRASE ! $damage dégâts ! K.O. !" 
             : "coup écrasant ! $damage dégâts";
@@ -74,7 +74,7 @@ class Brute extends Personnage {
         $this->setPv($this->pv - 15);
         $baseDamage = max(1, (int)($this->atk * 1.5) - $target->getDef());
         $damage = $this->randomDamage($baseDamage, 5);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() 
             ? "CHARGE BRUTALE ! $damage dégâts ! K.O. !" 
             : "CHARGE ! $damage dég (-15 PV)";
@@ -83,7 +83,7 @@ class Brute extends Personnage {
     // Piétinement - Dégâts + ralentissement
     public function stomp(Personnage $target): string {
         $damage = $this->randomDamage(max(1, $this->atk - $target->getDef()), 3);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         $target->addStatusEffect(new SpeedModEffect(3, -10));
         return $target->isDead() 
             ? "PIÉTINE ! $damage dégâts ! K.O. !" 

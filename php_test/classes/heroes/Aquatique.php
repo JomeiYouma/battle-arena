@@ -45,12 +45,12 @@ class Aquatique extends Personnage {
 
     public function attack(Personnage $target): string {
         $damage = $this->randomDamage(max(1, $this->atk - $target->getDef()), 3);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() ? "torrent ! $damage dégâts ! K.O. !" : "jet d'eau ! $damage dégâts";
     }
 
     public function dodge(): string {
-        if (rand(1, 100) <= $this->dodgeChance) {
+        if ($this->roll(1, 100) <= $this->dodgeChance) {
             $this->setEvading(true);
             return "devient insaisissable ! Esquive prête !";
         }
@@ -59,13 +59,15 @@ class Aquatique extends Personnage {
 
     public function heal($x = null): string {
         $oldPv = $this->pv;
-        $this->setPv($this->pv + rand(12, 18));
+        $amount = $this->roll(12, 18);
+        $this->setPv($this->pv + $amount);
+        $this->triggerHealHooks($amount);
         return "se régénère ! +" . ($this->pv - $oldPv) . " PV";
     }
 
     public function tsunami(Personnage $target): string {
         $damage = $this->randomDamage(max(1, (int)($this->atk * 1.8) - $target->getDef()), 4);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() ? "TSUNAMI ! $damage dégâts ! K.O. !" : "TSUNAMI ! $damage dégâts !";
     }
 }

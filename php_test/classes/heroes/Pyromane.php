@@ -58,7 +58,7 @@ class Pyromane extends Personnage {
     public function attack(Personnage $target): string {
         $effectiveDef = max(0, $target->getDef() - 3);
         $damage = $this->randomDamage(max(1, $this->atk - $effectiveDef), 3);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() ? "FLAMMES ! $damage dégâts ! K.O. !" : "boule de feu ! $damage dégâts";
     }
 
@@ -71,7 +71,7 @@ class Pyromane extends Personnage {
 
     public function flameArrow(Personnage $target): string {
         $damage = $this->randomDamage(5, 2);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         $target->addStatusEffect(new BurningEffect(3, $this->getAtk(), 1));
         return $target->isDead() 
             ? "FLÈCHE ! $damage dégâts ! K.O. !"
@@ -80,14 +80,16 @@ class Pyromane extends Personnage {
 
     public function heal($x = null): string {
         $oldPv = $this->pv;
-        $this->setPv($this->pv + rand(12, 18));
+        $amount = $this->roll(12, 18);
+        $this->setPv($this->pv + $amount);
+        $this->triggerHealHooks($amount);
         return "absorbe la chaleur ! +" . ($this->pv - $oldPv) . " PV";
     }
 
     public function inferno(Personnage $target): string {
         $this->setPv($this->pv - 20);
         $damage = $this->randomDamage(max(1, ($this->atk * 2) - $target->getDef()), 5);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() 
             ? "INFERNO ! $damage dégâts ! K.O. !"
             : "INFERNO ! $damage dég (-20 PV)";

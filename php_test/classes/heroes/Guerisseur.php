@@ -58,13 +58,15 @@ class Guerisseur extends Personnage {
 
     public function attack(Personnage $target): string {
         $damage = $this->randomDamage(max(1, $this->atk - $target->getDef()), 2);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() ? "frappe ! $damage dégâts ! K.O. !" : "frappe : $damage dégâts";
     }
 
     public function heal($x = null): string {
         $oldPv = $this->pv;
-        $this->setPv($this->pv + rand(22, 28));
+        $amount = $this->roll(22, 28);
+        $this->setPv($this->pv + $amount);
+        $this->triggerHealHooks($amount);
         return "se soigne ! +" . ($this->pv - $oldPv) . " PV";
     }
 
@@ -80,7 +82,7 @@ class Guerisseur extends Personnage {
 
     public function smite(Personnage $target): string {
         $damage = $this->randomDamage($this->atk + 5, 3);
-        $target->setPv($target->getPv() - $damage);
+        $target->receiveDamage($damage, $this);
         return $target->isDead() ? "CHÂTIMENT ! $damage dégâts purs ! K.O. !" : "CHÂTIMENT ! $damage dég (ignore DEF)";
     }
 

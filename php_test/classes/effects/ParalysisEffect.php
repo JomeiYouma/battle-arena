@@ -8,8 +8,8 @@ class ParalysisEffect extends StatusEffect {
         parent::__construct('Paralysie', '⚡', $duration);
     }
 
-    public function blocksAction(): bool {
-        return rand(0, 1) === 0;
+    public function blocksAction(Personnage $target): bool {
+        return $target->roll(0, 1) === 0;
     }
 
     public function resolveDamage(Personnage $target): ?array {

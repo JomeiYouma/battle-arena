@@ -18,6 +18,16 @@ if (!function_exists('chargerClasse')) {
             require __DIR__ . '/classes/effects/' . $classe . '.php';
             return;
         }
+        // Chercher dans classes/blessings/
+        if (file_exists(__DIR__ . '/classes/blessings/' . $classe . '.php')) {
+            require __DIR__ . '/classes/blessings/' . $classe . '.php';
+            return;
+        }
+        // Chercher dans classes/heroes/
+        if (file_exists(__DIR__ . '/classes/heroes/' . $classe . '.php')) {
+            require __DIR__ . '/classes/heroes/' . $classe . '.php';
+            return;
+        }
     }
     spl_autoload_register('chargerClasse');
 }
@@ -112,7 +122,7 @@ $multiCombat = MultiCombat::load($stateFile);
 if (!$multiCombat) {
     // Initialiser le combat si pas encore créé
     try {
-        $multiCombat = MultiCombat::create($matchData['player1']['hero'], $matchData['player2']['hero']);
+        $multiCombat = MultiCombat::create($matchData['player1'], $matchData['player2']);
         if (!$multiCombat->save($stateFile)) {
             die("Erreur: Impossible de sauvegarder l'état initial du combat.");
         }
