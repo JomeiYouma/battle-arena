@@ -234,7 +234,9 @@ class Combat {
         $icon = ($actor === $this->player) ? "🎮" : "🤖";
         if ($actorType === 'enemy' && isset($this->isMulti) && $this->isMulti) $icon = "🎮"; // En multi, les deux sont des joueurs
 
-        $this->logs[] = $icon . " " . $actor->getName() . " : " . $result;
+        // Ajouter l'emoji de l'action si disponible
+        $actionEmoji = $action['emoji'] ?? '';
+        $this->logs[] = $icon . " " . $actor->getName() . " " . $actionEmoji . " : " . $result;
         
         // Action réussie !
         $actor->incrementSuccessfulActions();

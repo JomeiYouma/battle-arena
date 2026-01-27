@@ -27,6 +27,7 @@ class Necromancien extends Personnage {
                 'description' => 'Attaque de base (ignore 50% DEF)',
                 'method' => 'attack',
                 'needsTarget' => true,
+                'target' => 'offensive',  // Attaque l'adversaire
                 'emoji' => '🌑'
             ],
             'ordre_necrotique' => [
@@ -35,6 +36,7 @@ class Necromancien extends Personnage {
                 'pp' => 3,
                 'method' => 'ordreNecrotique',
                 'needsTarget' => true,
+                'target' => 'adaptive',  // S'adapte selon l'action interceptée
                 'emoji' => '👻'
             ],
             'chaines_rituel' => [
@@ -43,6 +45,7 @@ class Necromancien extends Personnage {
                 'pp' => 1,
                 'method' => 'chainesRituel',
                 'needsTarget' => true,
+                'target' => 'offensive',  // Attaque l'adversaire (réciproque)
                 'emoji' => '⛓️'
             ],
             'malediction' => [
@@ -51,6 +54,7 @@ class Necromancien extends Personnage {
                 'pp' => 2,
                 'method' => 'malediction',
                 'needsTarget' => true,
+                'target' => 'offensive',  // Attaque l'adversaire
                 'emoji' => '💀'
             ],
             'manipulation_ame' => [
@@ -59,6 +63,7 @@ class Necromancien extends Personnage {
                 'pp' => 2,
                 'method' => 'manipulationAme',
                 'needsTarget' => true,
+                'target' => 'offensive',  // Affecte l'adversaire
                 'emoji' => '🔄'
             ]
         ];
@@ -76,43 +81,46 @@ class Necromancien extends Personnage {
     }
 
     /**
-     * Classe une action comme bénéfique, attaque, ou néfaste
-     * @return string 'beneficial', 'attack', 'harmful', ou 'neutral'
+     * Détermine le type de cible d'une action ('offensive', 'defensive', ou 'adaptive')
+     * Utilise d'abord la métadonnée 'target' si disponible, sinon utilise la classification par mots-clés
+     * @return string 'offensive' (cible l'adversaire), 'defensive' (cible soi-même), ou 'adaptive' (s'adapte)
      */
-    private function classifyAction(string $actionKey, Personnage $target): string {
-        $beneficialKeywords = ['heal', 'soin', 'buff', 'faveur', 'transe', 'fortif', 'jour', 'nouveau'];
-        $attackKeywords = ['attack', 'attaque', 'assaut', 'coup', 'frapp', 'lance', 'concoction', 'foudre', 'conseil', 'sentence', 'noeud', 'chaîne', 'rituel'];
-        $harmfulKeywords = ['malediction', 'curse', 'poison', 'brûl', 'paralys', 'gel', 'manipulation', 'échange', 'debuff'];
+    private function classifyActionTarget(string $actionKey, Personnage $target): string {
+        // Récupérer les actions disponibles de l'ennemi
+        $availableActions = $target->getAvailableActions();
+        
+        // Si la métadonnée 'target' existe, l'utiliser
+        if (isset($availableActions[$actionKey]['target'])) {
+            return $availableActions[$actionKey]['target'];
+        }
+        
+        // Sinon, utiliser la classification par mots-clés
+        $beneficialKeywords = ['heal', 'soin', 'buff', 'faveur', 'transe', 'fortif', 'jour', 'nouveau', 'shield', 'bouclier', 'regen', 'restoration'];
+        $offensiveKeywords = ['attack', 'attaque', 'assaut', 'coup', 'frapp', 'lance', 'concoction', 'foudre', 'conseil', 'sentence', 'noeud', 'chaîne', 'rituel', 'curse', 'poison', 'brûl', 'paralys', 'gel', 'manipulation', 'échange', 'debuff', 'malédiction'];
         
         $lowerKey = strtolower($actionKey);
         
         foreach ($beneficialKeywords as $keyword) {
             if (strpos($lowerKey, strtolower($keyword)) !== false) {
-                return 'beneficial';
+                return 'defensive';
             }
         }
         
-        foreach ($harmfulKeywords as $keyword) {
+        foreach ($offensiveKeywords as $keyword) {
             if (strpos($lowerKey, strtolower($keyword)) !== false) {
-                return 'harmful';
+                return 'offensive';
             }
         }
         
-        foreach ($attackKeywords as $keyword) {
-            if (strpos($lowerKey, strtolower($keyword)) !== false) {
-                return 'attack';
-            }
-        }
-        
-        return 'neutral';
+        return 'offensive'; // Par défaut, considérer comme offensif
     }
 
     /**
-     * Ordre Nécrotique - Force l'ennemi à utiliser sa capacité contre lui-même
-     * Logique:
-     * - Actions bénéfiques: les appliquer au Nécromancien
-     * - Attaques: les appliquer à l'ennemi
-     * - Actions néfastes: les appliquer à l'ennemi
+     * Ordre Nécrotique - Force l'ennemi à utiliser sa capacité contre lui-même ou pour vous
+     * Logique basée sur la classification de l'action:
+     * - Actions OFFENSIVES: les appliquer à l'ennemi (le forcer à se blesser)
+     * - Actions DÉFENSIVES: les appliquer au Nécromancien (voler ses bénéfices)
+     * - Actions ADAPTATIVES: déterminer intelligemment la meilleure cible
      */
     public function ordreNecrotique(Personnage $target): string {
         // Récupérer toutes les actions possibles de l'ennemi
@@ -139,38 +147,39 @@ class Necromancien extends Personnage {
         }
         
         $method = $action['method'];
-        $classification = $this->classifyAction($selectedKey, $target);
+        $targetClassification = $this->classifyActionTarget($selectedKey, $target);
         
         try {
             $result = "";
             
-            if ($classification === 'beneficial') {
-                // Action bénéfique : l'appliquer à soi-même
-                if ($action['needsTarget'] ?? false) {
-                    $result = $target->$method($this); // Applique l'action bénéfique au Nécromancien
-                } else {
-                    $result = $target->$method(); // Applique sans cible
-                }
-                return "invoque un Ordre Nécrotique ! Détourne " . $action['label'] . " pour soi : " . $result;
+            // Déterminer la cible appropriée selon la classification
+            $actionTarget = $target; // Par défaut, l'ennemi
+            
+            if ($targetClassification === 'defensive') {
+                // Action défensive : l'appliquer au Nécromancien
+                $actionTarget = $this;
+                $message = "invoque un Ordre Nécrotique ! Détourne " . $action['label'] . " pour votre bénéfice : ";
+            } 
+            else if ($targetClassification === 'offensive') {
+                // Action offensive : la retourner contre l'ennemi
+                $actionTarget = $target;
+                $message = "invoque un Ordre Nécrotique ! Force l'ennemi à utiliser " . $action['label'] . " contre lui-même : ";
             }
-            else if ($classification === 'attack' || $classification === 'neutral') {
-                // Attaque : l'appliquer à l'ennemi
-                if ($action['needsTarget'] ?? false) {
-                    $result = $target->$method($target); // Force l'ennemi à attaquer lui-même
-                } else {
-                    $result = $target->$method();
-                }
-                return "invoque un Ordre Nécrotique ! Force l'ennemi à utiliser " . $action['label'] . " contre lui-même : " . $result;
+            else { // 'adaptive'
+                // Pour les actions adaptatives, déterminer la meilleure cible
+                // Généralement, les appliquer contre l'ennemi si elles ont un effet négatif
+                $actionTarget = $target;
+                $message = "invoque un Ordre Nécrotique ! Retourne " . $action['label'] . " : ";
             }
-            else { // harmful
-                // Action néfaste : l'appliquer à l'ennemi
-                if ($action['needsTarget'] ?? false) {
-                    $result = $target->$method($target); // Force l'ennemi à la subir
-                } else {
-                    $result = $target->$method();
-                }
-                return "invoque un Ordre Nécrotique ! Retourne " . $action['label'] . " contre l'ennemi : " . $result;
+            
+            // Exécuter l'action avec la cible appropriée
+            if ($action['needsTarget'] ?? false) {
+                $result = $target->$method($actionTarget);
+            } else {
+                $result = $target->$method();
             }
+            
+            return $message . $result;
         } catch (Exception $e) {
             return "tente un Ordre Nécrotique mais l'invocation échoue mystérieusement (" . $e->getMessage() . ")...";
         }

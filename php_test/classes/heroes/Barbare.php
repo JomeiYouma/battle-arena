@@ -65,8 +65,13 @@ class Barbare extends Personnage {
     }
 
     public function warcry(): string {
-        if (isset($this->activeBuffs['Cri de guerre'])) return "a déjà crié !";
-        $this->addBuff('Cri de guerre', 'atk', $this->warcryBonus, 3);
+        // Vérifier s'il y a déjà un AttackBoostEffect actif
+        foreach ($this->statusEffects as $effect) {
+            if ($effect instanceof AttackBoostEffect) {
+                return "a déjà crié !";
+            }
+        }
+        $this->addStatusEffect(new AttackBoostEffect(3, $this->warcryBonus));
         return "CRI DE GUERRE ! +{$this->warcryBonus} ATK";
     }
 

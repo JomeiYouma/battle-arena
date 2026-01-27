@@ -58,14 +58,24 @@ class Guerrier extends Personnage {
     }
 
     public function rage(): string {
-        if (isset($this->activeBuffs['Rage'])) return "est déjà en rage !";
-        $this->addBuff('Rage', 'atk', $this->rageBonus, 2);
+        // Vérifier s'il y a déjà un AttackBoostEffect actif
+        foreach ($this->statusEffects as $effect) {
+            if ($effect instanceof AttackBoostEffect) {
+                return "est déjà en rage !";
+            }
+        }
+        $this->addStatusEffect(new AttackBoostEffect(2, $this->rageBonus));
         return "entre en RAGE ! +{$this->rageBonus} ATK";
     }
 
     public function shield(): string {
-        if (isset($this->activeBuffs['Bouclier'])) return "bouclier déjà actif !";
-        $this->addBuff('Bouclier', 'def', $this->shieldBonus, 2);
+        // Vérifier s'il y a déjà un DefenseBoostEffect actif
+        foreach ($this->statusEffects as $effect) {
+            if ($effect instanceof DefenseBoostEffect) {
+                return "bouclier déjà actif !";
+            }
+        }
+        $this->addStatusEffect(new DefenseBoostEffect(2, $this->shieldBonus));
         return "lève son bouclier ! +{$this->shieldBonus} DEF";
     }
 

@@ -90,10 +90,15 @@ class Brute extends Personnage {
             : "PIÉTINE ! $damage dég, ennemi ralenti !";
     }
 
-    // Armure d'os - +20 DEF
+    // Armure d'os - +10 DEF
     public function boneArmor(): string {
-        if (isset($this->activeBuffs['Armure Os'])) return "armure déjà active !";
-        $this->addBuff('Armure Os', 'def', 10, 2);
+        // Vérifier s'il y a déjà un DefenseBoostEffect actif
+        foreach ($this->statusEffects as $effect) {
+            if ($effect instanceof DefenseBoostEffect) {
+                return "armure déjà active !";
+            }
+        }
+        $this->addStatusEffect(new DefenseBoostEffect(2, 10));
         return "renforce ses os ! +10 DEF";
     }
 

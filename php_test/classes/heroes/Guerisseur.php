@@ -71,11 +71,21 @@ class Guerisseur extends Personnage {
     }
 
     public function bless(): string {
-        if (isset($this->activeBuffs['Bénédiction'])) {
+        // Vérifier s'il y a déjà un DefenseBoostEffect actif
+        $hasBlessing = false;
+        foreach ($this->statusEffects as $effect) {
+            if ($effect instanceof DefenseBoostEffect) {
+                $hasBlessing = true;
+                break;
+            }
+        }
+        
+        if ($hasBlessing) {
             $this->setPv($this->pv + 10);
             return "renouvelle sa bénédiction !";
         }
-        $this->addBuff('Bénédiction', 'def', $this->blessDefBonus, 3);
+        
+        $this->addStatusEffect(new DefenseBoostEffect(3, $this->blessDefBonus));
         $this->setPv($this->pv + 10);
         return "invoque une bénédiction !";
     }
@@ -87,8 +97,13 @@ class Guerisseur extends Personnage {
     }
 
     public function barrier(): string {
-        if (isset($this->activeBuffs['Barrière'])) return "barrière déjà active !";
-        $this->addBuff('Barrière', 'def', 25, 1);
+        // Vérifier s'il y a déjà un DefenseBoostEffect actif
+        foreach ($this->statusEffects as $effect) {
+            if ($effect instanceof DefenseBoostEffect) {
+                return "barrière déjà active !";
+            }
+        }
+        $this->addStatusEffect(new DefenseBoostEffect(1, 25));
         return "crée une BARRIÈRE ! +25 DEF";
     }
 }
