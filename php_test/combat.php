@@ -65,6 +65,7 @@ $isBotMatch = ($matchData['mode'] ?? '') === 'bot';
 ?>
 
 <link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./css/combat.css">
 
 <div class="game-container">
     <div class="arena">
@@ -114,10 +115,10 @@ $isBotMatch = ($matchData['mode'] ?? '') === 'bot';
             <div id="actionButtons" class="action-form">
                 <!-- Actions générées dynamiquement par JS -->
             </div>
-            <div id="waitingMessage" class="waiting-text" style="display:none; margin-top: 15px;">
+            <div id="waitingMessage" class="waiting-text waiting-message-hidden">
                 En attente de l'adversaire...
             </div>
-            <div id="gameOverMessage" style="display:none; text-align:center; margin-top: 30px;">
+            <div id="gameOverMessage" class="game-over-section">
                 <h3 id="gameOverText"></h3>
                 <button class="action-btn new-game" onclick="location.href='index.php'">Menu Principal</button>
             </div>
@@ -268,7 +269,7 @@ function showErrorMessage(message) {
         const controls = document.querySelector('.controls');
         controls.parentNode.insertBefore(errorMsg, controls);
     }
-    errorMsg.innerHTML = message + '<br><button onclick="location.href=\'index.php\'" style="margin-top: 10px; padding: 8px 16px; background: white; color: red; border: none; border-radius: 4px; cursor: pointer;">Retour Menu</button>';
+    errorMsg.innerHTML = message + '<br><button onclick="location.href=\'index.php\'" class="error-return-btn">Retour Menu</button>';
     errorMsg.style.display = 'block';
 }
 

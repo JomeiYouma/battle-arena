@@ -6,8 +6,6 @@
 
 require_once __DIR__ . '/StatusEffect.php';
 require_once __DIR__ . '/Blessing.php';
-// Autoload blessings if needed or rely on manual require in addBlessing
-// For simplicity, we assume index.php autoloader handles it or we require specific files when strings are passed.
 
 abstract class Personnage {
     const MAX_PV = 200;
@@ -107,21 +105,28 @@ abstract class Personnage {
         return $this->pv;
     }
 
+    public function getBaseAtk() {
+        return $this->baseAtk;
+    }
+
+    public function getBaseDef() {
+        return $this->baseDef;
+    }
+
+    public function getBaseSpeed() {
+        return $this->speed; // speed n'a pas de version modifiable séparée
+    }
+
     public function getAtk() {
         $atk = $this->atk;
         
-        // Appliquer modificateurs effets
         foreach ($this->statusEffects as $effect) {
             $mods = $effect->getStatModifiers();
             if (isset($mods['atk'])) {
                 $atk += $mods['atk'];
             }
-            if (isset($mods['atk'])) {
-                $atk += $mods['atk'];
-            }
         }
         
-        // Apply Blessings
         foreach ($this->blessings as $blessing) {
             $atk = $blessing->modifyStat('atk', $atk, $this);
         }
@@ -132,18 +137,13 @@ abstract class Personnage {
     public function getDef() {
         $def = $this->def;
         
-        // Appliquer modificateurs effets
         foreach ($this->statusEffects as $effect) {
             $mods = $effect->getStatModifiers();
             if (isset($mods['def'])) {
                 $def += $mods['def'];
             }
-            if (isset($mods['def'])) {
-                $def += $mods['def'];
-            }
         }
 
-        // Apply Blessings
         foreach ($this->blessings as $blessing) {
             $def = $blessing->modifyStat('def', $def, $this);
         }
@@ -170,18 +170,13 @@ abstract class Personnage {
     public function getSpeed(): int {
         $speed = $this->speed;
         
-        // Appliquer les modificateurs des effets de statut
         foreach ($this->statusEffects as $effect) {
             $mods = $effect->getStatModifiers();
             if (isset($mods['speed'])) {
                 $speed += $mods['speed'];
             }
-            if (isset($mods['speed'])) {
-                $speed += $mods['speed'];
-            }
         }
 
-        // Apply Blessings
         foreach ($this->blessings as $blessing) {
             $speed = $blessing->modifyStat('speed', $speed, $this);
         }

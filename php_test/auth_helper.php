@@ -31,66 +31,9 @@ function requireDebugAuth() {
         <meta charset="UTF-8">
         <title>Accès Protégé</title>
         <link rel="stylesheet" href="./style.css">
-        <style>
-            body { 
-                display: flex; 
-                align-items: center; 
-                justify-content: center; 
-                min-height: 100vh;
-                background: #1a1a2e;
-            }
-            .auth-box {
-                background: rgba(20, 20, 30, 0.95);
-                border: 2px solid #c41e3a;
-                border-radius: 15px;
-                padding: 40px;
-                text-align: center;
-                max-width: 400px;
-            }
-            .auth-box h2 {
-                color: #ffd700;
-                margin-bottom: 20px;
-            }
-            .auth-box input[type="password"] {
-                width: 100%;
-                padding: 12px;
-                background: #0a0a0f;
-                border: 2px solid #4a0000;
-                border-radius: 8px;
-                color: #e0e0e0;
-                font-size: 16px;
-                margin-bottom: 15px;
-            }
-            .auth-box input[type="password"]:focus {
-                outline: none;
-                border-color: #c41e3a;
-            }
-            .auth-box button {
-                width: 100%;
-                padding: 12px;
-                background: linear-gradient(135deg, #c41e3a, #7a1226);
-                border: none;
-                border-radius: 8px;
-                color: white;
-                font-size: 16px;
-                cursor: pointer;
-                transition: transform 0.2s;
-            }
-            .auth-box button:hover {
-                transform: scale(1.02);
-            }
-            .error {
-                color: #ff6b6b;
-                margin-bottom: 15px;
-            }
-            .back-link {
-                margin-top: 20px;
-                display: block;
-                color: #b8860b;
-            }
-        </style>
+        <link rel="stylesheet" href="./css/auth.css">
     </head>
-    <body>
+    <body class="auth-body">
         <div class="auth-box">
             <h2>🔐 Accès Protégé</h2>
             <?php if (isset($error)): ?>

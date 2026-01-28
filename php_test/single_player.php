@@ -124,6 +124,8 @@ if (isset($_POST['action']) && isset($_SESSION['combat'])) {
 }
 ?>
 <link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./css/single_player.css">
+<link rel="stylesheet" href="./css/combat.css">
 
 <div class="game-container">
 
@@ -246,7 +248,7 @@ if (isset($_SESSION['combat'])):
             // Note: Les stats ne sont pas enregistrées en mode solo (vs bot)
             // Seuls les combats PvP sont enregistrés
         ?>
-            <div class="game-over" id="gameOverSection" style="display: none;">
+            <div class="game-over game-over-hidden" id="gameOverSection">
                 <?php if ($combat->getWinner() === $hero): ?>
                     <h3 class="victory-text">VICTOIRE !</h3>
                     <br>
@@ -488,11 +490,11 @@ else:
     <form method="POST">
         <input type="hidden" name="mode" value="single">
         
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;">
+        <div class="selection-columns">
             <!-- HEROES -->
-            <div style="flex: 1; min-width: 300px;">
-                <h3 style="color:#b8860b;">Héros</h3>
-                <div class="hero-list" style="height: 400px; overflow-y: auto;">
+            <div class="selection-column">
+                <h3 class="selection-column-title">Héros</h3>
+                <div class="hero-list hero-list-scroll">
                     <?php foreach ($personnages as $perso): ?>
                         <label class="hero-row">
                             <input type="radio" name="hero_choice" value="<?php echo $perso['id']; ?>" required checked>
@@ -512,9 +514,9 @@ else:
             </div>
 
             <!-- BLESSINGS -->
-            <div style="flex: 1; min-width: 300px;">
-                <h3 style="color:#b8860b;">Bénédiction (Optionnel)</h3>
-                <div class="hero-list" style="height: 400px; overflow-y: auto;">
+            <div class="selection-column">
+                <h3 class="selection-column-title">Bénédiction (Optionnel)</h3>
+                <div class="hero-list hero-list-scroll">
                     <label class="hero-row">
                         <input type="radio" name="blessing_choice" value="" checked>
                         <div class="hero-row-content">
@@ -528,10 +530,10 @@ else:
                         <label class="hero-row">
                             <input type="radio" name="blessing_choice" value="<?php echo $b['id']; ?>">
                             <div class="hero-row-content">
-                                <div style="font-size: 30px; margin-right: 15px;"><?php echo $b['emoji']; ?></div>
+                                <div class="blessing-emoji-large"><?php echo $b['emoji']; ?></div>
                                 <div class="hero-info">
                                     <h4><?php echo $b['name']; ?></h4>
-                                    <p class="hero-theme" style="font-size: 12px;"><?php echo $b['desc']; ?></p>
+                                    <p class="hero-theme blessing-desc-small"><?php echo $b['desc']; ?></p>
                                 </div>
                             </div>
                         </label>
@@ -540,8 +542,8 @@ else:
             </div>
         </div>
         
-        <div style="text-align: center; margin-top: 20px;">
-            <button type="submit" class="action-btn enter-arena" style="width: 50%;">Entrer dans l'arène</button>
+        <div class="submit-section">
+            <button type="submit" class="action-btn enter-arena enter-arena-btn">Entrer dans l'arène</button>
         </div>
     </form>
 </div>

@@ -27,11 +27,6 @@ class StatRedistributionEffect extends StatusEffect {
             
             $target->setAtk($avg);
             $target->setDef($avg);
-            // Speed can't be easily set via setter if it doesn't exist, need to check Personnage
-            // Personnage doesn't have setSpeed? Let's check Personnage.php.
-            // ... Personnage DOES NOT have setSpeed. It has protected $speed.
-            // We need to add setSpeed or use reflection (dirty).
-            // Let's assume we will add setSpeed to Personnage.
             if (method_exists($target, 'setSpeed')) {
                 $target->setSpeed($avg);
             }

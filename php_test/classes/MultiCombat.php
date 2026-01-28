@@ -92,15 +92,7 @@ class MultiCombat extends Combat {
     }
 
     private static function createHeroFromData($data) {
-        // Handle nested hero data structure if present (when passed from match meta where hero is sub-array)
-        // But here specific usage seems to pass the hero array directly.
-        // Wait, from api.php: create($meta['player1']['hero'], ...) 
-        // But blessing_id is in $meta['player1']['blessing_id'].
-        // API needs to pass the WHOLE player array to create, not just hero, OR pass blessing separately.
-        
-        // I will assume the caller (api.php) will be updated to pass the full player array including 'hero' and 'blessing_id'.
-        // Let's enable support for both formats to be safe.
-        
+        // Support both direct hero data and nested player data with blessing_id
         $heroData = isset($data['hero']) ? $data['hero'] : $data;
         $blessingId = $data['blessing_id'] ?? null;
         

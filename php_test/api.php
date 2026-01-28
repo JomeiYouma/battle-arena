@@ -74,12 +74,9 @@ try {
             // Récupérer l'ID utilisateur si connecté
             $userId = User::isLoggedIn() ? User::getCurrentUserId() : null;
             
-            error_log("API join_queue - sessionId=$sessionId, hero=" . $heroData['name'] . ", displayName=$displayName, userId=$userId");
-            
             $queue = new MatchQueue();
             $result = $queue->findMatch($sessionId, $heroData, $displayName, $userId, $blessingId);
             
-            error_log("API join_queue - result=" . json_encode($result));
             echo json_encode($result);
             break;
         
@@ -141,12 +138,10 @@ try {
             if (($metaData['mode'] ?? '') === 'pvp' && $metaData['status'] === 'active') {
                 $oppLastPoll = $metaData[$oppPlayerKey]['last_poll'] ?? $metaData['created_at'];
                 if (($now - $oppLastPoll) > $AFK_TIMEOUT) {
-                    // Adversaire AFK! Victoire par forfait
                     $opponentAFK = true;
                     $metaData['status'] = 'finished';
                     $metaData['winner'] = $myPlayerKey;
                     $metaData['logs'][] = "⚠️ " . ($metaData[$oppPlayerKey]['display_name'] ?? 'Adversaire') . " est AFK. Victoire par forfait!";
-                    error_log("AFK DETECTED: Player $oppPlayerKey AFK for " . ($now - $oppLastPoll) . "s. Winner: $myPlayerKey");
                 }
             }
             
@@ -169,7 +164,6 @@ try {
                         throw new Exception("Impossible de sauvegarder l'état initial du combat");
                     }
                 } catch (Exception $e) {
-                    error_log("Error creating MultiCombat: " . $e->getMessage());
                     throw new Exception("Erreur lors de l'initialisation du combat: " . $e->getMessage());
                 }
             }
@@ -209,7 +203,6 @@ try {
                 
                 echo json_encode($response);
             } catch (Exception $e) {
-                error_log("Error building response: " . $e->getMessage());
                 throw new Exception("Erreur lors de la construction de la réponse: " . $e->getMessage());
             }
             break;
@@ -243,9 +236,6 @@ try {
             $isP1 = ($metaData['player1']['session'] === $sessionId);
             $isP2 = ($metaData['player2']['session'] === $sessionId);
             
-            // Debug log
-            error_log("submit_move - sessionId=$sessionId, p1_session=" . $metaData['player1']['session'] . ", p2_session=" . $metaData['player2']['session'] . ", isP1=$isP1, isP2=$isP2");
-            
             if (!$isP1 && !$isP2) {
                 flock($fp, LOCK_UN);
                 fclose($fp);
@@ -255,9 +245,7 @@ try {
             $myRole = $isP1 ? 'p1' : 'p2';
             $oppRole = $isP1 ? 'p2' : 'p1';
             
-            // Enregistrer l'action
             $metaData['current_turn_actions'][$myRole] = $move;
-            error_log("submit_move - Recorded action: $myRole -> $move");
             
             // Si c'est un match bot et que c'est le joueur qui joue, générer action bot
             if (($metaData['mode'] ?? '') === 'bot' && $myRole === 'p1') {

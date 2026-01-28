@@ -1,0 +1,49 @@
+/* ===== SINGLE PLAYER PAGE STYLES ===== */
+
+/* Selection screen layout */
+.selection-columns {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.selection-column {
+    flex: 1;
+    min-width: 300px;
+}
+
+.selection-column-title {
+    color: #b8860b;
+}
+
+.hero-list-scroll {
+    height: 320px;
+    overflow-y: auto;
+}
+
+/* Blessing emoji in list */
+.blessing-emoji-large {
+    font-size: 24px;
+    margin-right: 12px;
+}
+
+/* Blessing description */
+.blessing-desc-small {
+    font-size: 12px;
+}
+
+/* Submit section */
+.submit-section {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.enter-arena-btn {
+    width: 50%;
+}
+
+/* Game over hidden by default */
+.game-over-hidden {
+    display: none;
+}

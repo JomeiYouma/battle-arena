@@ -82,13 +82,3 @@ class JudgmentOfDamned extends Blessing {
         return "inflige une Sentence Méritée ! " . $finalDmg . " dégâts (x" . $multiplier . ") !";
     }
 }
-        
-        if ($hasEffect) $multiplier = 2.0;
-        
-        $damage = $actor->roll((int)($actor->getAtk() * $multiplier), (int)($actor->getAtk() * $multiplier * 1.2)); // Variance
-        $damage = max(1, $damage - $target->getDef());
-        
-        $target->receiveDamage($damage);
-        return "prononce la Sentence ! " . ($hasEffect ? "(CRITIQUE x2) " : "") . $damage . " dégâts !";
-    }
-}

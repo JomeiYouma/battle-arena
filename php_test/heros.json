@@ -122,7 +122,7 @@
         "description": "Géant lent mais dévastateur. Bombe finale si mal en point.",
         "images": {
             "p1": "media/giant_skol.png",
-            "p2": "media/giant_skol.png"
+            "p2": "media/giant_skol_2.png"
         }
     }
 ]

@@ -1,0 +1,45 @@
+/* ===== COMBAT / BATTLE COMMON STYLES ===== */
+
+/* Page title */
+.arena-title {
+    margin-bottom: 20px;
+}
+
+/* Fighter positioning */
+.fighter {
+    position: relative;
+}
+
+/* Info panel - hidden by default */
+.info-panel-hidden {
+    display: none;
+}
+
+/* Waiting message - hidden by default */
+.waiting-message-hidden {
+    display: none;
+    margin-top: 15px;
+}
+
+/* Game over section - hidden by default */
+.game-over-section {
+    display: none;
+    text-align: center;
+    margin-top: 30px;
+}
+
+/* Form spacing */
+.abandon-form {
+    margin-top: 20px;
+}
+
+/* Error button styling */
+.error-return-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: white;
+    color: red;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}

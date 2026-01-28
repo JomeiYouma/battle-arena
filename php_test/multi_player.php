@@ -41,351 +41,27 @@ $blessingsList = [
 ];
 ?>
 
-<style>
-/* ===== HERO SELECTION GRID AMÉLIORÉ ===== */
-.multi-container {
-    max-width: 1000px;
-    margin: 30px auto;
-    padding: 0 20px;
-}
-
-.multi-title {
-    text-align: center;
-    color: #ffd700;
-    font-size: 28px;
-    margin-bottom: 10px;
-    text-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
-    letter-spacing: 2px;
-}
-
-.multi-subtitle {
-    text-align: center;
-    color: #b8860b;
-    font-size: 14px;
-    margin-bottom: 30px;
-    font-style: italic;
-}
-
-/* ===== DISPLAY NAME INPUT ===== */
-.display-name-section {
-    max-width: 400px;
-    margin: 0 auto 30px;
-    background: rgba(20, 20, 30, 0.8);
-    border: 2px solid #4a0000;
-    border-radius: 10px;
-    padding: 20px;
-}
-
-.display-name-section label {
-    display: block;
-    color: #b8860b;
-    font-size: 14px;
-    margin-bottom: 8px;
-}
-
-.display-name-input {
-    width: 100%;
-    padding: 12px 15px;
-    background: rgba(10, 10, 15, 0.9);
-    border: 2px solid #4a0000;
-    border-radius: 8px;
-    color: #ffd700;
-    font-size: 16px;
-    text-align: center;
-    transition: all 0.3s;
-}
-
-.display-name-input:focus {
-    outline: none;
-    border-color: #c41e3a;
-    box-shadow: 0 0 15px rgba(196, 30, 58, 0.3);
-}
-
-.display-name-input::placeholder {
-    color: #666;
-}
-
-.hero-select-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 20px;
-    margin-bottom: 30px;
-}
-
-.hero-card-btn {
-    background: linear-gradient(145deg, rgba(30, 30, 40, 0.95), rgba(20, 15, 25, 0.98));
-    border: 2px solid #4a0000;
-    border-radius: 12px;
-    padding: 0;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    position: relative;
-}
-
-.hero-card-btn:hover {
-    transform: translateY(-8px) scale(1.02);
-    border-color: #c41e3a;
-    box-shadow: 0 15px 40px rgba(196, 30, 58, 0.4), 
-                0 0 30px rgba(255, 215, 0, 0.2),
-                inset 0 0 20px rgba(196, 30, 58, 0.1);
-}
-
-.hero-card-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #c41e3a, transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.hero-card-btn:hover::before {
-    opacity: 1;
-}
-
-.hero-card-content {
-    padding: 15px;
-    text-align: center;
-}
-
-.hero-card-content img {
-    width: 100px;
-    height: 100px;
-    object-fit: contain;
-    margin-bottom: 10px;
-    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
-    transition: transform 0.3s, filter 0.3s;
-}
-
-.hero-card-btn:hover .hero-card-content img {
-    transform: scale(1.1);
-    filter: drop-shadow(0 8px 20px rgba(196, 30, 58, 0.5));
-}
-
-.hero-card-content h4 {
-    color: #e0e0e0;
-    font-size: 16px;
-    margin: 8px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.hero-card-content .type-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #c41e3a, #7a1226);
-    color: #fff;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-}
-
-.hero-stats-preview {
-    color: #808080;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.hero-stats-preview span {
-    color: #b8860b;
-}
-
-/* ===== QUEUE SCREEN ===== */
-.queue-screen {
-    display: none;
-    text-align: center;
-    padding: 60px 20px;
-}
-
-.queue-screen.active {
-    display: block;
-}
-
-.queue-loader {
-    width: 80px;
-    height: 80px;
-    border: 4px solid #2a2a3a;
-    border-top: 4px solid #c41e3a;
-    border-radius: 50%;
-    margin: 0 auto 30px;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.queue-title {
-    color: #ffd700;
-    font-size: 24px;
-    margin-bottom: 20px;
-    text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-}
-
-.queue-box {
-    background: rgba(20, 20, 30, 0.9);
-    border: 2px solid #c41e3a;
-    border-radius: 15px;
-    padding: 30px;
-    max-width: 400px;
-    margin: 0 auto 30px;
-}
-
-.queue-countdown {
-    font-size: 64px;
-    font-weight: bold;
-    color: #c41e3a;
-    font-family: monospace;
-    text-shadow: 0 0 30px rgba(196, 30, 58, 0.6);
-    margin-bottom: 10px;
-}
-
-.queue-countdown-label {
-    color: #808080;
-    font-size: 14px;
-}
-
-.queue-message {
-    color: #b8860b;
-    font-size: 15px;
-    margin: 25px 0;
-    line-height: 1.6;
-}
-
-.queue-hero-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
-    padding: 15px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
-}
-
-.queue-hero-preview img {
-    width: 60px;
-    height: 60px;
-    object-fit: contain;
-}
-
-.queue-hero-preview .info {
-    text-align: left;
-}
-
-.queue-hero-preview .info h4 {
-    color: #ffd700;
-    margin: 0 0 5px;
-}
-
-.queue-hero-preview .info span {
-    color: #808080;
-    font-size: 12px;
-}
-
-.cancel-queue-btn {
-    background: linear-gradient(135deg, #4a0000, #2a0000);
-    border: 2px solid #6a0000;
-    color: #ff6b6b;
-    padding: 12px 30px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
-}
-
-.cancel-queue-btn:hover {
-    background: linear-gradient(135deg, #6a0000, #4a0000);
-    border-color: #c41e3a;
-    transform: scale(1.05);
-}
-
-.selection-screen.hidden {
-    display: none;
-}
-
-/* Blessings Grid */
-.blessing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 20px;
-}
-
-.blessing-card {
-    background: rgba(30, 30, 40, 0.9);
-    border: 2px solid #555;
-    border-radius: 8px;
-    padding: 15px;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-align: left;
-}
-
-.blessing-card:hover {
-    border-color: #ffd700;
-    transform: translateY(-3px);
-}
-
-.blessing-card.selected {
-    border-color: #ffd700;
-    background: rgba(80, 60, 20, 0.9);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-}
-
-.blessing-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    color: #ffd700;
-    font-weight: bold;
-}
-
-.blessing-desc {
-    font-size: 12px;
-    color: #aaa;
-    line-height: 1.4;
-}
-
-.step-indicator {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #888;
-    font-size: 14px;
-}
-.step-indicator span.active {
-    color: #ffd700;
-    font-weight: bold;
-}
-</style>
-
 <link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./css/multiplayer.css">
 
 <div class="multi-container">
     <!-- ÉCRAN 1: SÉLECTION DU HÉROS -->
     <div class="selection-screen" id="selectionScreen">
-        <h2 class="multi-title">⚔️ CHOISISSEZ VOTRE CHAMPION ⚔️</h2>
+        <h2 class="multi-title">⚔️ CHOISISSEZ VOTRE COMPOSITION ⚔️</h2>
         <p class="multi-subtitle">Sélectionnez un héros pour entrer dans l'arène multijoueur</p>
         
         <!-- CHAMP DISPLAY NAME -->
         <?php if (User::isLoggedIn()): ?>
-            <div class="display-name-section" style="background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(184, 134, 11, 0.1)); border-color: #b8860b;">
-                <label style="margin-bottom: 12px;">👤 Vous jouez en tant que</label>
-                <div style="color: #ffd700; font-size: 20px; font-weight: bold; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);">
+            <div class="display-name-section highlighted">
+                <label class="display-name-label">Vous jouez en tant que</label>
+                <div class="display-name-value">
                     <?php echo htmlspecialchars(User::getCurrentUsername()); ?>
                 </div>
             </div>
             <input type="hidden" id="displayName" value="<?php echo htmlspecialchars(User::getCurrentUsername()); ?>">
         <?php else: ?>
             <div class="display-name-section">
-                <label for="displayName">👤 Votre nom de joueur</label>
+                <label for="displayName">Votre nom de joueur</label>
                 <input type="text" 
                        id="displayName" 
                        class="display-name-input" 
@@ -395,7 +71,7 @@ $blessingsList = [
         <?php endif; ?>
         
         <div class="step-indicator" id="stepIndicator">
-            <span class="active">1. HÉROS</span> &nbsp;➡️&nbsp; <span>2. BÉNÉDICTION</span>
+            <span class="active">HÉROS</span> &nbsp;->&nbsp; <span>BÉNÉDICTION</span>
         </div>
 
         <!-- STEP 1: HEROES -->
@@ -420,14 +96,14 @@ $blessingsList = [
         </div>
 
         <!-- STEP 2: BLESSINGS (Hidden initially) -->
-        <div id="blessingStep" style="display: none;">
-            <h3 style="color: #ffd700; text-align: center; margin-bottom: 20px;">Choisissez une Bénédiction de départ</h3>
+        <div id="blessingStep" class="blessing-step">
+            <h3 class="blessing-step-title">Choisissez une Bénédiction</h3>
             
             <div class="blessing-grid">
                 <?php foreach ($blessingsList as $b): ?>
                 <div class="blessing-card" onclick="selectBlessing('<?php echo $b['id']; ?>', this)">
                     <div class="blessing-header">
-                        <span style="font-size: 24px;"><?php echo $b['emoji']; ?></span>
+                        <span class="blessing-emoji"><?php echo $b['emoji']; ?></span>
                         <span><?php echo $b['name']; ?></span>
                     </div>
                     <div class="blessing-desc">
@@ -437,19 +113,15 @@ $blessingsList = [
                 <?php endforeach; ?>
             </div>
             
-            <div style="text-align: center; margin-top: 30px; display: flex; gap: 20px; justify-content: center;">
-                <button type="button" class="cancel-queue-btn" onclick="backToHero()" style="border-color: #555; color: #aaa;">
-                    ⬅️ Retour
+            <div class="blessing-step-actions">
+                <button type="button" class="cancel-queue-btn secondary" onclick="backToHero()">
+                    Retour
                 </button>
-                <button type="button" class="cancel-queue-btn" onclick="confirmSelection()" style="background: linear-gradient(135deg, #ffd700, #b8860b); color: #000; font-weight: bold; border-color: #ffd700;">
-                    COMBATTRE ⚔️
+                <button type="button" class="cancel-queue-btn confirm" onclick="confirmSelection()">
+                    COMBATTRE
                 </button>
             </div>
         </div>
-        
-<!--         <div style="text-align: center;">
-            <a href="index.php" class="action-btn abandon">Retour au menu</a>
-        </div> -->
     </div>
 
     <!-- ÉCRAN 2: QUEUE D'ATTENTE -->
@@ -469,7 +141,7 @@ $blessingsList = [
             
             <div class="queue-countdown" id="countdown">30</div>
             <div class="queue-countdown-label">secondes restantes</div>
-            <div id="queueInfo" style="margin-top: 15px; font-size: 14px; color: #b8860b;">Connexion...</div>
+            <div id="queueInfo" class="queue-info">Connexion...</div>
         </div>
         
         <p class="queue-message">

@@ -147,11 +147,9 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
             
             <!-- DEBUG TOOLS (visible localement) -->
             <?php if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false): ?>
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #444; display: flex; gap: 15px; justify-content: center;">
-                    <a href="debug.php" class="menu-btn" style="background: #1a1a1a; border-color: #333; text-decoration: none;">
-                        Debug
-                    </a>
-                </div>
+                <a href="debug.php" class="menu-btn debug-btn">
+                    Debug
+                </a>
             <?php endif; ?>
         </div>
 
@@ -176,7 +174,6 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
             }
             ?>
             
-            <br><br>
             <a href="index.php" class="back-link">Retour au menu</a>
         </div>
 

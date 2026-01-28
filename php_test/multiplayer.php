@@ -157,8 +157,9 @@ try {
 
 <link rel="icon" href="./media/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./css/combat.css">
 
-<h1 style="margin-bottom: 20px;">Horus Battle Arena</h1>
+<h1 class="arena-title">Horus Battle Arena</h1>
 
 <div class="game-container">
     <div class="arena">
@@ -187,7 +188,7 @@ try {
         
         <!-- ZONE DE COMBAT -->
         <div class="fighters-area">
-            <div class="fighter hero" id="myFighter" style="position: relative;">
+            <div class="fighter hero" id="myFighter">
                 <img src="<?php echo $gameState['me']['img']; ?>" alt="Hero">
                 <div id="myEmojiContainer"></div>
                 <div class="effects-container hero-effects" id="myEffects"></div>
@@ -195,7 +196,7 @@ try {
 
             <div class="vs-indicator">VS</div>
 
-            <div class="fighter enemy" id="oppFighter" style="position: relative;">
+            <div class="fighter enemy" id="oppFighter">
                 <img src="<?php echo $gameState['opponent']['img']; ?>" alt="Opponent" class="enemy-img">
                 <div id="oppEmojiContainer"></div>
                 <div class="effects-container enemy-effects" id="oppEffects"></div>
@@ -218,7 +219,7 @@ try {
                 </div>
                 
                 <!-- RIGHT: Info panel (timer + description) -->
-                <div id="infoPanel" class="info-panel" style="display:none;">
+                <div id="infoPanel" class="info-panel info-panel-hidden">
                     <div id="actionTimer" class="action-timer-circle">
                         <!-- SVG Ring -->
                         <svg class="timer-svg" viewBox="0 0 70 70">
@@ -233,16 +234,16 @@ try {
                 </div>
             </div>
             
-            <div id="waitingMessage" class="waiting-text" style="display:none; margin-top: 15px;">
+            <div id="waitingMessage" class="waiting-text waiting-message-hidden">
                 En attente de l'adversaire...
             </div>
-            <div id="gameOverMessage" style="display:none; text-align:center; margin-top: 30px;">
+            <div id="gameOverMessage" class="game-over-section">
                 <h3 id="gameOverText"></h3>
                 <br>
                 <button class="action-btn new-game" onclick="location.href='index.php'">Menu Principal</button>
             </div>
             
-            <form method="POST" style="margin-top: 20px;">
+            <form method="POST" class="abandon-form">
                 <button type="submit" name="abandon_multi" class="action-btn abandon">Abandonner</button>
             </form>
         </div>
@@ -327,19 +328,15 @@ function updateTimerDisplay() {
 
 // Logic to play a random action
 function playRandomAction() {
-    console.log("Time's up! Triggering random action...");
     const availableButtons = document.querySelectorAll('.action-btn:not(.disabled)');
     if (availableButtons.length > 0) {
         const randomIndex = Math.floor(Math.random() * availableButtons.length);
         availableButtons[randomIndex].click();
-    } else {
-        console.warn("No available actions for random selection.");
     }
 }
 
 // Logic to trigger forfeit
 function triggerForfeit() {
-    console.log("AFK Limit reached! Triggering forfeit...");
     stopActionTimer();
     // Create and submit a form to abandon
     const form = document.createElement('form');
@@ -391,7 +388,6 @@ async function playTurnAnimations(turnActions) {
     if (!turnActions || turnActions.length === 0 || isPlayingAnimations) return;
     
     isPlayingAnimations = true;
-    console.log('Playing turn animations:', turnActions);
     
     for (const action of turnActions) {
         await playAction(action);
@@ -580,7 +576,6 @@ function updateCombatState() {
             }
             
             if (data.status === 'error') {
-                console.error('API error:', data.message);
                 showErrorMessage("Erreur API: " + data.message);
                 return;
             }
@@ -590,7 +585,6 @@ function updateCombatState() {
             // Check if new turn - play animations
             const hasNewAnimations = data.turn > lastTurnProcessed && data.turnActions && data.turnActions.length > 0;
             if (hasNewAnimations) {
-                console.log('New turn detected! Playing animations for turn', data.turn);
                 lastTurnProcessed = data.turn;
                 // Don't update stats here - animations will handle it
                 playTurnAnimations(data.turnActions);
@@ -641,15 +635,6 @@ function updateCombatState() {
             if (errorMsg) {
                 errorMsg.style.display = 'none';
             }
-            
-            // DEBUG: Log action data
-            console.log('Poll response:', {
-                waiting_for_me: data.waiting_for_me,
-                waiting_for_opponent: data.waiting_for_opponent,
-                actions: data.actions,
-                actionsCount: data.actions ? Object.keys(data.actions).length : 0,
-                isOver: data.isOver
-            });
             
             // Generate buttons from available actions
             if (data.actions && data.waiting_for_me && !data.isOver) {
@@ -722,7 +707,7 @@ function showErrorMessage(message) {
         const controls = document.querySelector('.controls');
         controls.parentNode.insertBefore(errorMsg, controls);
     }
-    errorMsg.innerHTML = message + '<br><button onclick="location.href=\'index.php\'" style="margin-top: 10px; padding: 8px 16px; background: white; color: red; border: none; border-radius: 4px; cursor: pointer;">Retour Menu</button>';
+    errorMsg.innerHTML = message + '<br><button onclick="location.href=\'index.php\'" class="error-return-btn">Retour Menu</button>';
     errorMsg.style.display = 'block';
 }
 
@@ -735,24 +720,17 @@ function sendAction(action) {
     waitMsg.style.display = 'block';
     waitMsg.innerText = 'Envoi de l\'action...';
     
-    console.log('Sending action:', action, 'for match:', MATCH_ID);
-    
     fetch('api.php?action=submit_move', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: 'match_id=' + MATCH_ID + '&move=' + action
     })
-        .then(r => {
-            console.log('Response status:', r.status);
-            return r.text(); // Get raw text first
-        })
+        .then(r => r.text())
         .then(text => {
-            console.log('Raw response:', text);
             try {
                 return JSON.parse(text);
             } catch (e) {
-                console.error('JSON parse failed, raw response:', text);
                 throw new Error('Réponse invalide: ' + text.substring(0, 100));
             }
         })
