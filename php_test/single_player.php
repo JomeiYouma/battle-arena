@@ -266,6 +266,7 @@ if (isset($_SESSION['combat'])):
     </div>
 </div>
 
+<script src="js/combat-animations.js"></script>
 <script>
 
     // Récupération des données depuis PHP
@@ -307,212 +308,41 @@ if (isset($_SESSION['combat'])):
         }
     }
     
-    function triggerHitAnimation(fighterElement) {
-        if (!fighterElement) return;
-        fighterElement.classList.add('fighter-hit');
-        setTimeout(() => fighterElement.classList.remove('fighter-hit'), 400);
-    }
-    
-    async function playTurnAnimations() {
+    // Configuration pour le système d'animations partagé
+    let isPlayingAnimations = false;
+    const combatAnimConfig = {
+        isMyAction: (actor) => actor === 'player',
+        getActorContainer: (isMe) => document.getElementById(isMe ? 'heroEmojiContainer' : 'enemyEmojiContainer'),
+        getTargetContainer: (isMe) => document.getElementById(isMe ? 'enemyEmojiContainer' : 'heroEmojiContainer'),
+        getActorFighter: (isMe) => document.getElementById(isMe ? 'heroFighter' : 'enemyFighter'),
+        getTargetFighter: (isMe) => document.getElementById(isMe ? 'enemyFighter' : 'heroFighter'),
+        updateStats: (states) => updateStats(states),
+        triggerHitAnimation: (fighter) => {
+            if (!fighter) return;
+            fighter.classList.add('fighter-hit');
+            setTimeout(() => fighter.classList.remove('fighter-hit'), 400);
+        }
+    };
+
+    // Wrapper pour intégrer avec le reste du code single_player
+    async function playTurnAnimationsWrapper() {
         if (!turnActions || turnActions.length === 0) {
-            // Pas d'animations, afficher directement le game-over si présent
             showGameOver();
             return;
         }
-
-        for (const action of turnActions) {
-            // Handle blessing passive animations
-            if (action.phase === 'blessing_passive') {
-                await playBlessingAnimation(action);
-            } else {
-                await playAction(action);
-            }
-        }
-        
-        // Afficher le game-over après toutes les animations
+        await playTurnAnimations(turnActions);
         showGameOver();
     }
-    
+
     function showGameOver() {
         const gameOver = document.getElementById('gameOverSection');
         const actionForm = document.getElementById('actionForm');
         if (gameOver) {
-            // Cacher le formulaire d'actions
             if (actionForm) {
                 actionForm.style.display = 'none';
             }
-            // Afficher le game-over
             gameOver.style.display = 'block';
         }
-    }
-
-    function playBlessingAnimation(action) {
-        return new Promise(resolve => {
-            const isPlayer = action.actor === 'player';
-            
-            const actorContainer = isPlayer 
-                ? document.getElementById('heroEmojiContainer') 
-                : document.getElementById('enemyEmojiContainer');
-            const actorFighter = isPlayer 
-                ? document.getElementById('heroFighter') 
-                : document.getElementById('enemyFighter');
-            
-            if (!actorFighter) {
-                setTimeout(() => resolve(), 1500);
-                return;
-            }
-            
-            // 1. Show action name with blessing styling (violet)
-            const nameElement = document.createElement('div');
-            nameElement.className = 'action-name-display blessing-passive';
-            nameElement.textContent = action.label || action.message || 'Blessing activé';
-            if (actorContainer) actorContainer.appendChild(nameElement);
-            
-            // 2. Show large blessing icon
-            const imgContainer = document.createElement('div');
-            imgContainer.className = 'blessing-action-img on-self';
-            
-            const img = document.createElement('img');
-            img.src = action.icon || 'media/blessings/moon.png';
-            img.alt = action.name || 'Blessing';
-            imgContainer.appendChild(img);
-            
-            if (actorContainer) actorContainer.appendChild(imgContainer);
-            
-            // 3. Update stats after delay
-            setTimeout(() => {
-                if (action.statesAfter) {
-                    updateStats(action.statesAfter);
-                }
-            }, 750);
-            
-            // 4. Clean up
-            setTimeout(() => {
-                if (actorContainer && actorContainer.contains(nameElement)) {
-                    actorContainer.removeChild(nameElement);
-                }
-                if (actorContainer && actorContainer.contains(imgContainer)) {
-                    actorContainer.removeChild(imgContainer);
-                }
-                resolve();
-            }, 1500);
-        });
-    }
-
-    function playAction(action) {
-        return new Promise(resolve => {
-            const isPlayer = action.actor === 'player';
-            const emoji = action.emoji;
-            const actionName = action.label || 'Effet';
-            const phase = action.phase || 'action';
-
-            // Conteneurs
-            const actorContainer = isPlayer 
-                ? document.getElementById('heroEmojiContainer') 
-                : document.getElementById('enemyEmojiContainer');
-            const targetContainer = isPlayer 
-                ? document.getElementById('enemyEmojiContainer') 
-                : document.getElementById('heroEmojiContainer');
-            const actorFighter = isPlayer 
-                ? document.getElementById('heroFighter') 
-                : document.getElementById('enemyFighter');
-
-            // --- ANIMATION DE MORT ---
-            if (action.isDeath || phase === 'death') {
-                const deathElement = document.createElement('div');
-                deathElement.className = 'action-name-display death-label';
-                deathElement.textContent = '💀 K.O.';
-                if (actorContainer) actorContainer.appendChild(deathElement);
-
-                // Faire disparaître l'image avec fondu
-                if (actorFighter) {
-                    actorFighter.classList.add('fighter-dead');
-                }
-                
-                // Mettre à jour les stats APRÈS l'animation
-                if (action.statesAfter) {
-                    updateStats(action.statesAfter);
-                }
-
-                setTimeout(() => {
-                    if (actorContainer && actorContainer.contains(deathElement)) {
-                        actorContainer.removeChild(deathElement);
-                    }
-                    resolve();
-                }, 2000);
-                return;
-            }
-
-            // --- ANIMATION STANDARD ---
-            
-            // 1. Afficher le nom au-dessus de l'acteur
-            const nameElement = document.createElement('div');
-            nameElement.className = 'action-name-display';
-            
-            // Style différent selon la phase
-            if (phase === 'damage_effect') {
-                nameElement.classList.add('effect-damage');
-            } else if (phase === 'stat_effect') {
-                nameElement.classList.add('effect-stats');
-            }
-            
-            nameElement.textContent = actionName;
-            if (actorContainer) actorContainer.appendChild(nameElement);
-
-            // 2. Déterminer où afficher l'emoji
-            let emojiContainer = null;
-            let cssClass = 'action-emoji';
-
-            if (phase === 'damage_effect' || phase === 'stat_effect') {
-                emojiContainer = actorContainer;
-                cssClass += ' on-self';
-            } else {
-                if (action.needsTarget) {
-                    emojiContainer = targetContainer;
-                    cssClass += ' on-target';
-                } else {
-                    emojiContainer = actorContainer;
-                    cssClass += ' on-self';
-                }
-            }
-
-            if (!isPlayer) {
-                cssClass += ' enemy-action';
-            }
-
-            // 3. Créer l'emoji
-            const emojiElement = document.createElement('div');
-            emojiElement.className = cssClass;
-            emojiElement.textContent = emoji;
-            
-            if (emojiContainer) emojiContainer.appendChild(emojiElement);
-
-            // Trigger hit animation on target if action targets them
-            if (action.needsTarget !== false && phase === 'action') {
-                 const targetFighter = isPlayer 
-                    ? document.getElementById('enemyFighter') 
-                    : document.getElementById('heroFighter');
-                triggerHitAnimation(targetFighter);
-            }
-
-            // 4. Mettre à jour les stats APRÈS l'animation (à mi-chemin)
-            setTimeout(() => {
-                if (action.statesAfter) {
-                    updateStats(action.statesAfter);
-                }
-            }, 750);
-
-            // 5. Nettoyer après animation
-            setTimeout(() => {
-                if (actorContainer && actorContainer.contains(nameElement)) {
-                    actorContainer.removeChild(nameElement);
-                }
-                if (emojiContainer && emojiContainer.contains(emojiElement)) {
-                    emojiContainer.removeChild(emojiElement);
-                }
-                resolve();
-            }, 1500);
-        });
     }
 
     // Appliquer les états initiaux IMMÉDIATEMENT sans transition
@@ -521,7 +351,7 @@ if (isset($_SESSION['combat'])):
     }
 
     // Lancer les animations au chargement
-    window.addEventListener('load', playTurnAnimations);
+    window.addEventListener('load', playTurnAnimationsWrapper);
 </script>
 
 <?php 

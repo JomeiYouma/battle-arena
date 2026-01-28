@@ -250,6 +250,7 @@ try {
     </div>
 </div>
 
+<script src="js/combat-animations.js"></script>
 <script>
 const MATCH_ID = '<?php echo addslashes($matchId); ?>';
 const INITIAL_STATE = <?php echo json_encode($gameState); ?>;
@@ -384,174 +385,39 @@ function setupActionTooltips() {
 
 // ============ ANIMATION SYSTEM ============
 
-async function playTurnAnimations(turnActions) {
-    if (!turnActions || turnActions.length === 0 || isPlayingAnimations) return;
-    
-    isPlayingAnimations = true;
-    
-    for (const action of turnActions) {
-        // Handle blessing passive animations
-        if (action.phase === 'blessing_passive') {
-            await playBlessingAnimation(action);
-        } else {
-            await playAction(action);
-        }
+// Configuration pour le système d'animations partagé
+const combatAnimConfig = {
+    isMyAction: (actor) => {
+        const actorIsP1 = actor === 'player';
+        return (actorIsP1 === IS_P1);
+    },
+    getActorContainer: (isMe) => {
+        return isMe 
+            ? document.getElementById('myEmojiContainer') 
+            : document.getElementById('oppEmojiContainer');
+    },
+    getTargetContainer: (isMe) => {
+        return isMe 
+            ? document.getElementById('oppEmojiContainer') 
+            : document.getElementById('myEmojiContainer');
+    },
+    getActorFighter: (isMe) => {
+        return isMe 
+            ? document.getElementById('myFighter') 
+            : document.getElementById('oppFighter');
+    },
+    getTargetFighter: (isMe) => {
+        return isMe 
+            ? document.getElementById('oppFighter') 
+            : document.getElementById('myFighter');
+    },
+    updateStats: (states) => updateStatsFromAction(states),
+    triggerHitAnimation: (fighter) => {
+        if (!fighter) return;
+        fighter.classList.add('fighter-hit');
+        setTimeout(() => fighter.classList.remove('fighter-hit'), 400);
     }
-    
-    isPlayingAnimations = false;
-}
-
-function playBlessingAnimation(action) {
-    return new Promise(resolve => {
-        const actorIsP1 = action.actor === 'player';
-        const isMe = (actorIsP1 === IS_P1);
-        
-        const myContainer = document.getElementById('myEmojiContainer');
-        const oppContainer = document.getElementById('oppEmojiContainer');
-        const myFighter = document.getElementById('myFighter');
-        const oppFighter = document.getElementById('oppFighter');
-        
-        const actorContainer = isMe ? myContainer : oppContainer;
-        const actorFighter = isMe ? myFighter : oppFighter;
-        
-        if (!actorFighter) {
-            setTimeout(() => resolve(), 1500);
-            return;
-        }
-        
-        // 1. Show action name with blessing styling (violet)
-        const nameElement = document.createElement('div');
-        nameElement.className = 'action-name-display blessing-passive';
-        nameElement.textContent = action.label || action.message || 'Blessing activé';
-        if (actorContainer) actorContainer.appendChild(nameElement);
-        
-        // 2. Show large blessing icon
-        const imgContainer = document.createElement('div');
-        imgContainer.className = 'blessing-action-img on-self';
-        
-        const img = document.createElement('img');
-        img.src = action.icon || 'media/blessings/moon.png';
-        img.alt = action.name || 'Blessing';
-        imgContainer.appendChild(img);
-        
-        if (actorContainer) actorContainer.appendChild(imgContainer);
-        
-        // 3. Update stats after delay
-        setTimeout(() => {
-            if (action.statesAfter) {
-                updateStatsFromAction(action.statesAfter);
-            }
-        }, 750);
-        
-        // 4. Clean up
-        setTimeout(() => {
-            if (actorContainer && actorContainer.contains(nameElement)) {
-                actorContainer.removeChild(nameElement);
-            }
-            if (actorContainer && actorContainer.contains(imgContainer)) {
-                actorContainer.removeChild(imgContainer);
-            }
-            resolve();
-        }, 1500);
-    });
-}
-
-function playAction(action) {
-    return new Promise(resolve => {
-        // In Combat.php: 'player' = P1, 'enemy' = P2
-        // If I'm P1, 'player' actions are mine. If I'm P2, 'player' actions are opponent's.
-        const actorIsP1 = action.actor === 'player';
-        const isMe = (actorIsP1 === IS_P1); // True if this action is from my perspective
-        
-        const emoji = action.emoji || '⚔️';
-        const actionName = action.label || 'Effet';
-        const phase = action.phase || 'action';
-        
-        // Get containers
-        const myContainer = document.getElementById('myEmojiContainer');
-        const oppContainer = document.getElementById('oppEmojiContainer');
-        const myFighter = document.getElementById('myFighter');
-        const oppFighter = document.getElementById('oppFighter');
-        
-        // Determine which side based on perspective
-        const actorContainer = isMe ? myContainer : oppContainer;
-        const targetContainer = isMe ? oppContainer : myContainer;
-        const actorFighter = isMe ? myFighter : oppFighter;
-        
-        // --- DEATH ANIMATION ---
-        if (action.isDeath || phase === 'death') {
-            const deathElement = document.createElement('div');
-            deathElement.className = 'action-name-display death-label';
-            deathElement.textContent = '💀 K.O.';
-            if (actorContainer) actorContainer.appendChild(deathElement);
-            
-            if (actorFighter) {
-                actorFighter.classList.add('fighter-dead');
-            }
-            
-            setTimeout(() => {
-                if (actorContainer && actorContainer.contains(deathElement)) {
-                    actorContainer.removeChild(deathElement);
-                }
-                resolve();
-            }, 2000);
-            return;
-        }
-        
-        // --- STANDARD ACTION ---
-        // 1. Show action name (on actor's emoji container)
-        const nameElement = document.createElement('div');
-        nameElement.className = 'action-name-display';
-        nameElement.textContent = actionName;
-        if (actorContainer) actorContainer.appendChild(nameElement);
-        
-        // 2. Determine where to show emoji
-        let emojiContainer = null;
-        let cssClass = 'action-emoji';
-        
-        if (phase === 'damage_effect' || phase === 'stat_effect') {
-            emojiContainer = actorContainer;
-            cssClass += ' on-self';
-        } else {
-            if (action.needsTarget !== false) {
-                emojiContainer = targetContainer;
-                cssClass += ' on-target';
-            } else {
-                emojiContainer = actorContainer;
-                cssClass += ' on-self';
-            }
-        }
-        
-        const emojiElement = document.createElement('div');
-        emojiElement.className = cssClass;
-        emojiElement.textContent = emoji;
-        if (emojiContainer) emojiContainer.appendChild(emojiElement);
-        
-        // Trigger hit animation on target if action targets them
-        if (action.needsTarget !== false && phase === 'action') {
-            const targetFighter = isMe ? oppFighter : myFighter;
-            triggerHitAnimation(targetFighter);
-        }
-        
-        // 3. Update stats after delay
-        setTimeout(() => {
-            if (action.statesAfter) {
-                updateStatsFromAction(action.statesAfter);
-            }
-        }, 750);
-        
-        // 4. Clean up
-        setTimeout(() => {
-            if (actorContainer && actorContainer.contains(nameElement)) {
-                actorContainer.removeChild(nameElement);
-            }
-            if (emojiContainer && emojiContainer.contains(emojiElement)) {
-                emojiContainer.removeChild(emojiElement);
-            }
-            resolve();
-        }, 1500);
-    });
-}
+};
 
 function updateStatsFromAction(states) {
     // In Combat.php: 'player' = P1, 'enemy' = P2
