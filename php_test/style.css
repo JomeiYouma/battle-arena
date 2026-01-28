@@ -2565,3 +2565,30 @@ select option {
     }
 }
 
+/* ===== CUSTOM TOOLTIP SYSTEM ===== */
+.custom-tooltip {
+    position: fixed;
+    z-index: 10000;
+    background: rgba(10, 10, 20, 0.92 0.5);
+    border: 1px solid rgba(184, 134, 11, 0.6);
+    border-radius: 6px;
+    padding: 8px 12px;
+    max-width: 260px;
+    font-size: 12px;
+    color: #e0e0e0;
+    box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.5),
+        0 0 10px rgba(184, 134, 11, 0.15);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    line-height: 1.4;
+    backdrop-filter: blur(4px);
+}
+
+.custom-tooltip.visible {
+    opacity: 1;
+   /*  transform: translateY(0); */
+}
+

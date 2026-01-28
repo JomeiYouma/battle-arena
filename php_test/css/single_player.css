@@ -98,6 +98,52 @@
     text-align: center;
 }
 
+/* Blessing thumbnail image */
+.blessing-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: invert(1) sepia(1) saturate(3) hue-rotate(250deg);
+    opacity: 0.85;
+    transition: all 0.2s ease;
+}
+
+.hero-row:hover .blessing-thumb,
+.hero-row input:checked ~ .hero-row-content .blessing-thumb {
+    opacity: 1;
+    filter: invert(1) sepia(1) saturate(4) hue-rotate(250deg) drop-shadow(0 0 5px rgba(138, 43, 226, 0.5));
+}
+
+/* No blessing icon container */
+.blessing-img-container {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.no-blessing-icon {
+    font-size: 24px;
+    color: #666;
+    font-weight: bold;
+}
+
+/* Blessing actions styling */
+.blessing-abilities {
+    margin-top: 6px;
+}
+
+.blessing-action {
+    background: rgba(138, 43, 226, 0.15);
+    border-color: rgba(138, 43, 226, 0.3);
+}
+
+.blessing-action:hover {
+    background: rgba(138, 43, 226, 0.35);
+    border-color: #9932cc;
+}
+
 /* Blessing description */
 .blessing-desc-small {
     font-size: 0.75em;

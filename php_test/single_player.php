@@ -473,14 +473,14 @@ if (isset($_SESSION['combat'])):
 else: 
     $personnages = json_decode(file_get_contents('heros.json'), true);
     $blessingsList = [
-        ['id' => 'WheelOfFortune', 'name' => 'Roue de Fortune', 'emoji' => '🎰', 'desc' => 'Portée aléatoire doublée + Action "Concoction Maladroite"'],
-        ['id' => 'LoversCharm', 'name' => 'Charmes Amoureux', 'emoji' => '💘', 'desc' => 'Renvoie 25% des dégâts + Action "Foudre de l\'Amour"'],
-        ['id' => 'JudgmentOfDamned', 'name' => 'Jugement des Maudits', 'emoji' => '⚖️', 'desc' => 'Soin baisse DEF. Actions "Grand Conseil" & "Sentence"'],
-        ['id' => 'StrengthFavor', 'name' => 'Faveur de Force', 'emoji' => '💪', 'desc' => 'DEF -75%, ATK +33%. Action "Transe Guerrière"'],
-        ['id' => 'MoonCall', 'name' => 'Appel de la Lune', 'emoji' => '🌙', 'desc' => 'Cycle 4 tours : Boost stats, coût PP double.'],
-        ['id' => 'WatchTower', 'name' => 'La Tour de Garde', 'emoji' => '🏰', 'desc' => 'ATK utilise DEF. Action "Fortifications" (+5 DEF)'],
-        ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'emoji' => '☀️', 'desc' => '+50% VIT. Bonus durées effets. Action "Jour Nouveau"'],
-        ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'emoji' => '🪢', 'desc' => 'Action "Nœud de Destin" (Lien de dégâts)']
+        ['id' => 'WheelOfFortune', 'name' => 'Roue de Fortune', 'img' => 'wheel.png', 'desc' => 'Portée aléatoire doublée'],
+        ['id' => 'LoversCharm', 'name' => 'Charmes Amoureux', 'img' => 'lovers.png', 'desc' => 'Renvoie 25% des dégâts reçus'],
+        ['id' => 'JudgmentOfDamned', 'name' => 'Jugement des Maudits', 'img' => 'judgment.png', 'desc' => 'Soin baisse DEF. +2 Actions'],
+        ['id' => 'StrengthFavor', 'name' => 'Faveur de Force', 'img' => 'strength.png', 'desc' => 'DEF -75%, ATK +33%'],
+        ['id' => 'MoonCall', 'name' => 'Appel de la Lune', 'img' => 'moon.png', 'desc' => 'Cycle 4 tours : Boost stats, coût PP x2'],
+        ['id' => 'WatchTower', 'name' => 'La Tour de Garde', 'img' => 'tower.png', 'desc' => 'ATK utilise DEF'],
+        ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'img' => 'chariot.png', 'desc' => '+50% VIT. Bonus durées effets'],
+        ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'img' => 'hanged.png', 'desc' => 'Mystérieux...']
     ];
 ?>
 
@@ -513,7 +513,7 @@ else:
                                     </div>
                                     <div class="hero-abilities">
                                         <?php foreach ($actions as $key => $action): ?>
-                                            <span class="ability-tag" title="<?php echo htmlspecialchars($action['description']); ?>">
+                                            <span class="ability-tag" data-tooltip="<?php echo htmlspecialchars($action['description']); ?>">
                                                 <?php echo $action['emoji'] ?? '⚔️'; ?> <?php echo $action['label']; ?>
                                             </span>
                                         <?php endforeach; ?>
@@ -532,21 +532,37 @@ else:
                     <label class="hero-row blessing-row">
                         <input type="radio" name="blessing_choice" value="" checked>
                         <div class="hero-row-content">
-                            <div class="blessing-emoji-large">❌</div>
+                            <div class="blessing-img-container">
+                                <span class="no-blessing-icon">✕</span>
+                            </div>
                             <div class="hero-info">
                                 <h4>Aucune</h4>
                                 <p class="hero-theme">Combat classique sans bonus.</p>
                             </div>
                         </div>
                     </label>
-                    <?php foreach ($blessingsList as $b): ?>
+                    <?php foreach ($blessingsList as $b): 
+                        // Charger la classe de bénédiction pour obtenir les actions
+                        $blessingClass = $b['id'];
+                        $tempBlessing = new $blessingClass();
+                        $blessingActions = $tempBlessing->getExtraActions();
+                    ?>
                         <label class="hero-row blessing-row">
                             <input type="radio" name="blessing_choice" value="<?php echo $b['id']; ?>">
                             <div class="hero-row-content">
-                                <div class="blessing-emoji-large"><?php echo $b['emoji']; ?></div>
+                                <img src="media/blessings/<?php echo $b['img']; ?>" alt="<?php echo $b['name']; ?>" class="blessing-thumb">
                                 <div class="hero-info">
                                     <h4><?php echo $b['name']; ?></h4>
                                     <p class="hero-theme blessing-desc-small"><?php echo $b['desc']; ?></p>
+                                    <?php if (!empty($blessingActions)): ?>
+                                    <div class="hero-abilities blessing-abilities">
+                                        <?php foreach ($blessingActions as $key => $action): ?>
+                                            <span class="ability-tag blessing-action" data-tooltip="<?php echo htmlspecialchars($action['description']); ?>">
+                                                <?php echo $action['emoji'] ?? '✨'; ?> <?php echo $action['label']; ?>
+                                            </span>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         </label>
@@ -563,3 +579,57 @@ else:
 
 <?php endif; ?>
 </div>
+
+<!-- Tooltip System -->
+<div id="customTooltip" class="custom-tooltip"></div>
+<script>
+(function() {
+    const tooltip = document.getElementById('customTooltip');
+    if (!tooltip) return;
+    
+    document.addEventListener('mouseover', function(e) {
+        const target = e.target.closest('[data-tooltip]');
+        if (target) {
+            const text = target.getAttribute('data-tooltip');
+            tooltip.textContent = text;
+            tooltip.classList.add('visible');
+            positionTooltip(e);
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        const target = e.target.closest('[data-tooltip]');
+        if (target) {
+            tooltip.classList.remove('visible');
+        }
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (tooltip.classList.contains('visible')) {
+            positionTooltip(e);
+        }
+    });
+    
+    function positionTooltip(e) {
+        const padding = 8;
+        const offsetX = 8; // Distance à droite du curseur
+        const offsetY = 8; // Distance en dessous du curseur
+        
+        let x = e.clientX + offsetX; // À droite du curseur
+        let y = e.clientY + offsetY; // En dessous du curseur
+        
+        // Si pas de place à droite, mettre à gauche
+        if (x + tooltip.offsetWidth > window.innerWidth - padding) {
+            x = e.clientX - tooltip.offsetWidth - offsetX;
+        }
+        
+        // Éviter le débordement en bas
+        if (y + tooltip.offsetHeight > window.innerHeight - padding) {
+            y = e.clientY - tooltip.offsetHeight - offsetY;
+        }
+        
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
+    }
+})();
+</script>

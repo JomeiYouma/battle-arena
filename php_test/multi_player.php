@@ -100,7 +100,7 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                         <div class="hero-abilities-multi">
                             <?php foreach ($actions as $key => $action): ?>
-                                <span class="ability-tag-multi" title="<?php echo htmlspecialchars($action['description']); ?>">
+                                <span class="ability-tag-multi" data-tooltip="<?php echo $action['label']; ?>: <?php echo htmlspecialchars($action['description']); ?>">
                                     <?php echo $action['emoji'] ?? '⚔️'; ?>
                                 </span>
                             <?php endforeach; ?>
@@ -115,16 +115,39 @@ require_once __DIR__ . '/includes/header.php';
         <div id="blessingStep" class="blessing-step selection-step">
             <h3 class="step-title blessings-title">🔮 Choisissez une Bénédiction <span class="optional-tag">(Optionnel)</span></h3>
             
+            <!-- Option Aucune -->
+            <div class="blessing-card no-blessing selected" onclick="selectBlessing('', this)">
+                <div class="blessing-header">
+                    <span class="no-blessing-icon">✕</span>
+                    <span>Aucune</span>
+                </div>
+                <div class="blessing-desc">Combat classique sans bonus.</div>
+            </div>
+            
             <div class="blessing-grid">
-                <?php foreach ($blessingsList as $b): ?>
+                <?php foreach ($blessingsList as $b): 
+                    // Charger la classe de bénédiction pour obtenir les actions
+                    $blessingClass = $b['id'];
+                    $tempBlessing = new $blessingClass();
+                    $blessingActions = $tempBlessing->getExtraActions();
+                ?>
                 <div class="blessing-card" onclick="selectBlessing('<?php echo $b['id']; ?>', this)">
                     <div class="blessing-header">
-                        <span class="blessing-emoji"><?php echo $b['emoji']; ?></span>
+                        <img src="media/blessings/<?php echo $b['img']; ?>" alt="<?php echo $b['name']; ?>" class="blessing-card-img">
                         <span><?php echo $b['name']; ?></span>
                     </div>
                     <div class="blessing-desc">
                         <?php echo $b['desc']; ?>
                     </div>
+                    <?php if (!empty($blessingActions)): ?>
+                    <div class="blessing-actions-multi">
+                        <?php foreach ($blessingActions as $key => $action): ?>
+                            <span class="ability-tag-multi blessing-ability" data-tooltip="<?php echo $action['label']; ?>: <?php echo htmlspecialchars($action['description']); ?>">
+                                <?php echo $action['emoji'] ?? '✨'; ?>
+                            </span>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             </div>
@@ -364,6 +387,60 @@ function cancelQueue() {
     
     selectedHeroId = null;
 }
+
+// === TOOLTIP SYSTEM ===
+(function() {
+    // Créer l'élément tooltip
+    const tooltip = document.createElement('div');
+    tooltip.id = 'customTooltip';
+    tooltip.className = 'custom-tooltip';
+    document.body.appendChild(tooltip);
+    
+    document.addEventListener('mouseover', function(e) {
+        const target = e.target.closest('[data-tooltip]');
+        if (target) {
+            const text = target.getAttribute('data-tooltip');
+            tooltip.textContent = text;
+            tooltip.classList.add('visible');
+            positionTooltip(e);
+        }
+    });
+    
+    document.addEventListener('mouseout', function(e) {
+        const target = e.target.closest('[data-tooltip]');
+        if (target) {
+            tooltip.classList.remove('visible');
+        }
+    });
+    
+    document.addEventListener('mousemove', function(e) {
+        if (tooltip.classList.contains('visible')) {
+            positionTooltip(e);
+        }
+    });
+    
+    function positionTooltip(e) {
+        const padding = 8;
+        const offsetX = 8; // Distance à droite du curseur
+        const offsetY = 8; // Distance en dessous du curseur
+        
+        let x = e.clientX + offsetX; // À droite du curseur
+        let y = e.clientY + offsetY; // En dessous du curseur
+        
+        // Si pas de place à droite, mettre à gauche
+        if (x + tooltip.offsetWidth > window.innerWidth - padding) {
+            x = e.clientX - tooltip.offsetWidth - offsetX;
+        }
+        
+        // Éviter le débordement en bas
+        if (y + tooltip.offsetHeight > window.innerHeight - padding) {
+            y = e.clientY - tooltip.offsetHeight - offsetY;
+        }
+        
+        tooltip.style.left = x + 'px';
+        tooltip.style.top = y + 'px';
+    }
+})();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

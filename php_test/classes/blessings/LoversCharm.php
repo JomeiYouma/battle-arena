@@ -27,7 +27,7 @@ class LoversCharm extends Blessing {
             'foudre_amour' => [
                 'label' => 'Foudre de l\'Amour',
                 'description' => 'Paralyse l\'ennemi (2 tours)',
-                'emoji' => '⚡❤️',
+                'emoji' => '⚡',
                 'method' => 'actionFoudreAmour',
                 'needsTarget' => true,
                 'pp' => 3

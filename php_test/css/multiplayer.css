@@ -395,6 +395,53 @@
     font-size: 20px;
 }
 
+/* Blessing card image */
+.blessing-card-img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    filter: invert(1) sepia(1) saturate(3) hue-rotate(250deg);
+    opacity: 0.8;
+    transition: all 0.2s ease;
+}
+
+.blessing-card:hover .blessing-card-img,
+.blessing-card.selected .blessing-card-img {
+    opacity: 1;
+    filter: invert(1) sepia(1) saturate(4) hue-rotate(250deg) drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
+}
+
+/* No blessing styling */
+.blessing-card.no-blessing {
+    margin-bottom: 12px;
+    background: rgba(40, 40, 50, 0.7);
+}
+
+.blessing-card.no-blessing .no-blessing-icon {
+    font-size: 20px;
+    color: #666;
+    font-weight: bold;
+    margin-right: 8px;
+}
+
+/* Blessing actions */
+.blessing-actions-multi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.blessing-ability {
+    background: rgba(138, 43, 226, 0.2);
+    border-color: rgba(138, 43, 226, 0.4);
+}
+
+.blessing-ability:hover {
+    background: rgba(138, 43, 226, 0.4);
+    border-color: #9932cc;
+}
+
 .blessing-desc {
     font-size: 12px;
     color: #aaa;
