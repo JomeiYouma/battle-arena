@@ -197,13 +197,13 @@ class Necromancien extends Personnage {
     // Malédiction - DoT 5% vie max pendant 5 tours
     public function malediction(Personnage $target): string {
         $dmgPerTurn = max(1, (int) ($target->getBasePv() * 0.05));
-        $target->addStatusEffect(new CurseEffect(5, $dmgPerTurn));
+        $target->addStatusEffect(new CurseEffect(5, $dmgPerTurn), $this);
         return "lance une Malédiction terrible ! " . $dmgPerTurn . " dégâts/tour pendant 5 tours !";
     }
 
     // Manipulation de l'Âme - Échange ATK/DEF pendant 2 tours
     public function manipulationAme(Personnage $target): string {
-        $target->addStatusEffect(new StatSwapEffect(2));
+        $target->addStatusEffect(new StatSwapEffect(2), $this);
         return "manipule l'âme de l'ennemi ! ATK et DEF échangées pendant 2 tours !";
     }
 }

@@ -375,13 +375,23 @@ abstract class Personnage {
 
     /**
      * Ajoute un effet de statut au personnage
+     * @param StatusEffect $effect L'effet à ajouter
+     * @param ?Personnage $source Le personnage qui applique l'effet (pour les hooks de blessing)
      */
-    public function addStatusEffect(StatusEffect $effect): void {
+    public function addStatusEffect(StatusEffect $effect, ?Personnage $source = null): void {
         // Check immunity
         foreach ($this->statusEffects as $e) {
             if ($e instanceof ImmunityEffect && $effect->getName() !== 'Immunité') {
                 // Immunisé ! Si fonction onResist existe?
                 return; 
+            }
+        }
+
+        // Hook: Let blessings modify effect duration
+        foreach ($this->blessings as $blessing) {
+            $modifiedDuration = $blessing->modifyEffectDuration($effect, $this, $source ?? $this);
+            if ($modifiedDuration !== null) {
+                $effect->setDuration($modifiedDuration);
             }
         }
 

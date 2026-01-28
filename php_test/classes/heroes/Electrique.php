@@ -65,8 +65,8 @@ class Electrique extends Personnage {
     public function priseFoudre(Personnage $target) {
         $dmg = max(1, $this->getAtk() - $target->getDef());
         $target->receiveDamage($dmg, $this);
-        $target->addStatusEffect(new ParalysisEffect(2));
-        $target->addStatusEffect(new SpeedModEffect(4, -5));
+        $target->addStatusEffect(new ParalysisEffect(2), $this);
+        $target->addStatusEffect(new SpeedModEffect(4, -5), $this);
         return "effectue une prise foudre ! " . $dmg . " dégâts et paralyse l'ennemi !";
     }
 

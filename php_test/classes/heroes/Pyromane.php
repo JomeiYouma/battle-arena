@@ -72,7 +72,7 @@ class Pyromane extends Personnage {
     public function flameArrow(Personnage $target): string {
         $damage = $this->randomDamage(5, 2);
         $target->receiveDamage($damage, $this);
-        $target->addStatusEffect(new BurningEffect(3, $this->getAtk(), 1));
+        $target->addStatusEffect(new BurningEffect(3, $this->getAtk(), 1), $this);
         return $target->isDead() 
             ? "FLÈCHE ! $damage dégâts ! K.O. !"
             : "FLÈCHE ENFLAMMÉE ! $damage dég, brûlure imminente...";

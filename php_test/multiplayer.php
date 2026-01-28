@@ -390,10 +390,70 @@ async function playTurnAnimations(turnActions) {
     isPlayingAnimations = true;
     
     for (const action of turnActions) {
-        await playAction(action);
+        // Handle blessing passive animations
+        if (action.phase === 'blessing_passive') {
+            await playBlessingAnimation(action);
+        } else {
+            await playAction(action);
+        }
     }
     
     isPlayingAnimations = false;
+}
+
+function playBlessingAnimation(action) {
+    return new Promise(resolve => {
+        const actorIsP1 = action.actor === 'player';
+        const isMe = (actorIsP1 === IS_P1);
+        
+        const myContainer = document.getElementById('myEmojiContainer');
+        const oppContainer = document.getElementById('oppEmojiContainer');
+        const myFighter = document.getElementById('myFighter');
+        const oppFighter = document.getElementById('oppFighter');
+        
+        const actorContainer = isMe ? myContainer : oppContainer;
+        const actorFighter = isMe ? myFighter : oppFighter;
+        
+        if (!actorFighter) {
+            setTimeout(() => resolve(), 1500);
+            return;
+        }
+        
+        // 1. Show action name with blessing styling (violet)
+        const nameElement = document.createElement('div');
+        nameElement.className = 'action-name-display blessing-passive';
+        nameElement.textContent = action.label || action.message || 'Blessing activé';
+        if (actorContainer) actorContainer.appendChild(nameElement);
+        
+        // 2. Show large blessing icon
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'blessing-action-img on-self';
+        
+        const img = document.createElement('img');
+        img.src = action.icon || 'media/blessings/moon.png';
+        img.alt = action.name || 'Blessing';
+        imgContainer.appendChild(img);
+        
+        if (actorContainer) actorContainer.appendChild(imgContainer);
+        
+        // 3. Update stats after delay
+        setTimeout(() => {
+            if (action.statesAfter) {
+                updateStatsFromAction(action.statesAfter);
+            }
+        }, 750);
+        
+        // 4. Clean up
+        setTimeout(() => {
+            if (actorContainer && actorContainer.contains(nameElement)) {
+                actorContainer.removeChild(nameElement);
+            }
+            if (actorContainer && actorContainer.contains(imgContainer)) {
+                actorContainer.removeChild(imgContainer);
+            }
+            resolve();
+        }, 1500);
+    });
 }
 
 function playAction(action) {

@@ -73,4 +73,23 @@ abstract class Blessing {
     }
 
     public function onHeal(Personnage $healer, int $amount): void {}
+
+    /**
+     * Return animation data for blessing passive activation
+     * @return array|null Animation data with 'emoji', 'message', etc. or null if no animation
+     */
+    public function getAnimationData(): ?array {
+        return null;
+    }
+
+    /**
+     * Modify status effect duration when it's applied
+     * @param StatusEffect $effect
+     * @param Personnage $target The target receiving the effect
+     * @param Personnage $source The source applying the effect (could be enemy)
+     * @return int Modified duration (or keep original if return null)
+     */
+    public function modifyEffectDuration(StatusEffect $effect, Personnage $target, Personnage $source): ?int {
+        return null;
+    }
 }

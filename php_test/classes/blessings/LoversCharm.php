@@ -3,6 +3,8 @@ require_once __DIR__ . '/../Blessing.php';
 require_once __DIR__ . '/../effects/ParalysisEffect.php';
 
 class LoversCharm extends Blessing {
+    private bool $damageReflectedThisTurn = false;
+
     public function __construct() {
         parent::__construct(
             'LoversCharm', 
@@ -12,11 +14,16 @@ class LoversCharm extends Blessing {
         );
     }
 
+    public function onTurnStart(Personnage $owner, Combat $combat): void {
+        $this->damageReflectedThisTurn = false;
+    }
+
     public function onReceiveDamage(Personnage $victim, Personnage $attacker, int $damage): int {
         if ($attacker !== $victim && !$attacker->isDead()) {
             $reflect = (int)($damage * 0.25);
             if ($reflect > 0) {
                 $attacker->setPv($attacker->getPv() - $reflect);
+                $this->damageReflectedThisTurn = true;
             }
         }
         return $damage;
@@ -43,7 +50,20 @@ class LoversCharm extends Blessing {
     }
 
     private function executeFoudre(Personnage $actor, Personnage $target): string {
-        $target->addStatusEffect(new ParalysisEffect(2));
+        $target->addStatusEffect(new ParalysisEffect(2), $actor);
         return "lance la Foudre de l'Amour ! " . $target->getName() . " est paralysé !";
+    }
+
+    public function getAnimationData(): ?array {
+        if ($this->damageReflectedThisTurn) {
+            return [
+                'emoji' => $this->emoji,
+                'name' => $this->name,
+                'message' => 'Renvoi de dégâts !',
+                'type' => 'reflect',
+                'icon' => 'media/blessings/lovers.png'
+            ];
+        }
+        return null;
     }
 }

@@ -321,7 +321,12 @@ if (isset($_SESSION['combat'])):
         }
 
         for (const action of turnActions) {
-            await playAction(action);
+            // Handle blessing passive animations
+            if (action.phase === 'blessing_passive') {
+                await playBlessingAnimation(action);
+            } else {
+                await playAction(action);
+            }
         }
         
         // Afficher le game-over après toutes les animations
@@ -339,6 +344,59 @@ if (isset($_SESSION['combat'])):
             // Afficher le game-over
             gameOver.style.display = 'block';
         }
+    }
+
+    function playBlessingAnimation(action) {
+        return new Promise(resolve => {
+            const isPlayer = action.actor === 'player';
+            
+            const actorContainer = isPlayer 
+                ? document.getElementById('heroEmojiContainer') 
+                : document.getElementById('enemyEmojiContainer');
+            const actorFighter = isPlayer 
+                ? document.getElementById('heroFighter') 
+                : document.getElementById('enemyFighter');
+            
+            if (!actorFighter) {
+                setTimeout(() => resolve(), 1500);
+                return;
+            }
+            
+            // 1. Show action name with blessing styling (violet)
+            const nameElement = document.createElement('div');
+            nameElement.className = 'action-name-display blessing-passive';
+            nameElement.textContent = action.label || action.message || 'Blessing activé';
+            if (actorContainer) actorContainer.appendChild(nameElement);
+            
+            // 2. Show large blessing icon
+            const imgContainer = document.createElement('div');
+            imgContainer.className = 'blessing-action-img on-self';
+            
+            const img = document.createElement('img');
+            img.src = action.icon || 'media/blessings/moon.png';
+            img.alt = action.name || 'Blessing';
+            imgContainer.appendChild(img);
+            
+            if (actorContainer) actorContainer.appendChild(imgContainer);
+            
+            // 3. Update stats after delay
+            setTimeout(() => {
+                if (action.statesAfter) {
+                    updateStats(action.statesAfter);
+                }
+            }, 750);
+            
+            // 4. Clean up
+            setTimeout(() => {
+                if (actorContainer && actorContainer.contains(nameElement)) {
+                    actorContainer.removeChild(nameElement);
+                }
+                if (actorContainer && actorContainer.contains(imgContainer)) {
+                    actorContainer.removeChild(imgContainer);
+                }
+                resolve();
+            }, 1500);
+        });
     }
 
     function playAction(action) {

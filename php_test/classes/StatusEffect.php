@@ -25,6 +25,10 @@ abstract class StatusEffect {
     public function getTurnsDelay(): int { return $this->turnsDelay; }
     public function getDamagePerTurn(): int { return $this->damagePerTurn; }
 
+    public function setDuration(int $duration): void {
+        $this->duration = max(0, $duration);
+    }
+
     public function isPending(): bool {
         return $this->turnsDelay > 0;
     }

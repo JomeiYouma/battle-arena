@@ -84,7 +84,7 @@ class Brute extends Personnage {
     public function stomp(Personnage $target): string {
         $damage = $this->randomDamage(max(1, $this->atk - $target->getDef()), 3);
         $target->receiveDamage($damage, $this);
-        $target->addStatusEffect(new SpeedModEffect(3, -10));
+        $target->addStatusEffect(new SpeedModEffect(3, -10), $this);
         return $target->isDead() 
             ? "PIÉTINE ! $damage dégâts ! K.O. !" 
             : "PIÉTINE ! $damage dég, ennemi ralenti !";
@@ -105,7 +105,7 @@ class Brute extends Personnage {
     // Bombe finale - Dégâts différés au tour suivant (60% PV max)
     public function deathBomb(Personnage $target): string {
         $damage = (int)($this->basePv * 0.6);
-        $target->addStatusEffect(new BombEffect(1, $damage));
+        $target->addStatusEffect(new BombEffect(1, $damage), $this);
         $this->setPv(0);
         return "AMORCE LA BOMBE FINALE ! Explosion imminente ($damage dégâts) !";
     }

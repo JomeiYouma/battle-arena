@@ -3,6 +3,8 @@ require_once __DIR__ . '/../Blessing.php';
 require_once __DIR__ . '/../effects/StatRedistributionEffect.php';
 
 class JudgmentOfDamned extends Blessing {
+    private bool $defBrokenThisTurn = false;
+
     public function __construct() {
         parent::__construct(
             'JudgmentOfDamned', 
@@ -12,12 +14,17 @@ class JudgmentOfDamned extends Blessing {
         );
     }
 
+    public function onTurnStart(Personnage $owner, Combat $combat): void {
+        $this->defBrokenThisTurn = false;
+    }
+
     public function onHeal(Personnage $healer, int $amount): void {
         $currentDef = $healer->getDef();
         $reduction = (int)($healer->getBaseDef() * 0.35);
         if ($reduction < 1) $reduction = 1;
         
         $healer->setDef(max(0, $currentDef - $reduction));
+        $this->defBrokenThisTurn = true;
     }
 
     public function getExtraActions(): array {
@@ -52,7 +59,7 @@ class JudgmentOfDamned extends Blessing {
     }
 
     private function executeGrandConseil(Personnage $actor, Personnage $target): string {
-        $target->addStatusEffect(new StatRedistributionEffect(3));
+        $target->addStatusEffect(new StatRedistributionEffect(3), $actor);
         return "convoque le Grand Conseil ! Les statistiques de " . $target->getName() . " sont redistribuées !";
     }
 
@@ -80,5 +87,18 @@ class JudgmentOfDamned extends Blessing {
         $target->receiveDamage($finalDmg, $actor);
         
         return "inflige une Sentence Méritée ! " . $finalDmg . " dégâts (x" . $multiplier . ") !";
+    }
+
+    public function getAnimationData(): ?array {
+        if ($this->defBrokenThisTurn) {
+            return [
+                'emoji' => $this->emoji,
+                'name' => $this->name,
+                'message' => 'DEF réduite par la guérison !',
+                'type' => 'def_break',
+                'icon' => 'media/blessings/judgment.png'
+            ];
+        }
+        return null;
     }
 }

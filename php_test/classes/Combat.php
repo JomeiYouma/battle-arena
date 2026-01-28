@@ -265,6 +265,29 @@ class Combat {
     }
 
     /**
+     * Ajoute les animations des blessings qui se sont déclenchés
+     */
+    protected function addBlessingAnimations(Personnage $character): void {
+        $isPlayer = ($character === $this->player);
+        
+        foreach ($character->getBlessings() as $blessing) {
+            $animData = $blessing->getAnimationData();
+            if ($animData !== null) {
+                $this->turnActions[] = [
+                    'phase' => 'blessing_passive',
+                    'actor' => $isPlayer ? 'player' : 'enemy',
+                    'emoji' => $animData['emoji'] ?? '',
+                    'name' => $animData['name'] ?? 'Blessing',
+                    'label' => $animData['message'] ?? 'Blessing activé',
+                    'type' => $animData['type'] ?? 'passive',
+                    'statesAfter' => $this->getStatesSnapshot()
+                ];
+                $this->logs[] = "✨ " . $character->getName() . " : " . ($animData['name'] ?? 'Blessing') . " - " . ($animData['message'] ?? 'Passif activé');
+            }
+        }
+    }
+
+    /**
      * Vérifie si une action vient d'une bénédiction
      */
     protected function isActionFromBlessing(Personnage $actor, string $actionKey): bool {
@@ -276,10 +299,6 @@ class Combat {
         }
         return false;
     }
-
-    /**
-     * Exécute l'action du joueur
-     */
     private function doPlayerAction(string $actionKey): void {
         $actions = $this->player->getAllActions();
         if (!isset($actions[$actionKey]) || !$this->player->canUseAction($actionKey)) {
@@ -349,24 +368,28 @@ class Combat {
         // ===== PHASE 2 : Dégâts Effets - Premier =====
         if ($this->turn > 1) {
             $this->resolveDamageEffectsFor($first);
+            $this->addBlessingAnimations($first);
             if ($this->checkDeath($first)) return;
         }
 
         // ===== PHASE 3 : Dégâts Effets - Second =====
         if ($this->turn > 1) {
             $this->resolveDamageEffectsFor($second);
+            $this->addBlessingAnimations($second);
             if ($this->checkDeath($second)) return;
         }
 
         // ===== PHASE 4 : Effets Stats - Premier =====
         if ($this->turn > 1) {
             $this->resolveStatEffectsFor($first);
+            $this->addBlessingAnimations($first);
             $this->processBuffsFor($first);
         }
 
         // ===== PHASE 5 : Effets Stats - Second =====
         if ($this->turn > 1) {
             $this->resolveStatEffectsFor($second);
+            $this->addBlessingAnimations($second);
             $this->processBuffsFor($second);
         }
 
@@ -378,6 +401,7 @@ class Combat {
         }
         
         $target = $playerIsFirst ? $this->enemy : $this->player;
+        $this->addBlessingAnimations($target);
         if ($this->checkDeath($target)) return;
 
         // ===== PHASE 7 : Action - Second =====
@@ -388,6 +412,7 @@ class Combat {
         }
         
         $target2 = $playerIsFirst ? $this->player : $this->enemy;
+        $this->addBlessingAnimations($target2);
         if ($this->checkDeath($target2)) return;
 
         $this->turn++;
