@@ -168,6 +168,58 @@
     color: #b8860b;
 }
 
+/* Capacités des héros en multijoueur */
+.hero-abilities-multi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+    justify-content: center;
+}
+
+.ability-tag-multi {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 12px;
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.ability-tag-multi:hover {
+    background: rgba(255, 140, 0, 0.3);
+    border-color: #ff8c00;
+    transform: scale(1.2);
+}
+
+/* Titres d'étapes */
+.step-title {
+    text-align: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-radius: 8px;
+}
+
+.heroes-title {
+    color: #ff8c00;
+    background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.1), transparent);
+    border-bottom: 2px solid rgba(255, 140, 0, 0.3);
+}
+
+.blessings-title {
+    color: #9932cc;
+    background: linear-gradient(90deg, transparent, rgba(138, 43, 226, 0.1), transparent);
+    border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+}
+
+.optional-tag {
+    font-size: 0.65em;
+    color: #888;
+    font-weight: normal;
+}
+
 /* ===== QUEUE SCREEN ===== */
 .queue-screen {
     display: none;
@@ -361,9 +413,23 @@
     font-weight: bold;
 }
 
+/* Selection steps container */
+.selection-step {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    padding: 15px;
+}
+
 /* Blessing step */
 .blessing-step {
     display: none;
+    border: 2px solid rgba(138, 43, 226, 0.3);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.15);
+}
+
+#heroStep {
+    border: 2px solid rgba(255, 140, 0, 0.3);
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.15);
 }
 
 .blessing-step-title {

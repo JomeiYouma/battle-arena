@@ -39,10 +39,13 @@ $blessingsList = [
     ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'emoji' => '☀️', 'desc' => '+50% VIT. Durée effets: Ennemis +2, Soi -1. Action "Jour Nouveau"'],
     ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'emoji' => '🪢', 'desc' => 'Action "Nœud de Destin" (Lien de dégâts)']
 ];
-?>
 
-<link rel="stylesheet" href="./style.css">
-<link rel="stylesheet" href="./css/multiplayer.css">
+// Configuration du header
+$pageTitle = 'Multijoueur - Horus Battle Arena';
+$extraCss = ['multiplayer'];
+$showUserBadge = false; // On affiche le nom dans le formulaire
+require_once __DIR__ . '/includes/header.php';
+?>
 
 <div class="multi-container">
     <!-- ÉCRAN 1: SÉLECTION DU HÉROS -->
@@ -75,9 +78,15 @@ $blessingsList = [
         </div>
 
         <!-- STEP 1: HEROES -->
-        <div id="heroStep">
+        <div id="heroStep" class="selection-step">
+            <h3 class="step-title heroes-title">⚔️ Choisissez votre Héros</h3>
             <div class="hero-select-grid">
-                <?php foreach ($heros as $h): ?>
+                <?php foreach ($heros as $h): 
+                    // Charger la classe pour obtenir les actions
+                    $heroClass = $h['type'];
+                    $tempHero = new $heroClass($h['pv'], $h['atk'], $h['name'], $h['def'] ?? 5, $h['speed'] ?? 10);
+                    $actions = $tempHero->getAvailableActions();
+                ?>
                 <button type="button" class="hero-card-btn" onclick="preSelectHero('<?php echo $h['id']; ?>', '<?php echo addslashes($h['name']); ?>', '<?php echo $h['images']['p1']; ?>', '<?php echo ucfirst($h['type']); ?>')">
                     <div class="hero-card-content">
                         <img src="<?php echo $h['images']['p1']; ?>" alt="<?php echo $h['name']; ?>">
@@ -89,6 +98,13 @@ $blessingsList = [
                             <span>DEF: <?php echo $h['def'] ?? 5; ?></span> | 
                             <span>SPE: <?php echo $h['speed']; ?></span>
                         </div>
+                        <div class="hero-abilities-multi">
+                            <?php foreach ($actions as $key => $action): ?>
+                                <span class="ability-tag-multi" title="<?php echo htmlspecialchars($action['description']); ?>">
+                                    <?php echo $action['emoji'] ?? '⚔️'; ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
                 </button>
                 <?php endforeach; ?>
@@ -96,8 +112,8 @@ $blessingsList = [
         </div>
 
         <!-- STEP 2: BLESSINGS (Hidden initially) -->
-        <div id="blessingStep" class="blessing-step">
-            <h3 class="blessing-step-title">Choisissez une Bénédiction</h3>
+        <div id="blessingStep" class="blessing-step selection-step">
+            <h3 class="step-title blessings-title">🔮 Choisissez une Bénédiction <span class="optional-tag">(Optionnel)</span></h3>
             
             <div class="blessing-grid">
                 <?php foreach ($blessingsList as $b): ?>
@@ -349,3 +365,5 @@ function cancelQueue() {
     selectedHeroId = null;
 }
 </script>
+
+<?php require_once __DIR__ . '/includes/footer.php'; ?>

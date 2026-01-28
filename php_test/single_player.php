@@ -492,10 +492,15 @@ else:
         
         <div class="selection-columns">
             <!-- HEROES -->
-            <div class="selection-column">
-                <h3 class="selection-column-title">Héros</h3>
+            <div class="selection-column heroes-column">
+                <h3 class="selection-column-title">⚔️ Héros</h3>
                 <div class="hero-list hero-list-scroll">
-                    <?php foreach ($personnages as $perso): ?>
+                    <?php foreach ($personnages as $perso): 
+                        // Charger la classe pour obtenir les actions
+                        $heroClass = $perso['type'];
+                        $tempHero = new $heroClass($perso['pv'], $perso['atk'], $perso['name'], $perso['def'] ?? 5, $perso['speed'] ?? 10);
+                        $actions = $tempHero->getAvailableActions();
+                    ?>
                         <label class="hero-row">
                             <input type="radio" name="hero_choice" value="<?php echo $perso['id']; ?>" required checked>
                             <div class="hero-row-content">
@@ -504,7 +509,14 @@ else:
                                     <h4><?php echo $perso['name']; ?></h4>
                                     <span class="type-badge"><?php echo $perso['type']; ?></span>
                                     <div class="hero-stats-mini">
-                                        <?php echo $perso['pv']; ?> PV | <?php echo $perso['atk']; ?> ATK | <?php echo $perso['speed'] ?? 10; ?> SPE
+                                        <?php echo $perso['pv']; ?> PV | <?php echo $perso['atk']; ?> ATK | <?php echo $perso['def'] ?? 5; ?> DEF | <?php echo $perso['speed'] ?? 10; ?> SPE
+                                    </div>
+                                    <div class="hero-abilities">
+                                        <?php foreach ($actions as $key => $action): ?>
+                                            <span class="ability-tag" title="<?php echo htmlspecialchars($action['description']); ?>">
+                                                <?php echo $action['emoji'] ?? '⚔️'; ?> <?php echo $action['label']; ?>
+                                            </span>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
                             </div>
@@ -514,12 +526,13 @@ else:
             </div>
 
             <!-- BLESSINGS -->
-            <div class="selection-column">
-                <h3 class="selection-column-title">Bénédiction (Optionnel)</h3>
+            <div class="selection-column blessings-column">
+                <h3 class="selection-column-title">🔮 Bénédiction <span class="optional-tag">(Optionnel)</span></h3>
                 <div class="hero-list hero-list-scroll">
-                    <label class="hero-row">
+                    <label class="hero-row blessing-row">
                         <input type="radio" name="blessing_choice" value="" checked>
                         <div class="hero-row-content">
+                            <div class="blessing-emoji-large">❌</div>
                             <div class="hero-info">
                                 <h4>Aucune</h4>
                                 <p class="hero-theme">Combat classique sans bonus.</p>
@@ -527,7 +540,7 @@ else:
                         </div>
                     </label>
                     <?php foreach ($blessingsList as $b): ?>
-                        <label class="hero-row">
+                        <label class="hero-row blessing-row">
                             <input type="radio" name="blessing_choice" value="<?php echo $b['id']; ?>">
                             <div class="hero-row-content">
                                 <div class="blessing-emoji-large"><?php echo $b['emoji']; ?></div>

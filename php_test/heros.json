@@ -9,8 +9,8 @@
         "speed": 12,
         "description": "Maître des flammes, sacrifie sa vie pour des dégâts dévastateurs.",
         "images": {
-            "p1": "media/fire_skol.png",
-            "p2": "media/fire_skol_2.png"
+            "p1": "media/heroes/fire_skol.png",
+            "p2": "media/heroes/fire_skol_2.png"
         }
     },
     {
@@ -23,8 +23,8 @@
         "speed": 8,
         "description": "Tank puissant, alterne rage offensive et défense solide.",
         "images": {
-            "p1": "media/combat_skol.png",
-            "p2": "media/combat_skol_2.png"
+            "p1": "media/heroes/combat_skol.png",
+            "p2": "media/heroes/combat_skol_2.png"
         }
     },
     {
@@ -37,8 +37,8 @@
         "speed": 13,
         "description": "Énergie divine pour soigner et infliger des dégâts qui ignorent les défenses.",
         "images": {
-            "p1": "media/priest_skol.png",
-            "p2": "media/priest_skol_2.png"
+            "p1": "media/heroes/priest_skol.png",
+            "p2": "media/heroes/priest_skol_2.png"
         }
     },
     {
@@ -51,8 +51,8 @@
         "speed": 15,
         "description": "Insaisissable et fluide, esquive et contre-attaque avec des tsunamis.",
         "images": {
-            "p1": "media/fish_skol.png",
-            "p2": "media/fish_skol_2.png"
+            "p1": "media/heroes/fish_skol.png",
+            "p2": "media/heroes/fish_skol_2.png"
         }
     },
     {
@@ -65,8 +65,8 @@
         "speed": 10,
         "description": "Berserk sanguinaire, plus dangereux quand blessé. Risque et récompense.",
         "images": {
-            "p1": "media/kouto_skol.png",
-            "p2": "media/kouto_skol_2.png"
+            "p1": "media/heroes/kouto_skol.png",
+            "p2": "media/heroes/kouto_skol_2.png"
         }
     },
     {
@@ -79,8 +79,8 @@
         "speed": 9,
         "description": "Guérisseur rusé, combine soins puissants et attaques sacrées.",
         "images": {
-            "p1": "media/sat_skol.png",
-            "p2": "media/sat_skol_2.png"
+            "p1": "media/heroes/sat_skol.png",
+            "p2": "media/heroes/sat_skol_2.png"
         }
     },
     {
@@ -93,8 +93,8 @@
         "speed": 11,
         "description": "Vitesse extrême et dégâts électriques. Paralysie et charge dévastatrice.",
         "images": {
-            "p1": "media/pikachu_skol.png",
-            "p2": "media/pikachu_skol_2.png"
+            "p1": "media/heroes/pikachu_skol.png",
+            "p2": "media/heroes/pikachu_skol_2.png"
         }
     },
     {
@@ -107,8 +107,8 @@
         "speed": 5,
         "description": "Manipulateur d'âmes, copie les attaques et maudit ses ennemis.",
         "images": {
-            "p1": "media/necro_skol.png",
-            "p2": "media/necro_skol_2.png"
+            "p1": "media/heroes/necro_skol.png",
+            "p2": "media/heroes/necro_skol_2.png"
         }
     },
     {
@@ -121,8 +121,8 @@
         "speed": 3,
         "description": "Géant lent mais dévastateur. Bombe finale si mal en point.",
         "images": {
-            "p1": "media/giant_skol.png",
-            "p2": "media/giant_skol_2.png"
+            "p1": "media/heroes/giant_skol.png",
+            "p2": "media/heroes/giant_skol_2.png"
         }
     }
 ]

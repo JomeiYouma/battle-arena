@@ -3,34 +3,105 @@
 /* Selection screen layout */
 .selection-columns {
     display: flex;
-    gap: 20px;
+    gap: 30px;
     flex-wrap: wrap;
     justify-content: center;
 }
 
 .selection-column {
     flex: 1;
-    min-width: 300px;
+    min-width: 320px;
+    max-width: 500px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+/* Colonne Héros */
+.heroes-column {
+    border: 2px solid rgba(255, 140, 0, 0.4);
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.2);
+}
+
+.heroes-column .selection-column-title {
+    color: #ff8c00;
+    border-bottom: 2px solid rgba(255, 140, 0, 0.3);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+/* Colonne Bénédictions */
+.blessings-column {
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+}
+
+.blessings-column .selection-column-title {
+    color: #9932cc;
+    border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.optional-tag {
+    font-size: 0.7em;
+    color: #888;
+    font-weight: normal;
 }
 
 .selection-column-title {
-    color: #b8860b;
+    text-align: center;
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
 }
 
 .hero-list-scroll {
-    height: 320px;
+    max-height: 400px;
     overflow-y: auto;
+}
+
+/* Différencier les rows héros et bénédictions */
+.blessing-row .hero-row-content {
+    border-left: 3px solid rgba(138, 43, 226, 0.5);
+}
+
+/* Capacités des héros */
+.hero-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.ability-tag {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.7em;
+    color: #ccc;
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.ability-tag:hover {
+    background: rgba(255, 140, 0, 0.3);
+    border-color: #ff8c00;
+    color: #fff;
 }
 
 /* Blessing emoji in list */
 .blessing-emoji-large {
-    font-size: 24px;
-    margin-right: 12px;
+    font-size: 28px;
+    min-width: 40px;
+    text-align: center;
 }
 
 /* Blessing description */
 .blessing-desc-small {
-    font-size: 12px;
+    font-size: 0.75em;
+    opacity: 0.85;
 }
 
 /* Submit section */

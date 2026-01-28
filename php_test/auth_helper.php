@@ -30,6 +30,7 @@ function requireDebugAuth() {
     <head>
         <meta charset="UTF-8">
         <title>Accès Protégé</title>
+        <link rel="icon" href="./media/website/favicon.ico" type="image/x-icon">
         <link rel="stylesheet" href="./style.css">
         <link rel="stylesheet" href="./css/auth.css">
     </head>
