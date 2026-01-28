@@ -10,3 +10,6 @@ Thumbs.db
 # Ignore IDE files
 .vscode/
 .idea/
+# Ignore backup folders
+/backup_new_ui/
+/sauvegarde-prochain-tp/
