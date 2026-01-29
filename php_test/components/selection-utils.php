@@ -8,11 +8,34 @@
  *   $blessings = getBlessingsList();
  */
 
+// Détection du mode : BDD ou JSON
+define('USE_DATABASE', file_exists(__DIR__ . '/../classes/Services/HeroManager.php'));
+
 function getHeroesList() {
     static $heroesCache = null;
     if ($heroesCache !== null) return $heroesCache;
     
-    $heroesCache = json_decode(file_get_contents(__DIR__ . '/../heros.json'), true);
+    if (USE_DATABASE) {
+        // Mode BDD
+        try {
+            require_once __DIR__ . '/../classes/Services/HeroManager.php';
+            $manager = new HeroManager();
+            $heroModels = $manager->getAll();
+            
+            // Convertir les modèles Hero en tableaux pour compatibilité
+            $heroesCache = array_map(function($hero) {
+                return $hero->toArray();
+            }, $heroModels);
+        } catch (Exception $e) {
+            // Fallback sur JSON en cas d'erreur BDD
+            error_log("Erreur BDD, fallback JSON: " . $e->getMessage());
+            $heroesCache = json_decode(file_get_contents(__DIR__ . '/../heros.json'), true);
+        }
+    } else {
+        // Mode JSON (par défaut si BDD pas configurée)
+        $heroesCache = json_decode(file_get_contents(__DIR__ . '/../heros.json'), true);
+    }
+    
     return $heroesCache;
 }
 

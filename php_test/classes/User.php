@@ -48,7 +48,7 @@ class User {
      * Connexion d'un utilisateur
      */
     public function login(string $email, string $password): array {
-        $stmt = $this->db->prepare('SELECT id, username, password_hash FROM users WHERE email = ?');
+        $stmt = $this->db->prepare('SELECT id, username, password_hash, is_admin FROM users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch();
         
@@ -59,8 +59,9 @@ class User {
         // Stocker en session
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
+        $_SESSION['is_admin'] = (int)$user['is_admin'];
         
-        return ['success' => true, 'user' => ['id' => $user['id'], 'username' => $user['username']]];
+        return ['success' => true, 'user' => ['id' => $user['id'], 'username' => $user['username'], 'is_admin' => $user['is_admin']]];
     }
     
     /**
@@ -69,6 +70,7 @@ class User {
     public static function logout(): void {
         unset($_SESSION['user_id']);
         unset($_SESSION['username']);
+        unset($_SESSION['is_admin']);
     }
     
     /**
@@ -90,6 +92,13 @@ class User {
      */
     public static function getCurrentUsername(): ?string {
         return $_SESSION['username'] ?? null;
+    }
+    
+    /**
+     * Vérifier si l'utilisateur connecté est admin
+     */
+    public static function isAdmin(): bool {
+        return isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
     }
     
     /**

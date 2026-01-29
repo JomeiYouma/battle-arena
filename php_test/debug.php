@@ -3,8 +3,8 @@
  * DEBUG TOOLS - Outils de développement et debug
  */
 
-require_once 'auth_helper.php';
-requireDebugAuth();
+require_once 'admin_helper.php';
+requireAdmin();
 
 // Actions
 $message = null;
@@ -181,7 +181,7 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
 <body>
     <div class="debug-container">
         <div class="debug-header">
-            <h1>🔧 Debug Tools</h1>
+            <h1>Debug Tools</h1>
             <a href="index.php" class="debug-btn">← Retour au menu</a>
         </div>
 
@@ -193,54 +193,55 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
 
         <!-- QUICK LINKS -->
         <div class="debug-card">
-            <h3>🔗 Accès Rapide</h3>
+            <h3>Accès Rapide</h3>
             <div class="quick-links">
-                <a href="simulation.php" class="debug-btn primary">📊 Simulateur</a>
-                <a href="account.php" class="debug-btn">👤 Mon Compte</a>
-                <a href="single_player.php" class="debug-btn">⚔️ Solo</a>
-                <a href="multiplayer-selection.php" class="debug-btn">👥 Multi (Selection)</a>
-                <a href="multiplayer-combat.php?match_id=debug_test" class="debug-btn">👥 Multi (Combat)</a>
-                <a href="reset_session.php" class="debug-btn danger">🔄 Reset Session</a>
+                <a href="simulation.php" class="debug-btn primary">Simulateur</a>
+                <a href="admin_heroes.php" class="debug-btn primary">Gestionnaire Héros</a>
+                <a href="account.php" class="debug-btn">Mon Compte</a>
+                <a href="single_player.php" class="debug-btn">Solo</a>
+                <a href="multiplayer-selection.php" class="debug-btn">Multi (Selection)</a>
+                <a href="multiplayer-combat.php?match_id=debug_test" class="debug-btn">Multi (Combat)</a>
+                <a href="reset_session.php" class="debug-btn danger">Reset Session</a>
             </div>
         </div>
 
         <!-- STATS GRID -->
         <div class="debug-grid">
             <div class="debug-card">
-                <h3>📁 Fichiers de Match</h3>
+                <h3>Fichiers de Match</h3>
                 <div class="value"><?php echo count($matchFiles); ?></div>
                 <div class="label">matchs sauvegardés</div>
                 <div class="debug-actions">
                     <form method="POST" style="margin:0;" onsubmit="return confirm('Supprimer tous les fichiers de match ?');">
-                        <button type="submit" name="clear_matches" class="debug-btn danger">🗑️ Vider</button>
+                        <button type="submit" name="clear_matches" class="debug-btn danger">Vider</button>
                     </form>
                 </div>
             </div>
 
             <div class="debug-card">
-                <h3>⏳ File d'attente</h3>
+                <h3>File d'attente</h3>
                 <div class="value"><?php echo count($queueData); ?></div>
                 <div class="label">joueurs en attente</div>
                 <div class="debug-actions">
                     <form method="POST" style="margin:0;">
-                        <button type="submit" name="clear_queue" class="debug-btn danger">🗑️ Vider</button>
+                        <button type="submit" name="clear_queue" class="debug-btn danger">Vider</button>
                     </form>
                 </div>
             </div>
 
             <div class="debug-card">
-                <h3>🦸 Personnages</h3>
+                <h3>Personnages</h3>
                 <div class="value"><?php echo count($personnages); ?></div>
                 <div class="label">héros disponibles</div>
             </div>
 
             <div class="debug-card">
-                <h3>💾 Session</h3>
+                <h3>Session</h3>
                 <div class="value"><?php echo count($sessionData); ?></div>
                 <div class="label">variables en session</div>
                 <div class="debug-actions">
                     <form method="POST" style="margin:0;">
-                        <button type="submit" name="reset_session" class="debug-btn danger">🔄 Reset</button>
+                        <button type="submit" name="reset_session" class="debug-btn danger">Reset</button>
                     </form>
                 </div>
             </div>
@@ -248,7 +249,7 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
 
         <!-- SESSION DATA -->
         <div class="debug-card">
-            <h3>📋 Données de Session</h3>
+            <h3>Données de Session</h3>
             <div class="debug-info">
                 <pre><?php echo htmlspecialchars(json_encode($sessionData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></pre>
             </div>
@@ -257,7 +258,7 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
         <!-- QUEUE DATA -->
         <?php if (!empty($queueData)): ?>
         <div class="debug-card">
-            <h3>⏳ Contenu de la File d'attente</h3>
+            <h3>Contenu de la File d'attente</h3>
             <div class="debug-info">
                 <pre><?php echo htmlspecialchars(json_encode($queueData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></pre>
             </div>
@@ -267,7 +268,7 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
         <!-- MATCH FILES -->
         <?php if (!empty($matchFiles)): ?>
         <div class="debug-card">
-            <h3>📁 Derniers Matchs</h3>
+            <h3>Derniers Matchs</h3>
             <div class="debug-info">
                 <?php 
                 $recentMatches = array_slice($matchFiles, -5);
@@ -292,7 +293,7 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
 
         <!-- SERVER INFO -->
         <div class="debug-card">
-            <h3>🖥️ Infos Serveur</h3>
+            <h3>Infos Serveur</h3>
             <div class="debug-info">
                 <pre>PHP: <?php echo phpversion(); ?>
 

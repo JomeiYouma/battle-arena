@@ -728,7 +728,7 @@ select {
     padding: 15px;
     font-size: 1.1rem;
     font-family: inherit;
-    margin: 20px 0;
+    /* margin: 20px 0; */
     background: var(--dungeon-gray);
     color: var(--text-light);
     border: 2px solid var(--primary-red);
