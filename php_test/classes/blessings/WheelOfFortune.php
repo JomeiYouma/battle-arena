@@ -6,7 +6,7 @@ class WheelOfFortune extends Blessing {
         parent::__construct(
             'WheelOfFortune', 
             'Roue de Fortune', 
-            'Double la portée des jets aléatoires.', 
+            'Passif : Double la portée des jets aléatoires.', 
             '🎰'
         );
     }
@@ -24,8 +24,8 @@ class WheelOfFortune extends Blessing {
     public function getExtraActions(): array {
         return [
             'concoction_maladroite' => [
-                'label' => 'Concoction Maladroite',
-                'description' => 'Inflige 25-33% PV à l\'ennemi, 15-25% à soi',
+                'label' => 'Audace du Chanceux',
+                'description' => 'Inflige entre 25 et 33% PV à l\'ennemi, s\'inflige entre 15 et 25% PV',
                 'emoji' => '🧪',
                 'method' => 'actionConcoctionMaladroite',
                 'needsTarget' => true,
@@ -51,6 +51,6 @@ class WheelOfFortune extends Blessing {
         $actor->receiveDamage($selfDmg);
         $target->receiveDamage($enemyDmg, $actor);
         
-        return "lance une potion instable ! -$selfDmg PV (Soi) / -$enemyDmg PV (Ennemi)";
+        return "devient instable ! -$selfDmg PV (Soi) / -$enemyDmg PV (Ennemi)";
     }
 }

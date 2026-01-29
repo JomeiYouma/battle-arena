@@ -9,7 +9,7 @@ class MoonCall extends Blessing {
         parent::__construct(
             'MoonCall', 
             'Appel de la Lune', 
-            'Cycle 4 tours: Boost stats mais coût PP doublé.', 
+            'Passif : Tous les 4 tours, SPE x 2, DEF & ATK +50%.', 
             '🌙'
         );
     }
@@ -42,7 +42,7 @@ class MoonCall extends Blessing {
             return [
                 'emoji' => $this->emoji,
                 'name' => $this->name,
-                'message' => 'Cycle lunaire actif ! Stats +50%',
+                'message' => 'Cycle lunaire actif !SPE x 2, DEF & ATK +50%',
                 'type' => 'stat_boost',
                 'icon' => 'media/blessings/moon.png'
             ];

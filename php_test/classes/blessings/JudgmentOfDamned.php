@@ -9,7 +9,7 @@ class JudgmentOfDamned extends Blessing {
         parent::__construct(
             'JudgmentOfDamned', 
             'Jugement des Maudits', 
-            'Se soigner brise la DEF (-35%).', 
+            'Passif : Sur le terrain, se soigner baisse la DEF de 35%.', 
             '⚖️'
         );
     }

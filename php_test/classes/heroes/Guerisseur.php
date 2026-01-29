@@ -82,11 +82,13 @@ class Guerisseur extends Personnage {
         
         if ($hasBlessing) {
             $this->setPv($this->pv + 10);
+            $this->triggerHealHooks(10);
             return "renouvelle sa bénédiction !";
         }
         
         $this->addStatusEffect(new DefenseBoostEffect(3, $this->blessDefBonus));
         $this->setPv($this->pv + 10);
+        $this->triggerHealHooks(10);
         return "invoque une bénédiction !";
     }
 

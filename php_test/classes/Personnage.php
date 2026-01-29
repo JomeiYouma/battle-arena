@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/StatusEffect.php';
 require_once __DIR__ . '/Blessing.php';
+require_once __DIR__ . '/effects/DestinyLinkEffect.php';
 
 abstract class Personnage {
     const MAX_PV = 200;
@@ -49,6 +50,19 @@ abstract class Personnage {
         }
         $this->pv -= $amount;
         if ($this->pv < 0) $this->pv = 0;
+        
+        // Check for Destiny Link effect - share damage with linked target
+        foreach ($this->statusEffects as $effect) {
+            if ($effect instanceof DestinyLinkEffect) {
+                $linkedTarget = $effect->getLinkedTarget();
+                if ($linkedTarget !== null && !$linkedTarget->isDead()) {
+                    $sharedDamage = (int)($amount * $effect->getDamagePercent());
+                    if ($sharedDamage > 0) {
+                        $linkedTarget->receiveDamage($sharedDamage);
+                    }
+                }
+            }
+        }
     }
 
     public function triggerHealHooks(int $amount): void {

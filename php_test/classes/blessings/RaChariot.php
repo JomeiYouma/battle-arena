@@ -8,8 +8,9 @@ class RaChariot extends Blessing {
     public function __construct() {
         parent::__construct(
             'RaChariot', 
-            'Chariot de Ra', 
-            '+50% VIT. Durée effets neg ennemis +2, nous -1.', 
+            'Chariot de Fracas', 
+            '+50% SPE<br>
+            Passif : Réduit de 1 tour les statuts subits, augmente de 2 tours les status infligés', 
             '☀️'
         );
     }
@@ -42,7 +43,7 @@ class RaChariot extends Blessing {
         return [
             'jour_nouveau' => [
                 'label' => 'Jour Nouveau',
-                'description' => 'Ajoute 50% VIT à ATK et DEF (2 tours)',
+                'description' => 'Ajoute 50% de SPE à ATK et DEF pendant 2 tours.',
                 'emoji' => '🌅',
                 'method' => 'actionJourNouveau',
                 'needsTarget' => false,

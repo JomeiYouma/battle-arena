@@ -9,7 +9,7 @@ class LoversCharm extends Blessing {
         parent::__construct(
             'LoversCharm', 
             'Charmes Amoureux', 
-            'Renvoie 25% des dégâts reçus.', 
+            'Passif : Renvoie 25% des dégâts reçus.', 
             '💘'
         );
     }
@@ -22,7 +22,7 @@ class LoversCharm extends Blessing {
         if ($attacker !== $victim && !$attacker->isDead()) {
             $reflect = (int)($damage * 0.25);
             if ($reflect > 0) {
-                $attacker->setPv($attacker->getPv() - $reflect);
+                $attacker->receiveDamage($reflect);
                 $this->damageReflectedThisTurn = true;
             }
         }
@@ -51,7 +51,7 @@ class LoversCharm extends Blessing {
 
     private function executeFoudre(Personnage $actor, Personnage $target): string {
         $target->addStatusEffect(new ParalysisEffect(2), $actor);
-        return "lance la Foudre de l'Amour ! " . $target->getName() . " est paralysé !";
+        return "foudroie son entourage ! " . $target->getName() . " est paralysé !";
     }
 
     public function getAnimationData(): ?array {

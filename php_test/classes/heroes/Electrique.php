@@ -19,7 +19,7 @@ class Electrique extends Personnage {
             ],
             'acceleration' => [
                 'label' => 'Accélération',
-                'description' => '+10 VIT (4 tours)',
+                'description' => '+10 SPE (4 tours)',
                 'pp' => 5,
                 'method' => 'acceleration',
                 'needsTarget' => false,
@@ -27,7 +27,7 @@ class Electrique extends Personnage {
             ],
             'prise_foudre' => [
                 'label' => 'Prise Foudre',
-                'description' => 'Paralyse 2 tours, -5 VIT (4 tours)',
+                'description' => 'Paralyse 2 tours, -5 SPE (4 tours)',
                 'pp' => 3,
                 'method' => 'priseFoudre',
                 'needsTarget' => true,
@@ -59,7 +59,7 @@ class Electrique extends Personnage {
 
     public function acceleration() {
         $this->addStatusEffect(new SpeedModEffect(4, 10));
-        return "se charge d'électricité statique et accélère ! (+10 Vit)";
+        return "se charge d'électricité statique et accélère ! (+10 SPE)";
     }
 
     public function priseFoudre(Personnage $target) {

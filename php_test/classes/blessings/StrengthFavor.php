@@ -26,7 +26,7 @@ class StrengthFavor extends Blessing {
         return [
             'transe_guerriere' => [
                 'label' => 'Transe Guerrière',
-                'description' => 'Purifie et immunise aux effets (3 tours)',
+                'description' => 'Immunise contre les effets de statuts (3 tours)',
                 'emoji' => '🥋',
                 'method' => 'actionTranseGuerriere',
                 'needsTarget' => false,

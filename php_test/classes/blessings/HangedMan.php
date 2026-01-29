@@ -1,21 +1,32 @@
 <?php
 require_once __DIR__ . '/../Blessing.php';
+require_once __DIR__ . '/../effects/DestinyLinkEffect.php';
 
 class HangedMan extends Blessing {
     public function __construct() {
         parent::__construct(
             'HangedMan', 
             'Corde du Pendu', 
-            'Mystérieux...', 
+            'Passif : -10% SPE, +15% ATK.', 
             '🪢'
         );
+    }
+
+    public function modifyStat(string $stat, int $currentValue, Personnage $owner): int {
+        if ($stat === 'speed') {
+            return (int)($currentValue * 0.9); // -10%
+        }
+        if ($stat === 'atk') {
+            return (int)($currentValue * 1.15); // +15%
+        }
+        return $currentValue;
     }
 
     public function getExtraActions(): array {
         return [
             'noeud_destin' => [
                 'label' => 'Nœud de Destin',
-                'description' => 'Lie le destin (Dégâts partagés pendant 3 tours)',
+                'description' => 'Inflige 35% des dégâts reçus à l\'adversaire (4 tours)',
                 'emoji' => '♾️',
                 'method' => 'actionNoeudDestin',
                 'needsTarget' => true,
@@ -32,8 +43,10 @@ class HangedMan extends Blessing {
     }
 
     private function executeNoeud(Personnage $actor, Personnage $target): string {
-        $damage = $actor->roll(15, 30);
-        $target->receiveDamage($damage, $actor);
-        return "serre le Nœud de Destin ! $damage dégâts !";
+        // Créer l'effet de lien avec la cible
+        $effect = new DestinyLinkEffect(4, 0.35, $target);
+        $actor->addStatusEffect($effect, $actor);
+        
+        return "lie son destin à " . $target->getName() . " ! Les dégâts seront partagés !";
     }
 }

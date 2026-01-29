@@ -20,16 +20,49 @@ function getBlessingsList() {
     static $blessingsCache = null;
     if ($blessingsCache !== null) return $blessingsCache;
     
-    $blessingsCache = [
-        ['id' => 'WheelOfFortune', 'name' => 'Roue de Fortune', 'img' => 'wheel.png', 'desc' => 'Portée aléatoire doublée'],
-        ['id' => 'LoversCharm', 'name' => 'Charmes Amoureux', 'img' => 'lovers.png', 'desc' => 'Renvoie 25% des dégâts reçus'],
-        ['id' => 'JudgmentOfDamned', 'name' => 'Jugement des Maudits', 'img' => 'judgment.png', 'desc' => 'Soin baisse DEF. +2 Actions'],
-        ['id' => 'StrengthFavor', 'name' => 'Faveur de Force', 'img' => 'strength.png', 'desc' => 'DEF -75%, ATK +33%'],
-        ['id' => 'MoonCall', 'name' => 'Appel de la Lune', 'img' => 'moon.png', 'desc' => 'Cycle 4 tours : Boost stats, coût PP x2'],
-        ['id' => 'WatchTower', 'name' => 'La Tour de Garde', 'img' => 'tower.png', 'desc' => 'ATK utilise DEF'],
-        ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'img' => 'chariot.png', 'desc' => '+50% VIT. Bonus durées effets'],
-        ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'img' => 'hanged.png', 'desc' => 'Mystérieux...']
+    $blessingsCache = [];
+    $blessingsDir = __DIR__ . '/../classes/blessings';
+    
+    // Mapping des noms de fichiers vers les images (peut être personnalisé)
+    $imageMapping = [
+        'WheelOfFortune' => 'wheel.png',
+        'LoversCharm' => 'lovers.png',
+        'JudgmentOfDamned' => 'judgment.png',
+        'StrengthFavor' => 'strength.png',
+        'MoonCall' => 'moon.png',
+        'WatchTower' => 'tower.png',
+        'RaChariot' => 'chariot.png',
+        'HangedMan' => 'hanged.png'
     ];
+    
+    // Scanner tous les fichiers PHP dans le dossier blessings
+    $files = glob($blessingsDir . '/*.php');
+    
+    foreach ($files as $file) {
+        $className = basename($file, '.php');
+        
+        try {
+            // Inclure le fichier de la classe
+            require_once $file;
+            
+            // Instancier la bénédiction pour récupérer ses informations
+            if (class_exists($className)) {
+                $blessing = new $className();
+                
+                $blessingsCache[] = [
+                    'id' => $className,
+                    'name' => $blessing->getName(),
+                    'img' => $imageMapping[$className] ?? 'default.png',
+                    'desc' => $blessing->getDescription(),
+                    'emoji' => $blessing->getEmoji()
+                ];
+            }
+        } catch (Exception $e) {
+            // Ignorer les blessings qui ne peuvent pas être chargées
+            error_log("Impossible de charger la bénédiction $className: " . $e->getMessage());
+        }
+    }
+    
     return $blessingsCache;
 }
 

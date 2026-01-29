@@ -2413,7 +2413,7 @@ select option {
     margin-bottom: 8px;
 }
 
-.multi-container .type-badge {
+/* .multi-container */ .type-badge {
     display: inline-block;
     background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
     color: var(--text-light);
