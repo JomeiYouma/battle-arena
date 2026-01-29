@@ -173,9 +173,6 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
                 require 'multi_player.php'; 
             }
             ?>
-            
-            <a href="index.php" class="back-link">Retour au menu</a>
-        </div>
 
     <?php endif; ?>
     

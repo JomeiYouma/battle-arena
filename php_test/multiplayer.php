@@ -688,3 +688,4 @@ function sendAction(action) {
 updateCombatState();
 pollInterval = setInterval(updateCombatState, 2000);
 </script>
+

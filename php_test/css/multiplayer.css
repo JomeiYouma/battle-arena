@@ -1,7 +1,7 @@
 /* ===== MULTIPLAYER SELECTION STYLES ===== */
 
 .multi-container {
-    max-width: 850px;
+    max-width: 1100px;
     margin: 20px auto;
     padding: 0 15px;
 }
@@ -21,6 +21,260 @@
     font-size: 12px;
     margin-bottom: 20px;
     font-style: italic;
+}
+
+/* ===== SELECTION SCREEN LAYOUT (same as single_player) ===== */
+.select-screen {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.select-screen > h2 {
+    text-align: center;
+    color: #ffd700;
+    margin-bottom: 10px;
+    font-size: 1.6em;
+}
+
+/* Selection screen layout - identical to single_player.css */
+.selection-columns {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.selection-column {
+    flex: 1;
+    min-width: 320px;
+    max-width: 500px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+/* Colonne Héros */
+.heroes-column {
+    border: 2px solid rgba(255, 140, 0, 0.4);
+    box-shadow: 0 0 15px rgba(255, 140, 0, 0.2);
+}
+
+.heroes-column .selection-column-title {
+    color: #ff8c00;
+    border-bottom: 2px solid rgba(255, 140, 0, 0.3);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+/* Colonne Bénédictions */
+.blessings-column {
+    border: 2px solid rgba(138, 43, 226, 0.4);
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.2);
+}
+
+.blessings-column .selection-column-title {
+    color: #9932cc;
+    border-bottom: 2px solid rgba(138, 43, 226, 0.3);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.optional-tag {
+    font-size: 0.7em;
+    color: #888;
+    font-weight: normal;
+}
+
+.selection-column-title {
+    text-align: center;
+    margin: 0 0 10px 0;
+    font-size: 1.1em;
+}
+
+.hero-list-scroll {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Hero row styling */
+.hero-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.hero-row input[type="radio"] {
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.hero-row:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.hero-row input[type="radio"]:checked + .hero-row-content {
+    border-left-color: rgba(255, 140, 0, 0.8);
+}
+
+.hero-row-content {
+    display: flex;
+    gap: 12px;
+    flex: 1;
+    border-left: 3px solid transparent;
+    padding-left: 8px;
+}
+
+.hero-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 140, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.hero-info {
+    flex: 1;
+}
+
+.hero-info h4 {
+    margin: 0 0 3px 0;
+    color: #fff;
+    font-size: 0.95em;
+}
+
+.type-badge{
+    display: inline-block;
+    background: rgba(255, 140, 0, 0.2);
+    border: 1px solid rgba(255, 140, 0, 0.4);
+    color: #ff8c00;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    margin-right: 6px;
+}
+
+.hero-list .hero-row-content .type-badge{
+    display: inline-block;
+    background: rgba(255, 140, 0, 0.2);
+    border: 1px solid rgba(255, 140, 0, 0.4);
+    color: #ff8c00;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    margin-right: 6px;
+}
+
+
+.hero-stats-mini {
+    font-size: 0.75em;
+    color: #aaa;
+    margin: 4px 0;
+}
+
+/* Différencier les rows héros et bénédictions */
+.blessing-row .hero-row-content {
+    border-left: 3px solid rgba(138, 43, 226, 0.5);
+}
+
+.blessing-row input[type="radio"]:checked + .hero-row-content {
+    border-left-color: rgba(138, 43, 226, 0.8);
+}
+
+/* Capacités des héros */
+.hero-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.ability-tag {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.7em;
+    color: #ccc;
+    cursor: help;
+    transition: all 0.2s ease;
+}
+
+.ability-tag:hover {
+    background: rgba(255, 140, 0, 0.3);
+    border-color: #ff8c00;
+    color: #fff;
+}
+
+.blessing-abilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.blessing-action {
+    background: rgba(138, 43, 226, 0.15);
+    border-color: rgba(138, 43, 226, 0.3);
+}
+
+.blessing-action:hover {
+    background: rgba(138, 43, 226, 0.35);
+    border-color: #9932cc;
+}
+
+.blessing-desc-small {
+    color: #b8860b;
+    font-size: 0.8em;
+}
+
+.blessing-img-container {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(138, 43, 226, 0.1);
+    border: 1px solid rgba(138, 43, 226, 0.3);
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.no-blessing-icon {
+    font-size: 24px;
+    color: #666;
+}
+
+.blessing-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    filter: invert(1) sepia(1) saturate(3) hue-rotate(250deg);
+    opacity: 0.85;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.hero-row:hover .blessing-thumb,
+.hero-row input[type="radio"]:checked + .hero-row-content .blessing-thumb {
+    opacity: 1;
+    filter: invert(1) sepia(1) saturate(4) hue-rotate(250deg) drop-shadow(0 0 5px rgba(138, 43, 226, 0.5));
+}
+
+.blessing-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 2px;
 }
 
 /* ===== DISPLAY NAME INPUT ===== */
@@ -76,148 +330,6 @@
 
 .display-name-input::placeholder {
     color: #666;
-}
-
-.hero-select-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
-}
-
-.hero-card-btn {
-    background: linear-gradient(145deg, rgba(30, 30, 40, 0.95), rgba(20, 15, 25, 0.98));
-    border: 2px solid #4a0000;
-    border-radius: 12px;
-    padding: 0;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    overflow: hidden;
-    position: relative;
-}
-
-.hero-card-btn:hover {
-    transform: translateY(-8px) scale(1.02);
-    border-color: #c41e3a;
-    box-shadow: 0 15px 40px rgba(196, 30, 58, 0.4), 
-                0 0 30px rgba(255, 215, 0, 0.2),
-                inset 0 0 20px rgba(196, 30, 58, 0.1);
-}
-
-.hero-card-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, #c41e3a, transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.hero-card-btn:hover::before {
-    opacity: 1;
-}
-
-.hero-card-content {
-    padding: 12px;
-    text-align: center;
-}
-
-.hero-card-content img {
-    width: 80px;
-    height: 80px;
-    object-fit: contain;
-    margin-bottom: 8px;
-    filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.5));
-    transition: transform 0.3s, filter 0.3s;
-}
-
-.hero-card-btn:hover .hero-card-content img {
-    transform: scale(1.1);
-    filter: drop-shadow(0 8px 20px rgba(196, 30, 58, 0.5));
-}
-
-.hero-card-content h4 {
-    color: #e0e0e0;
-    font-size: 13px;
-    margin: 6px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.hero-card-content .type-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #c41e3a, #7a1226);
-    color: #fff;
-    padding: 3px 10px;
-    border-radius: 12px;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-}
-
-.hero-stats-preview {
-    color: #808080;
-    font-size: 11px;
-    line-height: 1.6;
-}
-
-.hero-stats-preview span {
-    color: #b8860b;
-}
-
-/* Capacités des héros en multijoueur */
-.hero-abilities-multi {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 8px;
-    justify-content: center;
-}
-
-.ability-tag-multi {
-    display: inline-block;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 4px;
-    padding: 2px 5px;
-    font-size: 12px;
-    cursor: help;
-    transition: all 0.2s ease;
-}
-
-.ability-tag-multi:hover {
-    background: rgba(255, 140, 0, 0.3);
-    border-color: #ff8c00;
-    transform: scale(1.2);
-}
-
-/* Titres d'étapes */
-.step-title {
-    text-align: center;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-radius: 8px;
-}
-
-.heroes-title {
-    color: #ff8c00;
-    background: linear-gradient(90deg, transparent, rgba(255, 140, 0, 0.1), transparent);
-    border-bottom: 2px solid rgba(255, 140, 0, 0.3);
-}
-
-.blessings-title {
-    color: #9932cc;
-    background: linear-gradient(90deg, transparent, rgba(138, 43, 226, 0.1), transparent);
-    border-bottom: 2px solid rgba(138, 43, 226, 0.3);
-}
-
-.optional-tag {
-    font-size: 0.65em;
-    color: #888;
-    font-weight: normal;
 }
 
 /* ===== QUEUE SCREEN ===== */
@@ -353,142 +465,56 @@
     display: none;
 }
 
-/* Blessings Grid */
-.blessing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 12px;
-    margin-top: 15px;
-}
-
-.blessing-card {
-    background: rgba(30, 30, 40, 0.9);
-    border: 2px solid #555;
-    border-radius: 6px;
-    padding: 12px;
-    cursor: pointer;
-    transition: all 0.3s;
-    text-align: left;
-}
-
-.blessing-card:hover {
-    border-color: #ffd700;
-    transform: translateY(-3px);
-}
-
-.blessing-card.selected {
-    border-color: #ffd700;
-    background: rgba(80, 60, 20, 0.9);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
-}
-
-.blessing-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 8px;
-    color: #ffd700;
-    font-weight: bold;
-}
-
-.blessing-emoji {
-    font-size: 20px;
-}
-
-/* Blessing card image */
-.blessing-card-img {
-    width: 28px;
-    height: 28px;
-    object-fit: contain;
-    filter: invert(1) sepia(1) saturate(3) hue-rotate(250deg);
-    opacity: 0.8;
-    transition: all 0.2s ease;
-}
-
-.blessing-card:hover .blessing-card-img,
-.blessing-card.selected .blessing-card-img {
-    opacity: 1;
-    filter: invert(1) sepia(1) saturate(4) hue-rotate(250deg) drop-shadow(0 0 4px rgba(255, 215, 0, 0.5));
-}
-
-/* No blessing styling */
-.blessing-card.no-blessing {
-    margin-bottom: 12px;
-    background: rgba(40, 40, 50, 0.7);
-}
-
-.blessing-card.no-blessing .no-blessing-icon {
-    font-size: 20px;
-    color: #666;
-    font-weight: bold;
-    margin-right: 8px;
-}
-
-/* Blessing actions */
-.blessing-actions-multi {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 8px;
-}
-
-.blessing-ability {
-    background: rgba(138, 43, 226, 0.2);
-    border-color: rgba(138, 43, 226, 0.4);
-}
-
-.blessing-ability:hover {
-    background: rgba(138, 43, 226, 0.4);
-    border-color: #9932cc;
-}
-
-.blessing-desc {
-    font-size: 12px;
-    color: #aaa;
-    line-height: 1.4;
-}
-
-.step-indicator {
-    text-align: center;
-    margin-bottom: 20px;
-    color: #888;
-    font-size: 14px;
-}
-
-.step-indicator span.active {
-    color: #ffd700;
-    font-weight: bold;
-}
-
-/* Selection steps container */
-.selection-step {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
+/* ===== ALIASES POUR COMPOSANT PARTAGÉ ===== */
+/* Le composant selection-screen.php utilise .player-name-input-section */
+.player-name-input-section {
+    max-width: 340px;
+    margin: 0 auto 20px;
+    background: rgba(20, 20, 30, 0.8);
+    border: 2px solid #4a0000;
+    border-radius: 8px;
     padding: 15px;
 }
 
-/* Blessing step */
-.blessing-step {
-    display: none;
-    border: 2px solid rgba(138, 43, 226, 0.3);
-    box-shadow: 0 0 15px rgba(138, 43, 226, 0.15);
+.player-name-input-section.highlighted {
+    background: linear-gradient(135deg, rgba(20, 20, 30, 0.9), rgba(184, 134, 11, 0.1));
+    border-color: #b8860b;
 }
 
-#heroStep {
-    border: 2px solid rgba(255, 140, 0, 0.3);
-    box-shadow: 0 0 15px rgba(255, 140, 0, 0.15);
+.player-name-input-section label {
+    display: block;
+    color: #b8860b;
+    font-size: 14px;
+    margin-bottom: 8px;
 }
 
-.blessing-step-title {
+.player-name-label {
+    margin-bottom: 12px;
+}
+
+.player-name-value {
     color: #ffd700;
+    font-weight: bold;
+    font-size: 16px;
     text-align: center;
-    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
 }
 
-.blessing-step-actions {
-    text-align: center;
-    margin-top: 30px;
-    display: flex;
-    gap: 20px;
-    justify-content: center;
+.player-name-input-section input {
+    width: 100%;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #666;
+    border-radius: 4px;
+    color: #ffd700;
+    font-size: 14px;
+}
+
+.player-name-input-section input:focus {
+    outline: none;
+    border-color: #b8860b;
+    box-shadow: 0 0 8px rgba(184, 134, 11, 0.3);
+    background: rgba(0, 0, 0, 0.7);
 }

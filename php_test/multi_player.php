@@ -26,141 +26,33 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Charger la liste des héros et définitions des bénédictions (temporaire, idéalement en DB ou JSON)
-$heros = json_decode(file_get_contents('heros.json'), true);
-
-$blessingsList = [
-    ['id' => 'WheelOfFortune', 'name' => 'Roue de Fortune', 'emoji' => '🎰', 'desc' => 'Portée aléatoire doublée (ex: 1-10 → -4-15) + Action "Concoction Maladroite"'],
-    ['id' => 'LoversCharm', 'name' => 'Charmes Amoureux', 'emoji' => '💘', 'desc' => 'Renvoie 25% des dégâts reçus + Action "Foudre de l\'Amour" (Paralysie)'],
-    ['id' => 'JudgmentOfDamned', 'name' => 'Jugement des Maudits', 'emoji' => '⚖️', 'desc' => 'Se soigner baisse la DEF. Actions "Grand Conseil" & "Sentence"'],
-    ['id' => 'StrengthFavor', 'name' => 'Faveur de Force', 'emoji' => '💪', 'desc' => 'DEF -75%, ATK +33%. Action "Transe Guerrière" (Immunité)'],
-    ['id' => 'MoonCall', 'name' => 'Appel de la Lune', 'emoji' => '🌙', 'desc' => 'Cycle 4 tours : Stats boostées mais coût PP double.'],
-    ['id' => 'WatchTower', 'name' => 'La Tour de Garde', 'emoji' => '🏰', 'desc' => 'ATK utilise DEF. Action "Fortifications" (+5 DEF)'],
-    ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'emoji' => '☀️', 'desc' => '+50% VIT. Durée effets: Ennemis +2, Soi -1. Action "Jour Nouveau"'],
-    ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'emoji' => '🪢', 'desc' => 'Action "Nœud de Destin" (Lien de dégâts)']
-];
-
+// Charger la liste des héros et définitions des bénédictions (partagés)
 // Configuration du header
 $pageTitle = 'Multijoueur - Horus Battle Arena';
 $extraCss = ['multiplayer'];
 $showUserBadge = false; // On affiche le nom dans le formulaire
+$showMainTitle = false; // Le titre est dans le composant
 require_once __DIR__ . '/includes/header.php';
+
 ?>
 
 <div class="multi-container">
-    <!-- ÉCRAN 1: SÉLECTION DU HÉROS -->
-    <div class="selection-screen" id="selectionScreen">
-        <h2 class="multi-title">⚔️ CHOISISSEZ VOTRE COMPOSITION ⚔️</h2>
-        <p class="multi-subtitle">Sélectionnez un héros pour entrer dans l'arène multijoueur</p>
+    <!-- ÉCRAN 1: SÉLECTION DU HÉROS (avec composant partagé) -->
+    <div id="selectionScreen">
+        <?php
+        // Inclure le composant de sélection
+        include 'components/selection-screen.php';
         
-        <!-- CHAMP DISPLAY NAME -->
-        <?php if (User::isLoggedIn()): ?>
-            <div class="display-name-section highlighted">
-                <label class="display-name-label">Vous jouez en tant que</label>
-                <div class="display-name-value">
-                    <?php echo htmlspecialchars(User::getCurrentUsername()); ?>
-                </div>
-            </div>
-            <input type="hidden" id="displayName" value="<?php echo htmlspecialchars(User::getCurrentUsername()); ?>">
-        <?php else: ?>
-            <div class="display-name-section">
-                <label for="displayName">Votre nom de joueur</label>
-                <input type="text" 
-                       id="displayName" 
-                       class="display-name-input" 
-                       placeholder="Entrez votre pseudo..." 
-                       maxlength="20">
-            </div>
-        <?php endif; ?>
+        // Préparer la configuration
+        $selectionConfig = [
+            'mode' => 'multiplayer',
+            'showPlayerNameInput' => true,
+            'displayNameValue' => User::isLoggedIn() ? User::getCurrentUsername() : null,
+            'displayNameIsStatic' => User::isLoggedIn()
+        ];
         
-        <div class="step-indicator" id="stepIndicator">
-            <span class="active">HÉROS</span> &nbsp;->&nbsp; <span>BÉNÉDICTION</span>
-        </div>
-
-        <!-- STEP 1: HEROES -->
-        <div id="heroStep" class="selection-step">
-            <h3 class="step-title heroes-title">⚔️ Choisissez votre Héros</h3>
-            <div class="hero-select-grid">
-                <?php foreach ($heros as $h): 
-                    // Charger la classe pour obtenir les actions
-                    $heroClass = $h['type'];
-                    $tempHero = new $heroClass($h['pv'], $h['atk'], $h['name'], $h['def'] ?? 5, $h['speed'] ?? 10);
-                    $actions = $tempHero->getAvailableActions();
-                ?>
-                <button type="button" class="hero-card-btn" onclick="preSelectHero('<?php echo $h['id']; ?>', '<?php echo addslashes($h['name']); ?>', '<?php echo $h['images']['p1']; ?>', '<?php echo ucfirst($h['type']); ?>')">
-                    <div class="hero-card-content">
-                        <img src="<?php echo $h['images']['p1']; ?>" alt="<?php echo $h['name']; ?>">
-                        <h4><?php echo $h['name']; ?></h4>
-                        <span class="type-badge"><?php echo ucfirst($h['type']); ?></span>
-                        <div class="hero-stats-preview">
-                            <span>PV: <?php echo $h['pv']; ?></span> | 
-                            <span>ATK: <?php echo $h['atk']; ?></span> | 
-                            <span>DEF: <?php echo $h['def'] ?? 5; ?></span> | 
-                            <span>SPE: <?php echo $h['speed']; ?></span>
-                        </div>
-                        <div class="hero-abilities-multi">
-                            <?php foreach ($actions as $key => $action): ?>
-                                <span class="ability-tag-multi" data-tooltip="<?php echo $action['label']; ?>: <?php echo htmlspecialchars($action['description']); ?>">
-                                    <?php echo $action['emoji'] ?? '⚔️'; ?>
-                                </span>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-                </button>
-                <?php endforeach; ?>
-            </div>
-        </div>
-
-        <!-- STEP 2: BLESSINGS (Hidden initially) -->
-        <div id="blessingStep" class="blessing-step selection-step">
-            <h3 class="step-title blessings-title">🔮 Choisissez une Bénédiction <span class="optional-tag">(Optionnel)</span></h3>
-            
-            <!-- Option Aucune -->
-            <div class="blessing-card no-blessing selected" onclick="selectBlessing('', this)">
-                <div class="blessing-header">
-                    <span class="no-blessing-icon">✕</span>
-                    <span>Aucune</span>
-                </div>
-                <div class="blessing-desc">Combat classique sans bonus.</div>
-            </div>
-            
-            <div class="blessing-grid">
-                <?php foreach ($blessingsList as $b): 
-                    // Charger la classe de bénédiction pour obtenir les actions
-                    $blessingClass = $b['id'];
-                    $tempBlessing = new $blessingClass();
-                    $blessingActions = $tempBlessing->getExtraActions();
-                ?>
-                <div class="blessing-card" onclick="selectBlessing('<?php echo $b['id']; ?>', this)">
-                    <div class="blessing-header">
-                        <img src="media/blessings/<?php echo $b['img']; ?>" alt="<?php echo $b['name']; ?>" class="blessing-card-img">
-                        <span><?php echo $b['name']; ?></span>
-                    </div>
-                    <div class="blessing-desc">
-                        <?php echo $b['desc']; ?>
-                    </div>
-                    <?php if (!empty($blessingActions)): ?>
-                    <div class="blessing-actions-multi">
-                        <?php foreach ($blessingActions as $key => $action): ?>
-                            <span class="ability-tag-multi blessing-ability" data-tooltip="<?php echo $action['label']; ?>: <?php echo htmlspecialchars($action['description']); ?>">
-                                <?php echo $action['emoji'] ?? '✨'; ?>
-                            </span>
-                        <?php endforeach; ?>
-                    </div>
-                    <?php endif; ?>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            
-            <div class="blessing-step-actions">
-                <button type="button" class="cancel-queue-btn secondary" onclick="backToHero()">
-                    Retour
-                </button>
-                <button type="button" class="cancel-queue-btn confirm" onclick="confirmSelection()">
-                    COMBATTRE
-                </button>
-            </div>
-        </div>
+        renderSelectionScreen($selectionConfig);
+        ?>
     </div>
 
     <!-- ÉCRAN 2: QUEUE D'ATTENTE -->
@@ -192,92 +84,80 @@ require_once __DIR__ . '/includes/header.php';
             ❌ Annuler la recherche
         </button>
     </div>
-    
+
 </div>
+
+<!-- Tooltip System -->
+<div id="customTooltip" class="custom-tooltip"></div>
+<script src="js/selection-tooltip.js"></script>
 
 <script>
 let selectedHeroId = null;
-let selectedHeroData = {}; // {name, img, type}
 let selectedBlessingId = null;
 let queuePollInterval = null;
 let countdownInterval = null;
 let remainingTime = 30;
 let isInQueue = false;
 
-function preSelectHero(heroId, heroName, heroImg, heroType) {
-    selectedHeroId = heroId;
-    selectedHeroData = { name: heroName, img: heroImg, type: heroType };
-    
-    // Switch to step 2
-    document.getElementById('heroStep').style.display = 'none';
-    document.getElementById('blessingStep').style.display = 'block';
-    
-    // Update indicator
-    const spans = document.getElementById('stepIndicator').querySelectorAll('span');
-    spans[0].classList.remove('active');
-    spans[1].classList.add('active');
-}
-
-function backToHero() {
-    document.getElementById('heroStep').style.display = 'block';
-    document.getElementById('blessingStep').style.display = 'none';
-    
-    selectedHeroId = null;
-    selectedBlessingId = null;
-    
-    // Reset selection logic visual if needed
-    document.querySelectorAll('.blessing-card').forEach(c => c.classList.remove('selected'));
-    
-    const spans = document.getElementById('stepIndicator').querySelectorAll('span');
-    spans[0].classList.add('active');
-    spans[1].classList.remove('active');
-}
-
-function selectBlessing(id, cardElement) {
-    selectedBlessingId = id;
-    
-    document.querySelectorAll('.blessing-card').forEach(c => c.classList.remove('selected'));
-    cardElement.classList.add('selected');
-}
-
-function confirmSelection() {
-    if (!selectedHeroId) {
-        alert("Veuillez choisir un héros !");
-        backToHero();
-        return;
+// Intercepter la soumission du formulaire
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.select-screen form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Récupérer les valeurs du formulaire
+            selectedHeroId = document.querySelector('input[name="hero_choice"]:checked')?.value;
+            selectedBlessingId = document.querySelector('input[name="blessing_choice"]:checked')?.value || '';
+            
+            // Récupérer le display name
+            let displayName = null;
+            const displayNameInput = document.getElementById('playerName') || document.getElementById('displayName');
+            if (displayNameInput) {
+                displayName = displayNameInput.value?.trim();
+            }
+            
+            // Valider sélection héros
+            if (!selectedHeroId) {
+                alert('Veuillez choisir un héros !');
+                return;
+            }
+            
+            // Récupérer les données du héros pour l'affichage
+            const heroRadio = document.querySelector(`input[name="hero_choice"][value="${selectedHeroId}"]`);
+            const heroRow = heroRadio?.closest('.hero-row');
+            const heroImg = heroRow?.querySelector('img')?.src || 'media/heroes/placeholder.png';
+            const heroType = heroRow?.querySelector('.type-badge')?.textContent || 'Hero';
+            const heroName = heroRow?.querySelector('h4')?.textContent || 'Unknown';
+            
+            // Si pas de nom, utiliser le nom du héros par défaut
+            if (!displayName) {
+                displayName = heroName;
+            }
+            
+            // Afficher l'aperçu dans la queue
+            document.getElementById('previewImg').src = heroImg;
+            document.getElementById('previewName').textContent = displayName;
+            document.getElementById('previewType').textContent = heroType + ' (' + heroName + ')';
+            
+            // Basculer vers l'écran de queue
+            document.querySelector('.select-screen').style.display = 'none';
+            document.getElementById('queueScreen').style.display = 'block';
+            
+            // Démarrer compte à rebours
+            remainingTime = 30;
+            document.getElementById('countdown').textContent = remainingTime;
+            
+            countdownInterval = setInterval(() => {
+                remainingTime--;
+                document.getElementById('countdown').textContent = Math.max(0, remainingTime);
+            }, 1000);
+            
+            // Rejoindre la queue via API
+            joinQueue(selectedHeroId, displayName, selectedBlessingId);
+        });
     }
-    // Si pas de bénédiction sélectionnée, on pourrait dire que c'est optionnel ou en forcer une ?
-    // Optionnel pour l'instant (null)
-    
-    finalizeSelection(selectedHeroId, selectedHeroData.name, selectedHeroData.img, selectedHeroData.type, selectedBlessingId);
-}
-
-function finalizeSelection(heroId, heroName, heroImg, heroType, blessingId) {
-    // Récupérer le display name
-    const displayNameInput = document.getElementById('displayName');
-    const displayName = displayNameInput.value.trim() || heroName;
-    
-    // Afficher l'aperçu
-    document.getElementById('previewImg').src = heroImg;
-    document.getElementById('previewName').textContent = displayName;
-    document.getElementById('previewType').textContent = heroType + ' (' + heroName + ')';
-    
-    // Basculer vers l'écran de queue
-    document.getElementById('selectionScreen').classList.add('hidden');
-    document.getElementById('queueScreen').classList.add('active');
-    
-    // Démarrer compte à rebours
-    remainingTime = 30;
-    document.getElementById('countdown').textContent = remainingTime;
-    
-    countdownInterval = setInterval(() => {
-        remainingTime--;
-        document.getElementById('countdown').textContent = Math.max(0, remainingTime);
-    }, 1000);
-    
-    // Rejoindre la queue via API
-    joinQueue(heroId, displayName, blessingId);
-}
+});
 
 function joinQueue(heroId, displayName, blessingId) {
     let body = 'hero_id=' + encodeURIComponent(heroId) + '&display_name=' + encodeURIComponent(displayName);
@@ -382,65 +262,11 @@ function cancelQueue() {
     }
     
     // Retour à la sélection
-    document.getElementById('queueScreen').classList.remove('active');
-    document.getElementById('selectionScreen').classList.remove('hidden');
+    document.getElementById('queueScreen').style.display = 'none';
+    document.querySelector('.select-screen').style.display = 'block';
     
     selectedHeroId = null;
 }
-
-// === TOOLTIP SYSTEM ===
-(function() {
-    // Créer l'élément tooltip
-    const tooltip = document.createElement('div');
-    tooltip.id = 'customTooltip';
-    tooltip.className = 'custom-tooltip';
-    document.body.appendChild(tooltip);
-    
-    document.addEventListener('mouseover', function(e) {
-        const target = e.target.closest('[data-tooltip]');
-        if (target) {
-            const text = target.getAttribute('data-tooltip');
-            tooltip.textContent = text;
-            tooltip.classList.add('visible');
-            positionTooltip(e);
-        }
-    });
-    
-    document.addEventListener('mouseout', function(e) {
-        const target = e.target.closest('[data-tooltip]');
-        if (target) {
-            tooltip.classList.remove('visible');
-        }
-    });
-    
-    document.addEventListener('mousemove', function(e) {
-        if (tooltip.classList.contains('visible')) {
-            positionTooltip(e);
-        }
-    });
-    
-    function positionTooltip(e) {
-        const padding = 8;
-        const offsetX = 8; // Distance à droite du curseur
-        const offsetY = 8; // Distance en dessous du curseur
-        
-        let x = e.clientX + offsetX; // À droite du curseur
-        let y = e.clientY + offsetY; // En dessous du curseur
-        
-        // Si pas de place à droite, mettre à gauche
-        if (x + tooltip.offsetWidth > window.innerWidth - padding) {
-            x = e.clientX - tooltip.offsetWidth - offsetX;
-        }
-        
-        // Éviter le débordement en bas
-        if (y + tooltip.offsetHeight > window.innerHeight - padding) {
-            y = e.clientY - tooltip.offsetHeight - offsetY;
-        }
-        
-        tooltip.style.left = x + 'px';
-        tooltip.style.top = y + 'px';
-    }
-})();
 </script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
