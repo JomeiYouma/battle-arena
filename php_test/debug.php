@@ -4,6 +4,16 @@
  */
 
 require_once 'admin_helper.php';
+
+// Vérifier les permissions AVANT de faire la redirection silencieuse
+if (!isset($_SESSION['user_id'])) {
+    die('<h1>Erreur d\'accès</h1><p>Vous devez être connecté pour accéder au debug.</p><p><a href="login.php">Se connecter</a></p>');
+}
+
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
+    die('<h1>Erreur d\'accès</h1><p>Vous devez être administrateur pour accéder au debug.</p><p>Votre is_admin: ' . ($_SESSION['is_admin'] ?? 'NOT SET') . '</p><p><a href="index.php">Retour</a></p>');
+}
+
 requireAdmin();
 
 // Actions
@@ -46,7 +56,16 @@ require_once __DIR__ . '/classes/MatchQueue.php';
 $queueManager = new MatchQueue();
 $queueCount = $queueManager->getQueueCount();
 
-$personnages = json_decode(file_get_contents('heros.json'), true);
+// Charger les héros
+try {
+    require_once __DIR__ . '/components/selection-utils.php';
+    $personnages = getHeroesList();
+} catch (Exception $e) {
+    error_log("DEBUG: Erreur chargement héros: " . $e->getMessage());
+    $personnages = [];
+    $message = "Erreur lors du chargement des héros: " . $e->getMessage();
+    $messageType = 'error';
+}
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -286,8 +305,8 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
                     <strong style="color: #ffd700;"><?php echo $filename; ?></strong><br>
                     <?php if ($matchData): ?>
                     Status: <?php echo $matchData['status'] ?? 'N/A'; ?> | 
-                    P1: <?php echo $matchData['player1']['hero'] ?? 'N/A'; ?> vs 
-                    P2: <?php echo $matchData['player2']['hero'] ?? 'N/A'; ?>
+                    P1: <?php echo isset($matchData['player1']['hero']) ? $matchData['player1']['hero']['name'] : 'N/A'; ?> vs 
+                    P2: <?php echo isset($matchData['player2']['hero']) ? $matchData['player2']['hero']['name'] : 'N/A'; ?>
                     <?php else: ?>
                     <span style="color: #f44336;">Erreur de lecture</span>
                     <?php endif; ?>

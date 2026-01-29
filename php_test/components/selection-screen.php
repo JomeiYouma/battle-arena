@@ -20,16 +20,27 @@ function renderSelectionScreen($config = []) {
     $showPlayerNameInput = $config['showPlayerNameInput'] ?? false;
     $displayNameValue = $config['displayNameValue'] ?? null;
     $displayNameIsStatic = $config['displayNameIsStatic'] ?? false;
+    $teamId = $config['teamId'] ?? null;
+    $position = $config['position'] ?? null;
     
     $personnages = getHeroesList();
     $blessingsList = getBlessingsList();
 ?>
 
 <div class="select-screen">
-    <h2>Choisissez votre Champion et votre Bénédiction</h2>
+    <?php if ($mode === 'team_selection'): ?>
+        <h2>Sélectionnez un Héros pour le Slot <?php echo htmlspecialchars($position); ?></h2>
+    <?php else: ?>
+        <h2>Choisissez votre Champion et votre Bénédiction</h2>
+    <?php endif; ?>
     
     <form method="POST">
         <input type="hidden" name="mode" value="<?php echo htmlspecialchars($mode); ?>">
+        <?php if ($teamId && $position): ?>
+            <input type="hidden" name="action" value="add_hero_to_team">
+            <input type="hidden" name="team_id" value="<?php echo htmlspecialchars($teamId); ?>">
+            <input type="hidden" name="position" value="<?php echo htmlspecialchars($position); ?>">
+        <?php endif; ?>
         
         <!-- Champ nom du joueur (pour multiplayer) -->
         <?php if ($showPlayerNameInput): ?>
@@ -127,7 +138,11 @@ function renderSelectionScreen($config = []) {
         </div>
         
         <div class="submit-section">
-            <button type="submit" class="action-btn enter-arena enter-arena-btn">Entrer dans l'arène</button>
+            <?php if ($mode === 'team_selection'): ?>
+                <button type="submit" class="action-btn enter-arena enter-arena-btn">Ajouter à l'équipe</button>
+            <?php else: ?>
+                <button type="submit" class="action-btn enter-arena enter-arena-btn">Entrer dans l'arène</button>
+            <?php endif; ?>
         </div>
     </form>
 </div>

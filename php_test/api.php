@@ -13,6 +13,14 @@ function chargerClasse($classe) {
         require_once __DIR__ . '/classes/' . $classe . '.php';
         return;
     }
+    if (file_exists(__DIR__ . '/classes/Models/' . $classe . '.php')) {
+        require_once __DIR__ . '/classes/Models/' . $classe . '.php';
+        return;
+    }
+    if (file_exists(__DIR__ . '/classes/Services/' . $classe . '.php')) {
+        require_once __DIR__ . '/classes/Services/' . $classe . '.php';
+        return;
+    }
     if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
         require_once __DIR__ . '/classes/effects/' . $classe . '.php';
         return;
@@ -46,17 +54,21 @@ try {
                 throw new Exception("Héros non sélectionné");
             }
             
-            // Récupérer stats du héros
-            $heroes = json_decode(file_get_contents('heros.json'), true);
-            $heroData = null;
-            foreach ($heroes as $h) {
-                if ($h['id'] === $_POST['hero_id']) {
-                    $heroData = $h;
+            // Récupérer stats du héros depuis la BDD
+            require_once __DIR__ . '/classes/Services/HeroManager.php';
+            require_once __DIR__ . '/classes/Models/Hero.php';
+            $heroManager = new HeroManager();
+            $heroModel = null;
+            $allHeroes = $heroManager->getAll();
+            foreach ($allHeroes as $h) {
+                if ($h->getHeroId() === $_POST['hero_id']) {
+                    $heroModel = $h;
                     break;
                 }
             }
             
-            if (!$heroData) throw new Exception("Héros invalide");
+            if (!$heroModel) throw new Exception("Héros invalide");
+            $heroData = $heroModel->toArray();
             
             // Récupérer le display_name
             $displayName = isset($_POST['display_name']) && !empty(trim($_POST['display_name'])) 

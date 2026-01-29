@@ -13,6 +13,10 @@ function chargerClasse($classe) {
         require __DIR__ . '/classes/effects/' . $classe . '.php';
         return;
     }
+    if (file_exists(__DIR__ . '/classes/Services/' . $classe . '.php')) {
+        require __DIR__ . '/classes/Services/' . $classe . '.php';
+        return;
+    }
 }
 spl_autoload_register('chargerClasse');
 session_start();
@@ -40,11 +44,89 @@ $mostPlayed = $userModel->getMostPlayedHeroes($userId);
 $heroStats = $userModel->getHeroStats($userId);
 $recentCombats = $userModel->getRecentCombats($userId);
 
-// Charger les héros pour les noms
-$heroes = json_decode(file_get_contents(__DIR__ . '/heros.json'), true);
+// Charger les héros pour les noms depuis la BDD
+require_once __DIR__ . '/classes/Services/HeroManager.php';
+require_once __DIR__ . '/classes/Models/Hero.php';
+$heroManager = new HeroManager();
+$heroesModels = $heroManager->getAll(true);
 $heroNames = [];
-foreach ($heroes as $hero) {
-    $heroNames[$hero['id']] = $hero['name'];
+foreach ($heroesModels as $hero) {
+    $heroNames[$hero->getHeroId()] = $hero->getName();
+}
+
+// Charger les équipes de l'utilisateur
+$teamManager = new TeamManager(new PDO('mysql:host=localhost;dbname=horus_arena;charset=utf8mb4', 'root', ''));
+$userTeams = $teamManager->getTeamsByUser($userId);
+
+// Traitement des actions équipes
+$actionMessage = null;
+$actionType = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action'])) {
+        switch ($_POST['action']) {
+            case 'create_team':
+                $teamName = trim($_POST['team_name'] ?? '');
+                if ($teamName && strlen($teamName) > 0) {
+                    $newTeamId = $teamManager->createTeam($userId, $teamName, $_POST['team_description'] ?? '');
+                    if ($newTeamId) {
+                        $actionMessage = "Équipe créée avec succès!";
+                        $actionType = "success";
+                        $userTeams = $teamManager->getTeamsByUser($userId);
+                    } else {
+                        $actionMessage = "Erreur lors de la création de l'équipe.";
+                        $actionType = "error";
+                    }
+                }
+                break;
+                
+            case 'delete_team':
+                $teamId = (int) $_POST['team_id'];
+                if ($teamManager->userOwnsTeam($userId, $teamId)) {
+                    if ($teamManager->deleteTeam($teamId)) {
+                        $actionMessage = "Équipe supprimée avec succès!";
+                        $actionType = "success";
+                        $userTeams = $teamManager->getTeamsByUser($userId);
+                    }
+                }
+                break;
+
+            case 'add_hero_to_team':
+                $teamId = (int) ($_POST['team_id'] ?? 0);
+                $position = (int) ($_POST['position'] ?? 0);
+                $heroId = $_POST['hero_id'] ?? '';  // String, pas int!
+                $blessingId = $_POST['blessing_id'] ?? null;
+                
+                if (!empty($heroId) && $position >= 1 && $position <= 5) {
+                    if ($teamManager->userOwnsTeam($userId, $teamId)) {
+                        if ($teamManager->addMemberToTeam($teamId, $position, $heroId, $blessingId)) {
+                            $actionMessage = "Héros ajouté à l'équipe!";
+                            $actionType = "success";
+                            $userTeams = $teamManager->getTeamsByUser($userId);
+                        } else {
+                            $actionMessage = "Erreur lors de l'ajout du héros.";
+                            $actionType = "error";
+                        }
+                    }
+                }
+                break;
+
+            case 'remove_hero_from_team':
+                $teamId = (int) $_POST['team_id'];
+                $position = (int) $_POST['position'];
+                
+                if ($position >= 1 && $position <= 5) {
+                    if ($teamManager->userOwnsTeam($userId, $teamId)) {
+                        if ($teamManager->removeMemberFromTeam($teamId, $position)) {
+                            $actionMessage = "Héros retiré de l'équipe!";
+                            $actionType = "success";
+                            $userTeams = $teamManager->getTeamsByUser($userId);
+                        }
+                    }
+                }
+                break;
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -56,8 +138,12 @@ foreach ($heroes as $hero) {
     <link rel="icon" href="./media/website/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="css/account.css">
+    <link rel="stylesheet" href="css/shared-selection.css">
+    <link rel="stylesheet" href="css/multiplayer.css">
 </head>
 <body>
+    <!-- Tooltip system -->
+    <div id="customTooltip" class="custom-tooltip"></div>
     <div class="account-container">
         <div class="nav-links">
             <a href="index.php">← Retour au jeu</a>
@@ -72,8 +158,22 @@ foreach ($heroes as $hero) {
                 <button type="submit" name="logout" class="logout-btn">Déconnexion</button>
             </form>
         </div>
+
+        <!-- Message de notification -->
+        <?php if ($actionMessage): ?>
+            <div class="notification notification-<?php echo $actionType; ?>">
+                <?php echo htmlspecialchars($actionMessage); ?>
+            </div>
+        <?php endif; ?>
         
-        <!-- Stats Globales -->
+        <!-- Système de Tabs -->
+        <div class="tabs-navigation">
+            <button class="tab-button active" onclick="switchTab('stats')">📊 Statistiques</button>
+            <button class="tab-button" onclick="switchTab('teams')">🏆 Mes Équipes</button>
+        </div>
+
+        <!-- TAB 1: Statistiques -->
+        <div id="stats-tab" class="tab-content active">
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="value"><?php echo $globalStats['total']; ?></div>
@@ -189,5 +289,44 @@ foreach ($heroes as $hero) {
         </div>
         <?php endif; ?>
     </div>
+
+    <!-- TAB 2: Gestion des Équipes -->
+    <div id="teams-tab" class="tab-content">
+        <?php include 'components/team-manager.php'; ?>
+    </div>
 </body>
 </html>
+
+<script src="js/selection-tooltip.js"></script>
+<script>
+// Initialiser le système de tooltip
+document.addEventListener('DOMContentLoaded', initializeTooltipSystem);
+
+// Sélectionner automatiquement l'onglet "Mes Équipes" si on vient d'ajouter un héros
+document.addEventListener('DOMContentLoaded', function() {
+    const actionParam = new URLSearchParams(window.location.search).get('action');
+    const tabToSelect = '<?php echo isset($_POST['action']) ? ($_POST['action'] === 'add_hero_to_team' ? 'teams' : 'stats') : 'stats'; ?>';
+    
+    if (tabToSelect === 'teams') {
+        switchTab('teams');
+    }
+});
+
+function switchTab(tabName) {
+    // Masquer tous les tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Afficher le tab sélectionné
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.classList.add('active');
+}
+
+function confirmDelete(teamName) {
+    return confirm(`Êtes-vous sûr de vouloir supprimer l'équipe "${teamName}" ?`);
+}
+</script>

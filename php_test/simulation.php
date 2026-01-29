@@ -24,8 +24,9 @@ function chargerClasse($classe) {
 }
 spl_autoload_register('chargerClasse');
 
-// Charger les personnages
-$personnages = json_decode(file_get_contents('heros.json'), true);
+// Charger les personnages depuis la BDD
+require_once __DIR__ . '/components/selection-utils.php';
+$personnages = getHeroesList();
 
 // Liste des bénédictions disponibles
 $blessingsList = [

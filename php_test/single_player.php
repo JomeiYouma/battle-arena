@@ -65,7 +65,8 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
 
 // --- INITIALISATION DU COMBAT ---
 if (isset($_POST['hero_choice']) && !isset($_SESSION['combat'])) {
-    $personnages = json_decode(file_get_contents('heros.json'), true);
+    require_once __DIR__ . '/components/selection-utils.php';
+    $personnages = getHeroesList();
     
     // Trouver le héros choisi
     $heroStats = null;

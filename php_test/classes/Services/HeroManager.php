@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../Models/Hero.php';
-require_once __DIR__ . '/Database.php';
+require_once __DIR__ . '/../Database.php';
 
 /**
  * Manager pour les opérations CRUD sur les héros

@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/Services/Database.php';
+require_once __DIR__ . '/Database.php';
 
 /**
  * MatchQueue - Gestion de la file d'attente multijoueur via BDD
@@ -157,12 +157,16 @@ class MatchQueue {
                 $matchId = uniqid('match_');
                 $heroData = json_decode($entry['hero_data'], true);
                 
-                // Sélectionner un ennemi aléatoire
-                $heroes = json_decode(file_get_contents(__DIR__ . '/../heros.json'), true);
-                $potentialEnemies = array_filter($heroes, function($h) use ($heroData) {
-                    return $h['id'] !== $heroData['id'];
+                // Sélectionner un ennemi aléatoire depuis la BDD
+                require_once __DIR__ . '/Services/HeroManager.php';
+                require_once __DIR__ . '/Models/Hero.php';
+                $heroManager = new HeroManager();
+                $allHeroes = $heroManager->getAll();
+                $potentialEnemies = array_filter($allHeroes, function($h) use ($heroData) {
+                    return $h->getHeroId() !== $heroData['id'];
                 });
-                $enemyData = $potentialEnemies[array_rand($potentialEnemies)];
+                $enemyHero = $potentialEnemies[array_rand($potentialEnemies)];
+                $enemyData = $enemyHero->toArray();
                 
                 $matchData = [
                     'id' => $matchId,
