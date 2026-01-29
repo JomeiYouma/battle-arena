@@ -1,24 +1,9 @@
 <?php
 /**
- * REDIRECTEUR - Multiplayer Mode
- * Redirige vers la page de sélection héros + queue
- * 
- * FILES MAPPING:
- * - multiplayer.php (THIS FILE) → redirecteur vers multiplayer-selection.php
- * - multiplayer-selection.php → page de sélection héros + attente queue 30s
- * - multiplayer-combat.php → interface de combat multijoueur (PvP/PvBot)
+ * MULTIPLAYER COMBAT PAGE
+ * Interface complète de combat multiplayer avec polling en temps réel
+ * Basée sur la structure de single_player.php
  */
-header("Location: multiplayer-selection.php", true, 302);
-exit;
-
-/**
- * ANCIEN CODE - PRESERVED FOR REFERENCE (archived in multiplayer-combat.php)
- * ========================
- * Le code original du combat multijoueur a été déplacé vers multiplayer-combat.php
- * Cette page est maintenant un simple redirecteur pour maintenir la compatibilité
- */
-
-// --- CODE ARCHIVED BELOW - DO NOT USE ---
 
 // Autoloader (AVANT session_start pour la désérialisation)
 if (!function_exists('chargerClasse')) {
@@ -265,7 +250,7 @@ try {
         </div>
     </div>
 </div>
-
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
 <script src="js/combat-animations.js"></script>
 <script>
 const MATCH_ID = '<?php echo addslashes($matchId); ?>';

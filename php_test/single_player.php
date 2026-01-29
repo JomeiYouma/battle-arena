@@ -124,6 +124,7 @@ if (isset($_POST['action']) && isset($_SESSION['combat'])) {
 }
 ?>
 <link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="./css/shared-selection.css">
 <link rel="stylesheet" href="./css/single_player.css">
 <link rel="stylesheet" href="./css/combat.css">
 

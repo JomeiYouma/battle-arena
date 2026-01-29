@@ -170,7 +170,7 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
             if ($modeChoisi === 'single') {
                 require 'single_player.php'; 
             } elseif ($modeChoisi === 'multi') {
-                require 'multi_player.php'; 
+                require 'multiplayer-selection.php'; 
             }
             ?>
 

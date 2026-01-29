@@ -198,7 +198,8 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
                 <a href="simulation.php" class="debug-btn primary">📊 Simulateur</a>
                 <a href="account.php" class="debug-btn">👤 Mon Compte</a>
                 <a href="single_player.php" class="debug-btn">⚔️ Solo</a>
-                <a href="multi_player.php" class="debug-btn">👥 Multi</a>
+                <a href="multiplayer-selection.php" class="debug-btn">👥 Multi (Selection)</a>
+                <a href="multiplayer-combat.php?match_id=debug_test" class="debug-btn">👥 Multi (Combat)</a>
                 <a href="reset_session.php" class="debug-btn danger">🔄 Reset Session</a>
             </div>
         </div>
