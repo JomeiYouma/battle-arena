@@ -13,6 +13,10 @@ class AutoCombat {
     public function __construct(Personnage $fighter1, Personnage $fighter2) {
         $this->fighter1 = $fighter1;
         $this->fighter2 = $fighter2;
+        
+        // Établir la référence croisée pour les passifs qui réagissent aux actions adverses
+        $fighter1->setCurrentOpponent($fighter2);
+        $fighter2->setCurrentOpponent($fighter1);
     }
 
     private function getOrderedFighters(): array {

@@ -31,15 +31,21 @@ if (isset($_POST['clear_matches'])) {
 
 // Clear Queue
 if (isset($_POST['clear_queue'])) {
-    $queueFile = __DIR__ . '/data/queue.json';
-    file_put_contents($queueFile, '[]');
+    require_once __DIR__ . '/classes/MatchQueue.php';
+    $queue = new MatchQueue();
+    $queue->clearQueue();
     $message = "File d'attente vidée";
 }
 
 // Récupérer les infos
 $sessionData = $_SESSION ?? [];
 $matchFiles = glob(__DIR__ . '/data/matches/match_*.json');
-$queueData = json_decode(file_get_contents(__DIR__ . '/data/queue.json') ?: '[]', true);
+
+// Récupérer le nombre dans la queue via BDD
+require_once __DIR__ . '/classes/MatchQueue.php';
+$queueManager = new MatchQueue();
+$queueCount = $queueManager->getQueueCount();
+
 $personnages = json_decode(file_get_contents('heros.json'), true);
 ?>
 <!DOCTYPE html>
@@ -220,7 +226,7 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
 
             <div class="debug-card">
                 <h3>File d'attente</h3>
-                <div class="value"><?php echo count($queueData); ?></div>
+                <div class="value"><?php echo $queueCount; ?></div>
                 <div class="label">joueurs en attente</div>
                 <div class="debug-actions">
                     <form method="POST" style="margin:0;">
@@ -255,12 +261,12 @@ $personnages = json_decode(file_get_contents('heros.json'), true);
             </div>
         </div>
 
-        <!-- QUEUE DATA -->
-        <?php if (!empty($queueData)): ?>
+        <!-- QUEUE DATA (maintenant en BDD) -->
+        <?php if ($queueCount > 0): ?>
         <div class="debug-card">
-            <h3>Contenu de la File d'attente</h3>
+            <h3>File d'attente</h3>
             <div class="debug-info">
-                <pre><?php echo htmlspecialchars(json_encode($queueData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)); ?></pre>
+                <pre><?php echo $queueCount; ?> joueur(s) en attente (données stockées en BDD)</pre>
             </div>
         </div>
         <?php endif; ?>

@@ -40,6 +40,17 @@ abstract class Personnage {
     /** @var Blessing[] */
     protected array $blessings = [];
     
+    // --- RÉFÉRENCE À L'ADVERSAIRE ACTUEL ---
+    protected ?Personnage $currentOpponent = null;
+    
+    public function setCurrentOpponent(?Personnage $opponent): void {
+        $this->currentOpponent = $opponent;
+    }
+    
+    public function getCurrentOpponent(): ?Personnage {
+        return $this->currentOpponent;
+    }
+    
 
     
     public function receiveDamage(int $amount, ?Personnage $attacker = null): void {
@@ -65,9 +76,20 @@ abstract class Personnage {
         }
     }
 
-    public function triggerHealHooks(int $amount): void {
+    public function triggerHealHooks(int $amount, ?Personnage $opponent = null): void {
+        // Déclencher sur ses propres blessings
         foreach ($this->blessings as $blessing) {
             $blessing->onHeal($this, $amount);
+        }
+        
+        // Utiliser l'adversaire passé en paramètre, ou currentOpponent par défaut
+        $opp = $opponent ?? $this->currentOpponent;
+        
+        // Déclencher sur les blessings de l'adversaire (passifs "sur le terrain")
+        if ($opp !== null) {
+            foreach ($opp->getBlessings() as $blessing) {
+                $blessing->onHeal($this, $amount);
+            }
         }
     }
 

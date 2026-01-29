@@ -8,26 +8,11 @@
 require_once __DIR__ . '/auth_helper.php';
 requireDebugAuth();
 
-// Retirer de la queue si présent
+// Retirer de la queue si présent (via BDD)
 $sessionId = session_id();
-$queueFile = __DIR__ . '/data/queue.json';
-
-if (file_exists($queueFile)) {
-    $fp = fopen($queueFile, 'r+');
-    if (flock($fp, LOCK_EX)) {
-        $queue = json_decode(stream_get_contents($fp), true) ?: [];
-        $queue = array_filter($queue, function($entry) use ($sessionId) {
-            return $entry['sessionId'] !== $sessionId;
-        });
-        $queue = array_values($queue); // Réindexer
-        
-        ftruncate($fp, 0);
-        rewind($fp);
-        fwrite($fp, json_encode($queue, JSON_PRETTY_PRINT));
-        flock($fp, LOCK_UN);
-    }
-    fclose($fp);
-}
+require_once __DIR__ . '/classes/MatchQueue.php';
+$queue = new MatchQueue();
+$queue->removeFromQueue($sessionId);
 
 // Détruire la session
 session_unset();

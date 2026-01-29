@@ -25,6 +25,11 @@ class Combat {
     public function __construct(Personnage $player, Personnage $enemy) {
         $this->player = $player;
         $this->enemy = $enemy;
+        
+        // Établir la référence croisée pour les passifs qui réagissent aux actions adverses
+        $player->setCurrentOpponent($enemy);
+        $enemy->setCurrentOpponent($player);
+        
         $this->logs[] = "⚔️ Combat : " . $player->getName() . " VS " . $enemy->getName();
         $this->captureInitialStates();
     }

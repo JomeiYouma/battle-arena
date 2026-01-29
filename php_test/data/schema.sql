@@ -39,6 +39,19 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Table de la file d'attente multijoueur
+CREATE TABLE IF NOT EXISTS match_queue (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id VARCHAR(100) NOT NULL UNIQUE,
+    user_id INT DEFAULT NULL,
+    hero_data JSON NOT NULL COMMENT 'Données du héros sélectionné',
+    display_name VARCHAR(100) NOT NULL,
+    blessing_id VARCHAR(50) DEFAULT NULL,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_session (session_id),
+    INDEX idx_joined (joined_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Table des statistiques de combat
 CREATE TABLE IF NOT EXISTS combat_stats (
     id INT AUTO_INCREMENT PRIMARY KEY,

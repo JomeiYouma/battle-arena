@@ -258,28 +258,20 @@
 .heroes-table tbody tr {
     transition: all 0.3s;
 }
-2px;
-    align-items: center;
+
+.heroes-table tbody tr:hover {
+    background: rgba(196, 30, 58, 0.15);
 }
 
-.actions a {
-    color: #ffd700;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 0.9em;
-    padding: 6px 12px;
-    border: 2px solid transparent;
-    border-radius: 6px;
-    transition: all 0.3s;
-    background: rgba(255, 215, 0, 0.1);
+.heroes-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
-.actions a:hover {
-    color: #fff;
-    background: rgba(196, 30, 58, 0.3);
-    border-color: #c41e3a;
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(196, 30, 58, 0.3)
+.heroes-table td {
+    color: #e0e0e0;
+    font-size: 0.95em;
+}
+
 .heroes-table strong {
     color: #ffd700;
     font-size: 1.05em;
@@ -287,27 +279,9 @@
 
 .actions {
     display: flex;
-    gap: 12px;
+    gap: 8px;
     align-items: center;
-}
-
-.actions a {
-    color: #000;
-    background: #e0e0e0;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 0.85em;
-    padding: 6px 14px;
-    border: 2px solid #ccc;
-    border-radius: 6px;
-    transition: all 0.3s;
-}
-
-.actions a:hover {
-    background: #fff;
-    border-color: #999;
-    transform: translateY(-2px);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    flex-wrap: nowrap;
 }
 
 .actions form {

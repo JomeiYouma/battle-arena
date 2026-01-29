@@ -1,25 +1,21 @@
 <?php
+require_once __DIR__ . '/Services/Database.php';
 
+/**
+ * MatchQueue - Gestion de la file d'attente multijoueur via BDD
+ * Remplace l'ancien système basé sur queue.json
+ */
 class MatchQueue {
-    private $queueFile;
-    private $matchesDir;
-    private $timeoutSeconds = 30; // Temps avant de retirer un joueur inactif de la queue
+    private PDO $db;
+    private string $matchesDir;
+    private int $timeoutSeconds = 30;
 
     public function __construct() {
-        $this->queueFile = __DIR__ . '/../data/queue.json';
+        $this->db = Database::getInstance();
         $this->matchesDir = __DIR__ . '/../data/matches/';
         
-        // Assurer que les dossiers existent
-        if (!file_exists(dirname($this->queueFile))) {
-            mkdir(dirname($this->queueFile), 0777, true);
-        }
         if (!file_exists($this->matchesDir)) {
             mkdir($this->matchesDir, 0777, true);
-        }
-        
-        // Initialiser la queue si inexistante
-        if (!file_exists($this->queueFile)) {
-            file_put_contents($this->queueFile, '[]');
         }
     }
 
@@ -28,128 +24,108 @@ class MatchQueue {
      */
     public function findMatch($sessionId, $heroData, $displayName = null, $userId = null, $blessingId = null) {
         $displayName = $displayName ?? $heroData['name'];
+        $now = time();
         
-        $fp = fopen($this->queueFile, 'r+');
-        if (flock($fp, LOCK_EX)) { // Verrouillage exclusif
-            $content = stream_get_contents($fp);
-            $queue = json_decode($content, true) ?: [];
+        // 1. Nettoyer les entrées expirées
+        $this->cleanExpiredEntries();
+        
+        // 2. Vérifier si on est déjà dans la queue (et update timestamp)
+        $stmt = $this->db->prepare("SELECT id FROM match_queue WHERE session_id = :session_id");
+        $stmt->execute(['session_id' => $sessionId]);
+        $existing = $stmt->fetch();
+        
+        if ($existing) {
+            // Mise à jour du heartbeat
+            $stmt = $this->db->prepare("UPDATE match_queue SET joined_at = NOW() WHERE session_id = :session_id");
+            $stmt->execute(['session_id' => $sessionId]);
+        }
+        
+        // 3. Chercher un adversaire (le premier qui n'est pas nous)
+        $stmt = $this->db->prepare("
+            SELECT * FROM match_queue 
+            WHERE session_id != :session_id 
+            ORDER BY joined_at ASC 
+            LIMIT 1
+        ");
+        $stmt->execute(['session_id' => $sessionId]);
+        $opponent = $stmt->fetch();
+        
+        if ($opponent) {
+            // MATCH TROUVÉ !
+            $opponentHeroData = json_decode($opponent['hero_data'], true);
             
-            // 1. Nettoyer la queue (joueurs inactifs)
-            $now = time();
-            $queue = array_filter($queue, function($item) use ($now) {
-                return ($now - $item['timestamp']) < $this->timeoutSeconds;
-            });
+            // Retirer l'adversaire de la queue
+            $stmt = $this->db->prepare("DELETE FROM match_queue WHERE id = :id");
+            $stmt->execute(['id' => $opponent['id']]);
+            
+            // Retirer le joueur actuel de la queue
+            $stmt = $this->db->prepare("DELETE FROM match_queue WHERE session_id = :session_id");
+            $stmt->execute(['session_id' => $sessionId]);
+            
+            // Créer le fichier de match
+            $matchId = uniqid('match_');
+            $matchData = [
+                'id' => $matchId,
+                'created_at' => $now,
+                'status' => 'active',
+                'mode' => 'pvp',
+                'turn' => 1,
+                'player1' => [
+                    'session' => $opponent['session_id'],
+                    'hero' => $opponentHeroData,
+                    'display_name' => $opponent['display_name'],
+                    'user_id' => $opponent['user_id'],
+                    'hp' => $opponentHeroData['pv'],
+                    'max_hp' => $opponentHeroData['pv'],
+                    'blessing_id' => $opponent['blessing_id'],
+                    'last_poll' => $now
+                ],
+                'player2' => [
+                    'session' => $sessionId,
+                    'hero' => $heroData,
+                    'display_name' => $displayName,
+                    'user_id' => $userId,
+                    'hp' => $heroData['pv'],
+                    'max_hp' => $heroData['pv'],
+                    'blessing_id' => $blessingId,
+                    'last_poll' => $now
+                ],
+                'logs' => ["Le combat commence !"],
+                'current_turn_actions' => [],
+                'last_update' => $now
+            ];
 
-            // 2. Vérifier si on est déjà dans la queue
-            $isInQueue = false;
-            foreach ($queue as $index => $item) {
-                if ($item['sessionId'] === $sessionId) {
-                    $queue[$index]['timestamp'] = $now; // Update heartbeat
-                    $isInQueue = true;
-                    break;
-                }
-            }
-
-            // 3. Chercher un adversaire
-            $opponent = null;
-            $opponentIndex = -1;
-            foreach ($queue as $index => $item) {
-                if ($item['sessionId'] !== $sessionId) {
-                    $opponent = $item;
-                    $opponentIndex = $index;
-                    break;
-                }
-            }
-
-            if ($opponent) {
-                // MATCH TROUVÉ !
-                // Retirer l'adversaire de la queue
-                array_splice($queue, $opponentIndex, 1);
-                // Retirer le joueur actuel s'il y était (pour éviter duplicats)
-                $queue = array_filter($queue, function($item) use ($sessionId) {
-                    return $item['sessionId'] !== $sessionId;
-                });
-                
-                // Sauvegarder la queue
-                ftruncate($fp, 0);
-                rewind($fp);
-                fwrite($fp, json_encode(array_values($queue)));
-                flock($fp, LOCK_UN);
-                fclose($fp);
-
-                // Créer le fichier de match
-                $matchId = uniqid('match_');
-                $matchData = [
-                    'id' => $matchId,
-                    'created_at' => $now,
-                    'status' => 'active',
-                    'mode' => 'pvp',  // Vrai PvP
-                    'turn' => 1,
-                    'player1' => [
-                        'session' => $opponent['sessionId'],
-                        'hero' => $opponent['heroData'],
-                        'display_name' => $opponent['displayName'] ?? $opponent['heroData']['name'],
-                        'user_id' => $opponent['userId'] ?? null,
-                        'hp' => $opponent['heroData']['pv'],
-                        'max_hp' => $opponent['heroData']['pv'],
-                        'blessing_id' => $opponent['blessingId'] ?? null,
-                        'last_poll' => $now
-                    ],
-                    'player2' => [
-                        'session' => $sessionId,
-                        'hero' => $heroData,
-                        'display_name' => $displayName,
-                        'user_id' => $userId,
-                        'hp' => $heroData['pv'],
-                        'max_hp' => $heroData['pv'],
-                        'blessing_id' => $blessingId,
-                        'last_poll' => $now
-                    ],
-                    'logs' => ["Le combat commence !"],
-                    'current_turn_actions' => [],
-                    'last_update' => $now
-                ];
-
-                file_put_contents($this->matchesDir . $matchId . '.json', json_encode($matchData, JSON_PRETTY_PRINT));
-                
-                return ['status' => 'matched', 'matchId' => $matchId];
-
-            } else {
-                // PAS D'ADVERSAIRE, S'AJOUTER À LA QUEUE
-                if (!$isInQueue) {
-                    $queue[] = [
-                        'sessionId' => $sessionId,
-                        'heroData' => $heroData,
-                        'displayName' => $displayName,
-                        'userId' => $userId,
-                        'blessingId' => $blessingId,
-                        'timestamp' => $now
-                    ];
-                }
-                
-                // Sauvegarder
-                ftruncate($fp, 0);
-                rewind($fp);
-                fwrite($fp, json_encode(array_values($queue)));
-                flock($fp, LOCK_UN);
-                fclose($fp);
-                
-                return ['status' => 'waiting'];
-            }
-
+            file_put_contents($this->matchesDir . $matchId . '.json', json_encode($matchData, JSON_PRETTY_PRINT));
+            
+            return ['status' => 'matched', 'matchId' => $matchId];
+            
         } else {
-            fclose($fp);
-            return ['status' => 'error', 'message' => 'Queue locked'];
+            // PAS D'ADVERSAIRE, S'AJOUTER À LA QUEUE
+            if (!$existing) {
+                $stmt = $this->db->prepare("
+                    INSERT INTO match_queue (session_id, user_id, hero_data, display_name, blessing_id)
+                    VALUES (:session_id, :user_id, :hero_data, :display_name, :blessing_id)
+                ");
+                $stmt->execute([
+                    'session_id' => $sessionId,
+                    'user_id' => $userId,
+                    'hero_data' => json_encode($heroData),
+                    'display_name' => $displayName,
+                    'blessing_id' => $blessingId
+                ]);
+            }
+            
+            return ['status' => 'waiting'];
         }
     }
 
     /**
-     * Vérifie si un match a été créé pour ce joueur (cas où on était dans la queue et qqn nous a matché)
-     * Retourne 'matched' si un match joueur existe
-     * Retourne 'timeout' et crée un bot si 30 secondes écoulées sans match
+     * Vérifie si un match a été créé pour ce joueur
      */
     public function checkMatchStatus($sessionId) {
-        // 1. Balayer les fichiers matches pour voir si notre ID y est
+        $now = time();
+        
+        // 1. Balayer les fichiers matches pour voir si notre session y est
         $files = glob($this->matchesDir . 'match_*.json');
         foreach ($files as $file) {
             $content = file_get_contents($file);
@@ -157,7 +133,6 @@ class MatchQueue {
                 $match = json_decode($content, true);
                 if ($match && ($match['player1']['session'] === $sessionId || $match['player2']['session'] === $sessionId)) {
                     if ($match['status'] === 'active') {
-                        // Récupérer aussi le compteur de la queue
                         $queueCount = $this->getQueueCount();
                         return ['status' => 'matched', 'matchId' => $match['id'], 'queue_count' => $queueCount];
                     }
@@ -166,109 +141,108 @@ class MatchQueue {
         }
         
         // 2. Vérifier si le joueur est dans la queue et si timeout atteint
-        $now = time();
-        $queueContent = file_get_contents($this->queueFile);
-        $queue = json_decode($queueContent, true) ?: [];
+        $stmt = $this->db->prepare("
+            SELECT *, TIMESTAMPDIFF(SECOND, joined_at, NOW()) as time_in_queue 
+            FROM match_queue 
+            WHERE session_id = :session_id
+        ");
+        $stmt->execute(['session_id' => $sessionId]);
+        $entry = $stmt->fetch();
         
-        foreach ($queue as $item) {
-            if ($item['sessionId'] === $sessionId) {
-                $timeInQueue = $now - $item['timestamp'];
+        if ($entry) {
+            $timeInQueue = (int)$entry['time_in_queue'];
+            
+            if ($timeInQueue >= $this->timeoutSeconds) {
+                // Créer un match bot
+                $matchId = uniqid('match_');
+                $heroData = json_decode($entry['hero_data'], true);
                 
-                if ($timeInQueue >= $this->timeoutSeconds) {
-                    // Créer un match bot
-                    $matchId = uniqid('match_');
-                    $heroData = $item['heroData'];
-                    
-                    // Sélectionner un ennemi aléatoire
-                    $heroes = json_decode(file_get_contents(__DIR__ . '/../heros.json'), true);
-                    $potentialEnemies = array_filter($heroes, function($h) use ($heroData) {
-                        return $h['id'] !== $heroData['id'];
-                    });
-                    $enemyData = $potentialEnemies[array_rand($potentialEnemies)];
-                    
-                    $matchData = [
-                        'id' => $matchId,
-                        'created_at' => $now,
-                        'status' => 'active',
-                        'turn' => 1,
-                        'mode' => 'bot',  // Marquer comme combat bot
-                        'player1' => [
-                            'session' => $sessionId,
-                            'hero' => $heroData,
-                            'display_name' => $item['displayName'] ?? $heroData['name'],
-                            'hp' => $heroData['pv'],
-                            'max_hp' => $heroData['pv'],
-                            'blessing_id' => $item['blessingId'] ?? null,
-                            'last_poll' => $now
-                        ],
-                        'player2' => [
-                            'session' => 'bot_' . uniqid(),
-                            'hero' => $enemyData,
-                            'display_name' => $enemyData['name'] . ' (Bot)',
-                            'hp' => $enemyData['pv'],
-                            'max_hp' => $enemyData['pv'],
-                            'is_bot' => true
-                        ],
-                        'logs' => ["Le bot arrive en renfort !"],
-                        'last_update' => $now,
-                        'current_turn_actions' => []
-                    ];
-                    
-                    file_put_contents($this->matchesDir . $matchId . '.json', json_encode($matchData, JSON_PRETTY_PRINT));
-                    
-                    // Retirer du queue
-                    $queue = array_filter($queue, function($item) use ($sessionId) {
-                        return $item['sessionId'] !== $sessionId;
-                    });
-                    file_put_contents($this->queueFile, json_encode(array_values($queue)));
-                    
-                    return ['status' => 'timeout', 'matchId' => $matchId, 'queue_count' => 0];
-                }
+                // Sélectionner un ennemi aléatoire
+                $heroes = json_decode(file_get_contents(__DIR__ . '/../heros.json'), true);
+                $potentialEnemies = array_filter($heroes, function($h) use ($heroData) {
+                    return $h['id'] !== $heroData['id'];
+                });
+                $enemyData = $potentialEnemies[array_rand($potentialEnemies)];
                 
-                // Retourner le compteur
-                $queueCount = $this->getQueueCount();
-                return ['status' => 'waiting', 'queue_count' => $queueCount];
+                $matchData = [
+                    'id' => $matchId,
+                    'created_at' => $now,
+                    'status' => 'active',
+                    'turn' => 1,
+                    'mode' => 'bot',
+                    'player1' => [
+                        'session' => $sessionId,
+                        'hero' => $heroData,
+                        'display_name' => $entry['display_name'],
+                        'hp' => $heroData['pv'],
+                        'max_hp' => $heroData['pv'],
+                        'blessing_id' => $entry['blessing_id'],
+                        'last_poll' => $now
+                    ],
+                    'player2' => [
+                        'session' => 'bot_' . uniqid(),
+                        'hero' => $enemyData,
+                        'display_name' => $enemyData['name'] . ' (Bot)',
+                        'hp' => $enemyData['pv'],
+                        'max_hp' => $enemyData['pv'],
+                        'is_bot' => true
+                    ],
+                    'logs' => ["Le bot arrive en renfort !"],
+                    'last_update' => $now,
+                    'current_turn_actions' => []
+                ];
+                
+                file_put_contents($this->matchesDir . $matchId . '.json', json_encode($matchData, JSON_PRETTY_PRINT));
+                
+                // Retirer de la queue
+                $stmt = $this->db->prepare("DELETE FROM match_queue WHERE session_id = :session_id");
+                $stmt->execute(['session_id' => $sessionId]);
+                
+                return ['status' => 'timeout', 'matchId' => $matchId, 'queue_count' => 0];
             }
+            
+            $queueCount = $this->getQueueCount();
+            return ['status' => 'waiting', 'queue_count' => $queueCount];
         }
         
-        return ['status' => 'waiting', 'queue_count' => count($queue)];
+        return ['status' => 'waiting', 'queue_count' => $this->getQueueCount()];
     }
     
     /**
      * Obtient le nombre de joueurs en queue
      */
-    public function getQueueCount() {
-        if (!file_exists($this->queueFile)) {
-            return 0;
-        }
+    public function getQueueCount(): int {
+        $this->cleanExpiredEntries();
         
-        $now = time();
-        $content = file_get_contents($this->queueFile);
-        $queue = json_decode($content, true) ?: [];
+        $stmt = $this->db->query("SELECT COUNT(*) as count FROM match_queue");
+        $result = $stmt->fetch();
         
-        // Nettoyer les entrées expirées
-        $queue = array_filter($queue, function($item) use ($now) {
-            return ($now - $item['timestamp']) < $this->timeoutSeconds;
-        });
-        
-        return count($queue);
+        return (int)$result['count'];
     }
     
-    public function removeFromQueue($sessionId) {
-        $fp = fopen($this->queueFile, 'r+');
-        if (flock($fp, LOCK_EX)) {
-            $content = stream_get_contents($fp);
-            $queue = json_decode($content, true) ?: [];
-            
-            $queue = array_filter($queue, function($item) use ($sessionId) {
-                return $item['sessionId'] !== $sessionId;
-            });
-            
-            ftruncate($fp, 0);
-            rewind($fp);
-            fwrite($fp, json_encode(array_values($queue)));
-            flock($fp, LOCK_UN);
-        }
-        fclose($fp);
+    /**
+     * Retire un joueur de la queue
+     */
+    public function removeFromQueue($sessionId): void {
+        $stmt = $this->db->prepare("DELETE FROM match_queue WHERE session_id = :session_id");
+        $stmt->execute(['session_id' => $sessionId]);
+    }
+    
+    /**
+     * Nettoie les entrées expirées (plus vieilles que timeoutSeconds * 2)
+     */
+    private function cleanExpiredEntries(): void {
+        $stmt = $this->db->prepare("
+            DELETE FROM match_queue 
+            WHERE TIMESTAMPDIFF(SECOND, joined_at, NOW()) > :timeout
+        ");
+        $stmt->execute(['timeout' => $this->timeoutSeconds * 2]);
+    }
+    
+    /**
+     * Vide complètement la queue (pour debug)
+     */
+    public function clearQueue(): void {
+        $this->db->exec("TRUNCATE TABLE match_queue");
     }
 }
