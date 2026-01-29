@@ -194,13 +194,16 @@
 
 /* Blessing thumbnail image */
 .blessing-thumb {
-    width: 48px;
-    height: 48px;
+    width: 70%;
+    height: 70%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     object-fit: contain;
     filter: invert(1) sepia(1) saturate(3) hue-rotate(250deg);
     opacity: 0.85;
     transition: all 0.2s ease;
-    flex-shrink: 0;
 }
 
 .hero-row:hover .blessing-thumb,
@@ -218,8 +221,10 @@
     justify-content: center;
     background: rgba(138, 43, 226, 0.1);
     border: 1px solid rgba(138, 43, 226, 0.3);
-    border-radius: 4px;
+    border-radius: 50%;
     flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
 }
 
 .no-blessing-icon {

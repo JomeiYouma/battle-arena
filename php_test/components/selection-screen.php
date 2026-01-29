@@ -116,7 +116,9 @@ function renderSelectionScreen($config = []) {
                         <label class="hero-row blessing-row">
                             <input type="radio" name="blessing_choice" value="<?php echo $b['id']; ?>">
                             <div class="hero-row-content">
-                                <img src="media/blessings/<?php echo $b['img']; ?>" alt="<?php echo $b['name']; ?>" class="blessing-thumb">
+                                <div class="blessing-img-container">
+                                    <img src="media/blessings/<?php echo $b['img']; ?>" alt="<?php echo $b['name']; ?>" class="blessing-thumb">
+                                </div>
                                 <div class="hero-info">
                                     <h4><?php echo $b['name']; ?></h4>
                                     <p class="hero-theme blessing-desc-small"><?php echo $b['desc']; ?></p>

@@ -360,6 +360,11 @@
     width: 28px;
     height: 28px;
     object-fit: contain;
+    object-position: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     filter: drop-shadow(0 0 2px #d4af37);
 }
 
