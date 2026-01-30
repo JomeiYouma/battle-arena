@@ -42,7 +42,7 @@ $heroesData = [
     [
         'id' => 'aquatique',
         'name' => 'Aquatique',
-        'type' => 'Aquamancien',
+        'type' => 'Aquatique',
         'pv' => 110,
         'atk' => 18,
         'def' => 8,
@@ -62,7 +62,7 @@ $heroesData = [
     [
         'id' => 'rougemont',
         'name' => 'Rougemont',
-        'type' => 'Chevalier',
+        'type' => 'Guerrier',
         'pv' => 120,
         'atk' => 19,
         'def' => 9,
@@ -72,7 +72,7 @@ $heroesData = [
     [
         'id' => 'brute',
         'name' => 'Brute',
-        'type' => 'Colosse',
+        'type' => 'Brute',
         'pv' => 140,
         'atk' => 21,
         'def' => 7,
@@ -140,8 +140,20 @@ if (!is_dir($matchesDir)) {
 $matchFile = $matchesDir . $matchId . '.json';
 file_put_contents($matchFile, json_encode($matchData, JSON_PRETTY_PRINT));
 
-// NOTE: Pas de création d'objet TeamCombat pour le test UI
-// L'UI testera juste l'affichage, pas la logique du combat
+// Initialiser le système de combat réel
+require_once __DIR__ . '/classes/MultiCombat.php';
+$stateFile = $matchesDir . $matchId . '.state';
+
+try {
+    // MultiCombat::create va maintenant détecter qu'il y a des 'heroes' et créer un TeamCombat
+    $combat = MultiCombat::create($matchData['player1'], $matchData['player2']);
+    
+    if (!$combat->save($stateFile)) {
+        die("Erreur interne: Impossible de sauvegarder l'état initial du combat.");
+    }
+} catch (Exception $e) {
+    die("Erreur d'initialisation du combat: " . $e->getMessage());
+}
 
 // Stocker dans session et rediriger
 $_SESSION['matchId'] = $matchId;

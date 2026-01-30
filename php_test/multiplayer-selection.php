@@ -18,6 +18,10 @@ if (!function_exists('chargerClasse')) {
             require __DIR__ . '/classes/blessings/' . $classe . '.php';
             return;
         }
+        if (file_exists(__DIR__ . '/classes/heroes/' . $classe . '.php')) {
+            require __DIR__ . '/classes/heroes/' . $classe . '.php';
+            return;
+        }
     }
     spl_autoload_register('chargerClasse');
 }
