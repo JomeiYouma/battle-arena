@@ -88,10 +88,22 @@ class TeamCombat extends MultiCombat {
      * Exécuter une action de switch vers un autre héros
      * 
      * @param int $targetIndex Index du héros cible (0-4)
+     * @param Personnage|null $actor Acteur du switch si disponible
      */
-    private function executeSwitchAction(int $targetIndex): void {
-        // Déterminer quel joueur fait le switch (basé sur le tour)
-        $isPlayer1 = $this->turn % 2 === 1; // Tours impairs = P1, pairs = P2
+    private function executeSwitchAction(int $targetIndex, ?Personnage $actor = null): void {
+        // Déterminer quel joueur fait le switch (basé sur l'acteur si possible)
+        $isPlayer1 = null;
+        if ($actor !== null) {
+            if (in_array($actor, $this->player1Team, true)) {
+                $isPlayer1 = true;
+            } elseif (in_array($actor, $this->player2Team, true)) {
+                $isPlayer1 = false;
+            }
+        }
+        // Fallback: utiliser la parité du tour si l'acteur n'est pas trouvé
+        if ($isPlayer1 === null) {
+            $isPlayer1 = $this->turn % 2 === 1; // Tours impairs = P1, pairs = P2
+        }
 
         // Récupérer le héros courant et vérifier si l'index est valide
         $team = $isPlayer1 ? $this->player1Team : $this->player2Team;
@@ -131,6 +143,31 @@ class TeamCombat extends MultiCombat {
             'hero' => $newHero->getName(),
             'heroIndex' => $targetIndex
         ];
+    }
+
+    /**
+     * Override performAction pour gérer les actions de switch (format: "switch:X")
+     * @param Personnage $actor L'acteur effectuant l'action
+     * @param Personnage $target La cible (peut être null pour le switch)
+     * @param string $actionKey La clé d'action (ex: "attack", "switch:3")
+     */
+    protected function performAction(Personnage $actor, Personnage $target, string $actionKey): void {
+        // Vérifier si c'est un action de switch
+        if (strpos($actionKey, 'switch:') === 0) {
+            // Parser le format "switch:X" pour extraire l'index
+            $parts = explode(':', $actionKey);
+            if (count($parts) === 2 && is_numeric($parts[1])) {
+                $targetIndex = (int)$parts[1];
+                $this->executeSwitchAction($targetIndex, $actor);
+                return;
+            } else {
+                $this->logs[] = "❌ Format d'action switch invalide: " . $actionKey;
+                return;
+            }
+        }
+        
+        // Pour toutes les autres actions, utiliser la logique parent
+        parent::performAction($actor, $target, $actionKey);
     }
 
     /**

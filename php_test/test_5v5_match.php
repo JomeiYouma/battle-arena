@@ -88,6 +88,15 @@ $team2 = array_slice($heroesData, 0, 5);
 shuffle($team2);
 $team2 = array_slice($team2, 0, 5);
 
+// Ajouter la propriété isDead à tous les héros (tous vivants au départ)
+foreach ($team1 as &$hero) {
+    $hero['isDead'] = false;
+}
+foreach ($team2 as &$hero) {
+    $hero['isDead'] = false;
+}
+unset($hero); // Break reference
+
 // Créer l'ID du match
 $matchId = uniqid('match_5v5_test_');
 $now = time();
