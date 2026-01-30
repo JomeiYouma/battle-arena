@@ -80,7 +80,7 @@ class Hero {
             'description' => $this->description,
             'images' => [
                 'p1' => $this->imageP1,
-                'p2' => $this->imageP2
+                'p2' => $this->imageP1  // Utiliser la même image, le flip CSS s'occupe du retournement
             ]
         ];
     }

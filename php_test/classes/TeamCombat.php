@@ -1,8 +1,10 @@
 <?php
+require_once __DIR__ . '/MultiCombat.php';
+
 /**
  * TEAMCOMBAT - Combat multijoueur 5v5 avec équipes
  * 
- * Hérite de Combat et ajoute la gestion des équipes avec système de switch
+ * Hérite de MultiCombat et ajoute la gestion des équipes avec système de switch
  * 
  * Fonctionnalités:
  * - Gestion de 5 héros par équipe
@@ -11,7 +13,7 @@
  * - Récupération des équipes initiales depuis BD
  */
 
-class TeamCombat extends Combat {
+class TeamCombat extends MultiCombat {
     // Équipes complètes
     private array $player1Team = [];  // 5 Personnage objects
     private array $player2Team = [];

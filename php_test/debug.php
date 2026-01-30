@@ -226,6 +226,7 @@ try {
                 <a href="single_player.php" class="debug-btn">Solo</a>
                 <a href="multiplayer-selection.php" class="debug-btn">Multi (Selection)</a>
                 <a href="multiplayer-combat.php?match_id=debug_test" class="debug-btn">Multi (Combat)</a>
+                <a href="test_5v5_match.php" class="debug-btn primary" style="background: linear-gradient(135deg, #ff6b35, #ff8c42);">🏆 Test 5v5</a>
                 <a href="reset_session.php" class="debug-btn danger">Reset Session</a>
             </div>
         </div>

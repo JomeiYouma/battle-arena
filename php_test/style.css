@@ -480,6 +480,7 @@ h3 {
         0 8px 30px rgba(0, 0, 0, 0.8),
         inset 0 0 40px rgba(139, 0, 0, 0.1);
     animation: pulse-glow 4s ease-in-out infinite;
+    margin: auto;
 }
 
 /* --- STATS ROW (EN DEHORS DE LA ZONE DE COMBAT) --- */
@@ -1709,7 +1710,7 @@ select option {
     gap: 20px;
     align-items: stretch; /* Aligner la hauteur */
     margin-top: 20px;
-    height: 320px; /* Fixer une hauteur globale pour la zone de contrôles */
+    height: 180px;
 }
 
 /* LEFT COLUMN: Action List */

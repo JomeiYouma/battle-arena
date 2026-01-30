@@ -117,17 +117,24 @@ if (!$matchData) {
 require_once __DIR__ . '/classes/MultiCombat.php';
 
 $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
-$multiCombat = MultiCombat::load($stateFile);
+$multiCombat = null;
 
-if (!$multiCombat) {
+// Essayer de charger l'état existant
+if (file_exists($stateFile)) {
+    $multiCombat = MultiCombat::load($stateFile);
+}
+
+// Si pas d'état, créer un état initial (pour les tests UI)
+if (!$multiCombat && isset($matchData['player1']['hero'])) {
     // Initialiser le combat si pas encore créé
     try {
         $multiCombat = MultiCombat::create($matchData['player1'], $matchData['player2']);
-        if (!$multiCombat->save($stateFile)) {
-            die("Erreur: Impossible de sauvegarder l'état initial du combat.");
+        if ($multiCombat && !$multiCombat->save($stateFile)) {
+            error_log("Erreur: Impossible de sauvegarder l'état initial du combat.");
         }
     } catch (Exception $e) {
-        die("Erreur lors de l'initialisation du combat: " . $e->getMessage());
+        error_log("Erreur lors de l'initialisation du combat: " . $e->getMessage());
+        // Continuer sans état - pour les tests UI
     }
 }
 
@@ -136,18 +143,77 @@ $sessionId = session_id();
 $isP1 = ($matchData['player1']['session'] === $sessionId);
 $myRole = $isP1 ? 'p1' : 'p2';
 
+// DÉTECTION MODE 5v5
+$is5v5 = $matchData['mode'] === '5v5' || ($multiCombat instanceof TeamCombat);
+$teamSidebars = ['p1' => [], 'p2' => []];
+$isTestUI = isset($matchData['player1']['heroes']) && isset($matchData['player2']['heroes']);
+
+if ($is5v5 && $isTestUI) {
+    $teamSidebars['p1'] = $matchData['player1']['heroes'] ?? [];
+    $teamSidebars['p2'] = $matchData['player2']['heroes'] ?? [];
+}
+
 // Construire l'état du jeu pour l'affichage
 try {
-    $gameState = $multiCombat->getStateForUser($sessionId, $matchData);
-    $gameState['status'] = 'active';
-    $gameState['turn'] = $matchData['turn'] ?? 1;
-    $gameState['isOver'] = $multiCombat->isOver();
+    if ($multiCombat) {
+        $gameState = $multiCombat->getStateForUser($sessionId, $matchData);
+        $gameState['status'] = 'active';
+        $gameState['turn'] = $matchData['turn'] ?? 1;
+        $gameState['isOver'] = $multiCombat->isOver();
+    } else {
+        // Mode test UI - créer un état par défaut
+        $myPlayer = $isP1 ? $matchData['player1'] : $matchData['player2'];
+        $oppPlayer = $isP1 ? $matchData['player2'] : $matchData['player1'];
+        $myHero = $myPlayer['hero'] ?? $myPlayer['heroes'][0] ?? null;
+        $oppHero = $oppPlayer['hero'] ?? $oppPlayer['heroes'][0] ?? null;
+        
+        $gameState = [
+            'status' => 'active',
+            'turn' => 1,
+            'isOver' => false,
+            'waiting_for_me' => true,
+            'waiting_for_opponent' => false,
+            'logs' => $matchData['logs'] ?? ["Test UI 5v5"],
+            'turnActions' => [],
+            'me' => [
+                'name' => $myHero['name'] ?? 'Héros 1',
+                'type' => $myHero['type'] ?? 'Unknown',
+                'pv' => $myHero['pv'] ?? 100,
+                'max_pv' => $myHero['pv'] ?? 100,
+                'atk' => $myHero['atk'] ?? 20,
+                'def' => $myHero['def'] ?? 5,
+                'speed' => $myHero['speed'] ?? 10,
+                'img' => $myHero['images']['p1'] ?? 'media/heroes/default.png',
+                'activeEffects' => []
+            ],
+            'opponent' => [
+                'name' => $oppHero['name'] ?? 'Héros 2',
+                'type' => $oppHero['type'] ?? 'Unknown',
+                'pv' => $oppHero['pv'] ?? 100,
+                'max_pv' => $oppHero['pv'] ?? 100,
+                'atk' => $oppHero['atk'] ?? 20,
+                'def' => $oppHero['def'] ?? 5,
+                'speed' => $oppHero['speed'] ?? 10,
+                'img' => $oppHero['images']['p1'] ?? 'media/heroes/default.png',
+                'activeEffects' => []
+            ],
+            'actions' => [
+                'attack' => ['label' => 'Attaque', 'emoji' => '⚔️', 'description' => 'Attaque normale', 'canUse' => true, 'ppText' => ''],
+                'spell' => ['label' => 'Sort', 'emoji' => '✨', 'description' => 'Utilise un sort', 'canUse' => true, 'ppText' => ''],
+                'defend' => ['label' => 'Défense', 'emoji' => '🛡️', 'description' => 'Se défendre', 'canUse' => true, 'ppText' => '']
+            ]
+        ];
+    }
     
     // Déterminer qui doit jouer
     $actions = $matchData['current_turn_actions'] ?? [];
     $oppRole = $isP1 ? 'p2' : 'p1';
-    $gameState['waiting_for_me'] = !isset($actions[$myRole]);
-    $gameState['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && ($matchData['mode'] ?? '') !== 'bot';
+    if (!isset($gameState['waiting_for_me'])) {
+        $gameState['waiting_for_me'] = !isset($actions[$myRole]);
+    }
+    if (!isset($gameState['waiting_for_opponent'])) {
+        $gameState['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && ($matchData['mode'] ?? '') !== 'bot';
+    }
     
 } catch (Exception $e) {
     die("Erreur lors de la construction de l'état du jeu: " . $e->getMessage());
@@ -162,7 +228,21 @@ try {
 
 <h1 class="arena-title">Horus Battle Arena</h1>
 
-<div class="game-container">
+<div class="game-container <?php echo $is5v5 ? 'mode-5v5' : ''; ?>">
+    <?php if ($is5v5): ?>
+    <!-- TEAM 1 SIDEBAR (caché sur petit écran) -->
+    <aside class="team-sidebar team-1" id="teamSidebar1">
+        <div class="sidebar-header">
+            <h3>MON ÉQUIPE</h3>
+            <button class="sidebar-close" onclick="closeTeamDrawer(1)">✕</button>
+        </div>
+        <div class="team-heroes-list" id="team1HeroesList"></div>
+    </aside>
+    
+    <!-- DRAWER BUTTONS pour mobile -->
+    <button class="drawer-toggle team-1-toggle" id="drawerToggle1" onclick="toggleTeamDrawer(1)" title="Équipe 1">◄</button>
+    <?php endif; ?>
+    
     <div class="arena">
         <div class="turn-indicator" id="turnIndicator">Tour <?php echo $gameState['turn']; ?></div>
         
@@ -244,18 +324,286 @@ try {
                 <button class="action-btn new-game" onclick="location.href='index.php'">Menu Principal</button>
             </div>
             
+            <?php if ($is5v5): ?>
+            <!-- BOUTON DE SWITCH POUR 5v5 -->
+            <div class="switch-button-container">
+                <button type="button" class="action-btn switch-btn" id="switchBtn" onclick="showSwitchMenu()">
+                    <span class="action-emoji-icon">🔄</span>
+                    <span class="action-label">SWITCH</span>
+                </button>
+            </div>
+            <?php endif; ?>
+            
             <form method="POST" class="abandon-form">
                 <button type="submit" name="abandon_multi" class="action-btn abandon">Abandonner</button>
             </form>
         </div>
     </div>
+    
+    <?php if ($is5v5): ?>
+    <!-- TEAM 2 SIDEBAR (caché sur petit écran) -->
+    <aside class="team-sidebar team-2" id="teamSidebar2">
+        <div class="sidebar-header">
+            <h3>ADVERSAIRE</h3>
+            <button class="sidebar-close" onclick="closeTeamDrawer(2)">✕</button>
+        </div>
+        <div class="team-heroes-list" id="team2HeroesList"></div>
+    </aside>
+    
+    <!-- DRAWER BUTTON pour mobile (droite) -->
+    <button class="drawer-toggle team-2-toggle" id="drawerToggle2" onclick="toggleTeamDrawer(2)" title="Équipe 2">►</button>
+    <?php endif; ?>
 </div>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 <script src="js/combat-animations.js"></script>
+<style>
+/* ===== 5v5 TEAM SIDEBARS ===== */
+.game-container.mode-5v5 {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    justify-content: center;
+    position: relative;
+}
+
+.game-container.mode-5v5 .arena {
+    flex: 0 1 auto;
+}
+
+.team-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #ff6b35;
+    border-radius: 8px;
+    min-width: 200px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.team-sidebar .sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #ff6b35;
+}
+
+.team-sidebar h3 {
+    margin: 0;
+    color: #ffd700;
+    font-size: 1rem;
+}
+
+.sidebar-close {
+    background: none;
+    border: none;
+    color: #ff6b35;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    display: none;
+}
+
+.team-heroes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.hero-card {
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid #666;
+    border-radius: 6px;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.hero-card:hover {
+    border-color: #ff6b35;
+    background: rgba(30, 30, 30, 1);
+}
+
+.hero-card.active {
+    border-color: #ffd700;
+    background: rgba(40, 35, 20, 0.9);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.hero-card.dead {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.hero-card-name {
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 0.3rem;
+}
+
+.hero-card-position {
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 0.3rem;
+}
+
+.hero-card-hp {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+
+.hero-card-hp-bar {
+    flex: 1;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.hero-card-hp-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4444, #ffaa00);
+    border-radius: 3px;
+}
+
+.hero-card-stats {
+    display: flex;
+    gap: 0.3rem;
+    font-size: 0.8rem;
+    color: #ccc;
+}
+
+.hero-card-stats span {
+    flex: 1;
+}
+
+/* DRAWER MODE (Mobile/Small screens) */
+@media (max-width: 1399px) {
+    .game-container.mode-5v5 {
+        flex-direction: column;
+    }
+    
+    .team-sidebar {
+        position: fixed;
+        top: 0;
+        width: 220px;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.98);
+        border-right: 2px solid #ff6b35;
+        border-radius: 0;
+        padding: 1rem;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        max-height: 100vh;
+    }
+    
+    .team-sidebar.team-1 {
+        left: 0;
+    }
+    
+    .team-sidebar.team-2 {
+        right: 0;
+        transform: translateX(100%);
+        border-right: none;
+        border-left: 2px solid #ff6b35;
+    }
+    
+    .team-sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .sidebar-close {
+        display: block;
+    }
+    
+    .drawer-toggle {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #ff6b35;
+        border: 2px solid #ffd700;
+        color: #000;
+        font-size: 1.5rem;
+        cursor: pointer;
+        z-index: 99;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .drawer-toggle:hover {
+        background: #ffd700;
+        color: #ff6b35;
+    }
+    
+    .drawer-toggle.team-1-toggle {
+        left: 10px;
+    }
+    
+    .drawer-toggle.team-2-toggle {
+        right: 10px;
+    }
+}
+
+/* GRAND ÉCRAN */
+@media (min-width: 1400px) {
+    .drawer-toggle {
+        display: none !important;
+    }
+    
+    .sidebar-close {
+        display: none !important;
+    }
+    
+    .team-sidebar {
+        display: flex !important;
+        transform: none !important;
+    }
+}
+
+/* SWITCH BUTTON CONTAINER */
+.switch-button-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.switch-btn {
+    min-width: 200px;
+    background: linear-gradient(135deg, #ff6b35, #ff8c42);
+    border: 2px solid #ffd700 !important;
+    color: #000;
+}
+
+.switch-btn:hover:not(.disabled) {
+    box-shadow: 0 0 15px rgba(255, 107, 53, 0.6);
+}
+
+.switch-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+</style>
 <script>
 const MATCH_ID = '<?php echo addslashes($matchId); ?>';
 const INITIAL_STATE = <?php echo json_encode($gameState); ?>;
 const IS_P1 = <?php echo $isP1 ? 'true' : 'false'; ?>; // True if I am player1 in the match
+const IS_5V5 = <?php echo $is5v5 ? 'true' : 'false'; ?>;
+const IS_TEST_UI = <?php echo $isTestUI ? 'true' : 'false'; ?>;
+const TEAM_DATA_P1 = <?php echo json_encode($teamSidebars['p1']); ?>;
+const TEAM_DATA_P2 = <?php echo json_encode($teamSidebars['p2']); ?>;
 
 let pollInterval = null;
 let lastLogCount = <?php echo count($gameState['logs']); ?>;
@@ -476,6 +824,12 @@ function updateEffectIndicators(effects, containerId) {
 
 
 function updateCombatState() {
+    // Mode test UI - pas de polling
+    if (IS_TEST_UI) {
+        console.log('TEST UI MODE - Pas de polling');
+        return;
+    }
+
     fetch('api.php?action=poll_status&match_id=' + MATCH_ID, {
         credentials: 'same-origin'
     })
@@ -686,7 +1040,194 @@ function sendAction(action) {
 }
 
 // Initial load and start polling
-updateCombatState();
-pollInterval = setInterval(updateCombatState, 2000);
+if (!IS_TEST_UI) {
+    updateCombatState();
+    pollInterval = setInterval(updateCombatState, 2000);
+} else {
+    console.log('Test UI mode - polling désactivé');
+}
+
+// ===== 5v5 TEAM MANAGEMENT =====
+
+/**
+ * Toggle team drawer (mobile view)
+ */
+function toggleTeamDrawer(teamNum) {
+    const sidebar = document.getElementById('teamSidebar' + teamNum);
+    if (sidebar) {
+        sidebar.classList.toggle('open');
+    }
+}
+
+/**
+ * Close team drawer
+ */
+function closeTeamDrawer(teamNum) {
+    const sidebar = document.getElementById('teamSidebar' + teamNum);
+    if (sidebar) {
+        sidebar.classList.remove('open');
+    }
+}
+
+/**
+ * Initialiser les sidebars pour le 5v5 (peuplés par JS une fois les données reçues)
+ */
+function initializeTeamSidebars() {
+    if (!IS_5V5) return;
+    
+    console.log('Initializing team sidebars');
+    
+    // Déterminer quelle équipe afficher de quel côté
+    const myTeamData = IS_P1 ? TEAM_DATA_P1 : TEAM_DATA_P2;
+    const oppTeamData = IS_P1 ? TEAM_DATA_P2 : TEAM_DATA_P1;
+    
+    // Sidebar 1 (gauche) = toujours mon équipe
+    // Sidebar 2 (droite) = toujours l'adversaire
+    populateTeamSidebar(1, myTeamData, true);
+    populateTeamSidebar(2, oppTeamData, false);
+}
+
+/**
+ * Remplir une sidebar avec les héros de l'équipe
+ */
+function populateTeamSidebar(teamNum, heroesData, isMyTeam) {
+    const containerId = 'team' + teamNum + 'HeroesList';
+    const container = document.getElementById(containerId);
+    
+    if (!container || !heroesData || heroesData.length === 0) {
+        console.warn('Cannot populate team sidebar', teamNum);
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    heroesData.forEach((heroData, index) => {
+        const heroCard = createHeroCard(heroData, index, isMyTeam);
+        container.appendChild(heroCard);
+    });
+}
+
+/**
+ * Créer une carte héro pour la sidebar
+ */
+function createHeroCard(heroData, index, isMyTeam) {
+    const card = document.createElement('div');
+    card.className = 'hero-card';
+    
+    // Marquer le héros actif (le premier combat)
+    if (index === 0) {
+        card.classList.add('active');
+    }
+    
+    // Marquer comme mort si HP <= 0
+    if (heroData.pv <= 0) {
+        card.classList.add('dead');
+    }
+    
+    const hpPercent = Math.max(0, (heroData.pv / heroData.pv) * 100);
+    
+    card.innerHTML = `
+        <div class="hero-card-name">${escapeHtml(heroData.name)}</div>
+        <div class="hero-card-position">Position ${index + 1}</div>
+        <div class="hero-card-hp">
+            <div class="hero-card-hp-bar">
+                <div class="fill" style="width: ${hpPercent}%"></div>
+            </div>
+            <span style="min-width: 30px; text-align: right;">${Math.round(hpPercent)}%</span>
+        </div>
+        <div class="hero-card-stats">
+            <span>⚔️ ${heroData.atk}</span>
+            <span>🛡️ ${heroData.def}</span>
+            <span>⚡ ${heroData.speed}</span>
+        </div>
+        <div class="hero-card-hp" style="font-size: 0.85rem; color: #999;">
+            ${heroData.pv} / ${heroData.pv} PV
+        </div>
+    `;
+    
+    // Ajouter event pour switch (plus tard)
+    card.addEventListener('click', () => {
+        if (!card.classList.contains('dead') && !card.classList.contains('active')) {
+            performSwitch(index);
+        }
+    });
+    
+    return card;
+}
+
+/**
+ * Échapper le HTML
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+/**
+ * Afficher le menu de switch (sélection du héros à switcher)
+ */
+function showSwitchMenu() {
+    if (!IS_5V5) return;
+    alert('🔄 Switch de héros - À implémenter');
+}
+
+/**
+ * Effectuer un switch vers un autre héros
+ */
+function performSwitch(heroIndex) {
+    if (!IS_5V5) return;
+    
+    // Envoyer l'action de switch au serveur
+    stopActionTimer();
+    const btnContainer = document.getElementById('actionButtons');
+    const waitMsg = document.getElementById('waitingMessage');
+    
+    btnContainer.style.display = 'none';
+    waitMsg.style.display = 'block';
+    waitMsg.innerText = 'Changement de héros...';
+    
+    fetch('api.php?action=submit_move', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: 'match_id=' + MATCH_ID + '&move=switch&target_index=' + heroIndex
+    })
+        .then(r => r.text())
+        .then(text => {
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                throw new Error('Réponse invalide: ' + text.substring(0, 100));
+            }
+        })
+        .then(data => {
+            if (!data) {
+                showErrorMessage('Erreur: réponse vide du serveur');
+                btnContainer.style.display = 'flex';
+                waitMsg.style.display = 'none';
+                return;
+            }
+            
+            if (data.status === 'error') {
+                showErrorMessage("Erreur: " + (data.message || "Erreur inconnue"));
+                btnContainer.style.display = 'flex';
+                waitMsg.style.display = 'none';
+            } else if (data.status === 'ok') {
+                waitMsg.innerText = "En attente de l'adversaire...";
+            }
+        })
+        .catch(err => {
+            console.error('Switch error:', err);
+            showErrorMessage('Erreur: ' + err.message);
+            btnContainer.style.display = 'flex';
+            waitMsg.style.display = 'none';
+        });
+}
+
+// Initialiser les sidebars si 5v5
+if (IS_5V5) {
+    initializeTeamSidebars();
+}
 </script>
 
