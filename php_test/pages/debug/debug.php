@@ -224,10 +224,9 @@ try {
                 <a href="../admin/admin_heroes.php" class="debug-btn primary">Gestionnaire Héros</a>
                 <a href="../account.php" class="debug-btn">Mon Compte</a>
                 <a href="../game/single_player.php" class="debug-btn">Solo</a>
-                <a href="../game/multiplayer-selection.php" class="debug-btn">Multi (Selection)</a>
-                <a href="../game/multiplayer-combat.php?match_id=debug_test" class="debug-btn">Multi (Combat)</a>
-                <a href="test_5v5_match.php" class="debug-btn primary" style="background: linear-gradient(135deg, #ff6b35, #ff8c42);">🏆 Test 5v5</a>
-                <a href="reset_session.php" class="debug-btn danger">Reset Session</a>
+                <a href="../game/multiplayer-selection.php" class="debug-btn">Multi 1v1</a>
+                <a href="../game/multiplayer_5v5_selection.php" class="debug-btn">Multi 5v5</a>
+                <a href="../game/multiplayer-combat.php?match_id=debug_test" class="debug-btn">Combat Debug</a>
             </div>
         </div>
 

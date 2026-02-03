@@ -86,9 +86,7 @@ php_test/
 │   ├── schema_teams.sql
 │   └── matches/
 │
-├── config/                      # Configuration
-└── scripts/                     # Scripts utilitaires
-    └── migrate_heroes.php
+└── config/                      # Configuration
 ```
 
 ## 🔧 Constantes de Chemins (autoload.php)
