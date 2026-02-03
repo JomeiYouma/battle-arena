@@ -2,16 +2,61 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+
+// Nettoyer les données de match précédent pour éviter les conflits
+unset($_SESSION['matchId']);
+unset($_SESSION['queue5v5Status']);
+unset($_SESSION['queue5v5Team']);
+unset($_SESSION['queue5v5DisplayName']);
+unset($_SESSION['queue5v5BlessingId']);
+// Nettoyer aussi les données 1v1
+unset($_SESSION['queueHeroId']);
+unset($_SESSION['queueStartTime']);
+unset($_SESSION['queueHeroData']);
+unset($_SESSION['queueDisplayName']);
+unset($_SESSION['queueBlessingId']);
+
+// Charger les classes nécessaires
+require_once __DIR__ . '/classes/User.php';
+
+$pageTitle = 'Multijoueur - Horus Battle Arena';
+$extraCss = ['shared-selection'];
+$showUserBadge = true;
+$showMainTitle = false;
+require_once __DIR__ . '/includes/header.php';
 ?>
-<link rel="stylesheet" href="./style.css">
-<link rel="stylesheet" href="./css/shared-selection.css">
+
+<div class="multi-container">
+    <div class="mode-selection-header">
+        <h2 class="page-title">⚔️ MODE MULTIJOUEUR</h2>
+        <p class="page-subtitle">Choisissez votre mode de jeu</p>
+    </div>
+
 <style>
+    .mode-selection-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem;
+    }
+    
+    .page-title {
+        color: var(--gold-accent);
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .page-subtitle {
+        color: #aaa;
+        font-size: 1.1rem;
+    }
+    
     /* Styles spécifiques déplacés ici ou dans un CSS à part si tu préfères */
     .mode-cards {
         display: flex;
         gap: 2rem;
         flex-wrap: wrap;
         justify-content: center;
+        padding: 0 2rem;
     }
     
     .mode-card {
@@ -107,13 +152,7 @@ if (session_status() === PHP_SESSION_NONE) {
         color: #fff;
     }
 
-    h2 .page-title{
-        margin-bottom: 25vw;
-    }
 </style>
-
-<!-- Note: .mode-container est déjà ouvert par index.php -->
-<h2 class="page-title">CHOISIR LE MODE DE JEU</h2>
 
 <div class="mode-cards">
     <!-- 1v1 DUEL -->
@@ -125,7 +164,7 @@ if (session_status() === PHP_SESSION_NONE) {
     </a>
     
     <!-- 5v5 TEAM -->
-    <a href="multiplayer_5v5_setup.php" class="mode-card card-5v5">
+    <a href="multiplayer_5v5_selection.php" class="mode-card card-5v5">
         <div class="mode-icon">🛡️</div>
         <h2>ÉQUIPE 5v5</h2>
         <p>Dirigez une escouade de 5 héros.<br>Stratégie d'équipe et switch tactique.</p>

@@ -24,6 +24,10 @@ class TeamCombat extends MultiCombat {
     
     // Enregistrement des informations de switch
     private array $switchLogs = [];
+    
+    // État du switch obligatoire après mort
+    private bool $player1NeedsForcedSwitch = false;
+    private bool $player2NeedsForcedSwitch = false;
 
     /**
      * Initialiser un combat d'équipe
@@ -62,6 +66,246 @@ class TeamCombat extends MultiCombat {
         // Player 2's current opponent = Player 1's current hero
         $this->player1Team[0]->setCurrentOpponent($this->player2Team[0]);
         $this->player2Team[0]->setCurrentOpponent($this->player1Team[0]);
+    }
+
+    // ============================================
+    // FACTORY METHOD
+    // ============================================
+
+    /**
+     * Créer un combat d'équipe à partir des données d'un match JSON
+     * 
+     * @param array $p1Data Données joueur 1 avec 'team_id' ou 'heroes' array
+     * @param array $p2Data Données joueur 2 avec 'team_id' ou 'heroes' array
+     * @return TeamCombat|null Retourne null si impossible de créer
+     */
+    public static function create($p1Data, $p2Data): ?TeamCombat {
+        try {
+            // Récupérer les héros à partir des données
+            $p1Heroes = $p1Data['heroes'] ?? null;
+            $p2Heroes = $p2Data['heroes'] ?? null;
+            
+            if (!$p1Heroes || !$p2Heroes || count($p1Heroes) !== 5 || count($p2Heroes) !== 5) {
+                return null;
+            }
+            
+            // Créer les objets Personnage pour chaque héros
+            $team1 = [];
+            foreach ($p1Heroes as $heroData) {
+                $team1[] = self::createHeroFromData($heroData, $p1Data['blessing_id'] ?? null);
+            }
+            
+            $team2 = [];
+            foreach ($p2Heroes as $heroData) {
+                $team2[] = self::createHeroFromData($heroData, $p2Data['blessing_id'] ?? null);
+            }
+            
+            return new TeamCombat($team1, $team2);
+        } catch (Exception $e) {
+            error_log("TeamCombat::create error: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Créer un objet Personnage à partir de données héros
+     * (Réutilise la logique de MultiCombat)
+     */
+    private static function createHeroFromData($heroData, $blessingId = null): Personnage {
+        error_log("createHeroFromData: " . json_encode($heroData));
+        
+        $type = $heroData['type'];
+        error_log("Hero type: $type");
+        
+        // Les types sont les vrais noms des classes
+        $heroClass = $type;
+        
+        $fullClassName = '\\' . $heroClass;
+        error_log("Full class name: $fullClassName");
+        
+        if (!class_exists($fullClassName)) {
+            error_log("Class not found: $fullClassName - trying to load");
+            // Try loading with require_once
+            $heroFile = __DIR__ . '/heroes/' . $type . '.php';
+            error_log("Trying to load: $heroFile");
+            if (file_exists($heroFile)) {
+                require_once $heroFile;
+            }
+            
+            if (!class_exists($fullClassName)) {
+                throw new Exception("Hero class not found: $fullClassName (file: $heroFile)");
+            }
+        }
+        
+        // Créer le héros avec ses paramètres
+        $hero = new $fullClassName(
+            $heroData['pv'] ?? 100,
+            $heroData['atk'] ?? 15,
+            $heroData['name'] ?? 'Héros',
+            $heroData['def'] ?? 5,
+            $heroData['speed'] ?? 10
+        );
+        
+        error_log("Hero created: " . $hero->getName());
+        
+        // Appliquer une bénédiction si fournie
+        if ($blessingId) {
+            $blessing = BlessingFactory::createBlessing($blessingId);
+            if ($blessing) {
+                $hero->addBlessing($blessing);
+            }
+        }
+        
+        return $hero;
+    }
+
+    // ============================================
+    // OVERRIDE STATE GETTERS
+    // ============================================
+
+    /**
+     * Override getStateForUser pour retourner l'image du héros actuel en 5v5
+     */
+    public function getStateForUser($sessionId, $metaData) {
+        // Appeler la méthode parent
+        $state = parent::getStateForUser($sessionId, $metaData);
+        
+        // Récupérer l'équipe et l'index du héros actuel
+        $isP1 = ($metaData['player1']['session'] === $sessionId);
+        $heroesData = $isP1 ? ($metaData['player1']['heroes'] ?? []) : ($metaData['player2']['heroes'] ?? []);
+        $currentIndex = $isP1 ? $this->currentPlayer1Index : $this->currentPlayer2Index;
+        $oppCurrentIndex = $isP1 ? $this->currentPlayer2Index : $this->currentPlayer1Index;
+        
+        // En 5v5, utiliser le NOM DU HÉROS ACTIF (pas le display_name qui est le nom d'équipe)
+        $myTeam = $isP1 ? $this->player1Team : $this->player2Team;
+        $oppTeam = $isP1 ? $this->player2Team : $this->player1Team;
+        
+        $myActiveHero = $myTeam[$currentIndex] ?? null;
+        $oppActiveHero = $oppTeam[$oppCurrentIndex] ?? null;
+        
+        if ($myActiveHero) {
+            $state['me']['name'] = $myActiveHero->getName();
+            $state['me']['type'] = $myActiveHero->getType();
+        }
+        
+        if ($oppActiveHero) {
+            $state['opponent']['name'] = $oppActiveHero->getName();
+            $state['opponent']['type'] = $oppActiveHero->getType();
+        }
+        
+        // Retourner l'image du héros actuel s'il existe
+        if (isset($heroesData[$currentIndex]['images'])) {
+            $imageKey = $isP1 ? 'p1' : 'p2';
+            $state['me']['img'] = $heroesData[$currentIndex]['images'][$imageKey] ?? $state['me']['img'];
+        }
+        
+        // Même chose pour l'adversaire
+        $oppIsP1 = !$isP1;
+        $oppHeroesData = $oppIsP1 ? ($metaData['player1']['heroes'] ?? []) : ($metaData['player2']['heroes'] ?? []);
+        
+        if (isset($oppHeroesData[$oppCurrentIndex]['images'])) {
+            $imageKey = $oppIsP1 ? 'p1' : 'p2';
+            $state['opponent']['img'] = $oppHeroesData[$oppCurrentIndex]['images'][$imageKey] ?? $state['opponent']['img'];
+        }
+        
+        // Ajouter le flag de forced switch si le héros actif est mort
+        $state['needsForcedSwitch'] = $isP1 ? $this->player1NeedsForcedSwitch : $this->player2NeedsForcedSwitch;
+        
+        // Ajouter l'action SWITCH si des héros sont disponibles pour remplacer
+        $teamNum = $isP1 ? 1 : 2;
+        $availableSwitches = $this->getAvailableSwitchTargets($teamNum);
+        
+        if (!empty($availableSwitches) && !$state['needsForcedSwitch']) {
+            // Ajouter l'action SWITCH uniquement si pas en forced switch (qui a son propre UI)
+            $state['actions']['switch'] = [
+                'label' => 'Switch',
+                'emoji' => '🔄',
+                'canUse' => true,
+                'ppText' => '',
+                'description' => 'Changer de héros actif (' . count($availableSwitches) . ' disponible' . (count($availableSwitches) > 1 ? 's' : '') . ')'
+            ];
+        }
+        
+        // ===== AJOUTER LES DONNÉES D'ÉQUIPE POUR LES SIDEBARS =====
+        $myTeam = $isP1 ? $this->player1Team : $this->player2Team;
+        $oppTeam = $isP1 ? $this->player2Team : $this->player1Team;
+        
+        $state['myTeam'] = $this->serializeTeamForClient($myTeam, $heroesData);
+        $state['oppTeam'] = $this->serializeTeamForClient($oppTeam, $oppHeroesData);
+        $state['myActiveIndex'] = $currentIndex;
+        $state['oppActiveIndex'] = $oppCurrentIndex;
+        
+        return $state;
+    }
+    
+    /**
+     * Sérialiser une équipe pour le client (avec HP actuels)
+     */
+    private function serializeTeamForClient(array $team, array $originalHeroesData): array {
+        $result = [];
+        foreach ($team as $index => $hero) {
+            $originalData = $originalHeroesData[$index] ?? [];
+            $result[] = [
+                'name' => $hero->getName(),
+                'type' => $hero->getType(),
+                'pv' => $hero->getPV(),
+                'max_pv' => $hero->getBasePv(),
+                'atk' => $hero->getAtk(),
+                'def' => $hero->getDef(),
+                'speed' => $hero->getSpeed(),
+                'isDead' => $hero->isDead(),
+                'images' => $originalData['images'] ?? null
+            ];
+        }
+        return $result;
+    }
+
+    /**
+     * Vérifier et marquer les switches obligatoires après mort
+     */
+    public function checkAndMarkForcedSwitches(): void {
+        // Vérifier si le héros actif du joueur 1 est mort
+        if ($this->player1Team[$this->currentPlayer1Index]->isDead()) {
+            $this->player1NeedsForcedSwitch = true;
+            $this->logs[] = "💀 " . $this->player1Team[$this->currentPlayer1Index]->getName() . " est mort! Choisissez un remplaçant.";
+        }
+        
+        // Vérifier si le héros actif du joueur 2 est mort
+        if ($this->player2Team[$this->currentPlayer2Index]->isDead()) {
+            $this->player2NeedsForcedSwitch = true;
+            $this->logs[] = "💀 " . $this->player2Team[$this->currentPlayer2Index]->getName() . " est mort! Choisissez un remplaçant.";
+        }
+    }
+
+    /**
+     * Effectuer un switch obligatoire (après mort)
+     * Retourne true si le switch a réussi, false sinon
+     */
+    public function performForcedSwitch(int $playerNum, int $targetIndex): bool {
+        if ($playerNum !== 1 && $playerNum !== 2) return false;
+        if ($targetIndex < 0 || $targetIndex >= 5) return false;
+        
+        $team = $playerNum === 1 ? $this->player1Team : $this->player2Team;
+        $newHero = $team[$targetIndex];
+        
+        // Vérifier que le héros n'est pas mort
+        if ($newHero->isDead()) {
+            return false;
+        }
+        
+        // Effectuer le switch
+        if ($playerNum === 1) {
+            $this->switchHeroTeam1($targetIndex);
+            $this->player1NeedsForcedSwitch = false;
+        } else {
+            $this->switchHeroTeam2($targetIndex);
+            $this->player2NeedsForcedSwitch = false;
+        }
+        
+        // Log du switch obligatoire
+        $this->logs[] = "🔄 " . $newHero->getName() . " remplace le héros tombé!";
+        
+        return true;
     }
 
     // ============================================
@@ -332,9 +576,9 @@ class TeamCombat extends MultiCombat {
                 $available[] = [
                     'index' => $index,
                     'name' => $hero->getName(),
-                    'hp' => $hero->getPV(),
-                    'hp_max' => $hero->getPVMax(),
-                    'hp_percent' => round(($hero->getPV() / $hero->getPVMax()) * 100)
+                    'hp' => $hero->getPv(),
+                    'hp_max' => $hero->getBasePv(),
+                    'hp_percent' => round(($hero->getPv() / $hero->getBasePv()) * 100)
                 ];
             }
         }

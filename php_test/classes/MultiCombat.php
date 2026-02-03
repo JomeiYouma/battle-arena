@@ -277,7 +277,7 @@ class MultiCombat extends Combat {
                 'atk' => $myChar->getAtk(),
                 'def' => $myChar->getDef(),
                 'speed' => $myChar->getSpeed(),
-                'img' => $metaData[$isP1 ? 'player1' : 'player2']['hero']['images']['p1'],
+                'img' => $metaData[$isP1 ? 'player1' : 'player2']['hero']['images']['p1'] ?? '',
                 'activeEffects' => $myEffects
             ],
             'opponent' => [
@@ -288,7 +288,7 @@ class MultiCombat extends Combat {
                 'atk' => $oppChar->getAtk(),
                 'def' => $oppChar->getDef(),
                 'speed' => $oppChar->getSpeed(),
-                'img' => $metaData[$isP1 ? 'player2' : 'player1']['hero']['images']['p2'],
+                'img' => $metaData[$isP1 ? 'player2' : 'player1']['hero']['images']['p2'] ?? '',
                 'activeEffects' => $oppEffects
             ],
             'actions' => $actions

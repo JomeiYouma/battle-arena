@@ -104,7 +104,13 @@ $_SESSION['matchId'] = $matchId;
 $matchFile = __DIR__ . '/data/matches/' . $matchId . '.json';
 
 if (!file_exists($matchFile)) {
-    die("Erreur: Le match '$matchId' n'existe pas.");
+    // Match inexistant - nettoyer la session et rediriger
+    unset($_SESSION['matchId']);
+    unset($_SESSION['queue5v5Status']);
+    unset($_SESSION['queue5v5Team']);
+    unset($_SESSION['queue5v5DisplayName']);
+    header("Location: multiplayer.php?error=match_not_found");
+    exit;
 }
 
 $matchData = json_decode(file_get_contents($matchFile), true);
@@ -113,8 +119,9 @@ if (!$matchData) {
     die("Erreur: Impossible de lire les données du match.");
 }
 
-// Charger l'état du combat via MultiCombat
+// Charger l'état du combat via MultiCombat (ou TeamCombat pour 5v5)
 require_once __DIR__ . '/classes/MultiCombat.php';
+require_once __DIR__ . '/classes/TeamCombat.php';
 
 $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
 $multiCombat = null;
@@ -124,7 +131,7 @@ if (file_exists($stateFile)) {
     $multiCombat = MultiCombat::load($stateFile);
 }
 
-// Si pas d'état, créer un état initial (pour les tests UI)
+// Si pas d'état, créer un état initial (pour les tests UI ou nouveau combat)
 if (!$multiCombat && isset($matchData['player1']['hero'])) {
     // Initialiser le combat si pas encore créé
     try {
@@ -146,9 +153,15 @@ $myRole = $isP1 ? 'p1' : 'p2';
 // DÉTECTION MODE 5v5
 $is5v5 = $matchData['mode'] === '5v5' || ($multiCombat instanceof TeamCombat);
 $teamSidebars = ['p1' => [], 'p2' => []];
-$isTestUI = isset($matchData['player1']['heroes']) && isset($matchData['player2']['heroes']);
 
-if ($is5v5 && $isTestUI) {
+// isTestUI = vrai seulement si pas de fichier de combat (mode visualisation UI sans vrai combat)
+$isTestUI = !$multiCombat && isset($matchData['player1']['heroes']) && isset($matchData['player2']['heroes']);
+
+// Noms d'équipes pour l'UI
+$myTeamName = $isP1 ? ($matchData['player1']['display_name'] ?? 'Mon Équipe') : ($matchData['player2']['display_name'] ?? 'Mon Équipe');
+$oppTeamName = $isP1 ? ($matchData['player2']['display_name'] ?? 'Adversaire') : ($matchData['player1']['display_name'] ?? 'Adversaire');
+
+if ($is5v5) {
     $teamSidebars['p1'] = $matchData['player1']['heroes'] ?? [];
     $teamSidebars['p2'] = $matchData['player2']['heroes'] ?? [];
 }
@@ -233,7 +246,7 @@ try {
     <!-- TEAM 1 SIDEBAR (caché sur petit écran) -->
     <aside class="team-sidebar team-1" id="teamSidebar1">
         <div class="sidebar-header">
-            <h3>MON ÉQUIPE</h3>
+            <h3 id="myTeamName"><?php echo htmlspecialchars($myTeamName); ?></h3>
             <button class="sidebar-close" onclick="closeTeamDrawer(1)">✕</button>
         </div>
         <div class="team-heroes-list" id="team1HeroesList"></div>
@@ -321,7 +334,8 @@ try {
             <div id="gameOverMessage" class="game-over-section">
                 <h3 id="gameOverText"></h3>
                 <br>
-                <button class="action-btn new-game" onclick="location.href='index.php'">Menu Principal</button>
+                <button class="action-btn new-game" onclick="location.href='multiplayer.php'">Rejouer</button>
+                <button class="action-btn" onclick="location.href='index.php'" style="margin-left: 10px;">Menu Principal</button>
             </div>
             
             <?php if ($is5v5): ?>
@@ -343,7 +357,7 @@ try {
     <!-- TEAM 2 SIDEBAR (caché sur petit écran) -->
     <aside class="team-sidebar team-2" id="teamSidebar2">
         <div class="sidebar-header">
-            <h3>ADVERSAIRE</h3>
+            <h3 id="oppTeamName"><?php echo htmlspecialchars($oppTeamName); ?></h3>
             <button class="sidebar-close" onclick="closeTeamDrawer(2)">✕</button>
         </div>
         <div class="team-heroes-list" id="team2HeroesList"></div>
@@ -351,6 +365,21 @@ try {
     
     <!-- DRAWER BUTTON pour mobile (droite) -->
     <button class="drawer-toggle team-2-toggle" id="drawerToggle2" onclick="toggleTeamDrawer(2)" title="Équipe 2">►</button>
+    
+    <!-- MODAL DE SWITCH -->
+    <div id="switchModal" class="switch-modal" style="display:none;">
+        <div class="switch-modal-content">
+            <div class="switch-modal-header">
+                <h3 id="switchModalTitle">🔄 Changer de Héros</h3>
+                <button class="switch-modal-close" onclick="closeSwitchModal()">✕</button>
+            </div>
+            <p class="switch-modal-subtitle">Sélectionnez un héros pour remplacer votre combattant actuel</p>
+            <div id="switchHeroesGrid" class="switch-heroes-grid">
+                <!-- Héros disponibles générés par JS -->
+            </div>
+            <button class="switch-modal-cancel" onclick="closeSwitchModal()">Annuler</button>
+        </div>
+    </div>
     <?php endif; ?>
 </div>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
@@ -607,6 +636,95 @@ try {
     cursor: not-allowed;
 }
 
+/* ===== AMÉLIORATION BOUTONS D'ACTION 5v5 ===== */
+.mode-5v5 .action-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    min-height: 80px;
+}
+
+.mode-5v5 .action-list .action-btn {
+    /* Taille fixe pour éviter le décalage au hover */
+    min-width: 140px;
+    min-height: 70px;
+    max-width: 180px;
+    padding: 10px 15px;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    
+    /* Style */
+    background: linear-gradient(180deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.98) 100%);
+    border: 2px solid #555;
+    border-radius: 8px;
+    color: var(--text-light);
+    
+    /* Transition sans changement de taille */
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    box-sizing: border-box;
+}
+
+.mode-5v5 .action-list .action-btn:hover:not(:disabled) {
+    border-color: var(--gold-accent);
+    box-shadow: 0 0 15px rgba(184, 134, 11, 0.4);
+    background: linear-gradient(180deg, rgba(50, 45, 30, 0.95) 0%, rgba(35, 30, 20, 0.98) 100%);
+    /* PAS de transform pour éviter le décalage */
+}
+
+.mode-5v5 .action-list .action-btn .action-emoji-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.mode-5v5 .action-list .action-btn .action-label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.mode-5v5 .action-list .action-btn .action-pp {
+    font-size: 0.75rem;
+    color: var(--gold-accent);
+    font-weight: normal;
+    opacity: 0.9;
+}
+
+/* Couleurs spécifiques par type d'action */
+.mode-5v5 .action-list .action-btn.attack {
+    border-color: #c44;
+}
+.mode-5v5 .action-list .action-btn.attack:hover:not(:disabled) {
+    border-color: #f66;
+    box-shadow: 0 0 15px rgba(255, 80, 80, 0.4);
+}
+
+.mode-5v5 .action-list .action-btn.defend {
+    border-color: #48c;
+}
+.mode-5v5 .action-list .action-btn.defend:hover:not(:disabled) {
+    border-color: #6af;
+    box-shadow: 0 0 15px rgba(100, 170, 255, 0.4);
+}
+
+.mode-5v5 .action-list .action-btn.spell,
+.mode-5v5 .action-list .action-btn.heal {
+    border-color: #4a4;
+}
+.mode-5v5 .action-list .action-btn.spell:hover:not(:disabled),
+.mode-5v5 .action-list .action-btn.heal:hover:not(:disabled) {
+    border-color: #6c6;
+    box-shadow: 0 0 15px rgba(100, 200, 100, 0.4);
+}
+
 .switch-btn .action-label {
     width: 100%;
     text-align: center;
@@ -644,6 +762,169 @@ try {
 
 .game-container.switch-mode .switch-btn:hover {
     background: linear-gradient(180deg, #d4a10d 0%, var(--gold-accent) 100%) !important;
+}
+
+/* ===== SWITCH MODAL ===== */
+.switch-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.switch-modal-content {
+    background: linear-gradient(145deg, rgba(25, 25, 25, 0.98), rgba(35, 35, 35, 0.98));
+    border: 2px solid var(--gold-accent);
+    border-radius: 12px;
+    padding: 2rem;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}
+
+.switch-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.switch-modal-header h3 {
+    color: var(--gold-accent);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.switch-modal-close {
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.8rem;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0;
+    line-height: 1;
+}
+
+.switch-modal-close:hover {
+    color: #fff;
+}
+
+.switch-modal-subtitle {
+    color: #aaa;
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+}
+
+.switch-modal.forced-switch .switch-modal-header h3 {
+    color: #ff6b6b;
+}
+
+.switch-modal.forced-switch .switch-modal-content {
+    border-color: #ff6b6b;
+}
+
+.switch-heroes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.switch-hero-card {
+    background: rgba(30, 30, 30, 0.9);
+    border: 2px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.switch-hero-card:hover:not(.unavailable) {
+    border-color: var(--gold-accent);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(184, 134, 11, 0.3);
+}
+
+.switch-hero-card.unavailable {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(100%);
+}
+
+.switch-hero-card.active {
+    border-color: #4a90e2;
+    background: rgba(74, 144, 226, 0.15);
+}
+
+.switch-hero-card.active::after {
+    content: "EN COMBAT";
+    display: block;
+    font-size: 0.65rem;
+    color: #4a90e2;
+    margin-top: 0.3rem;
+    font-weight: bold;
+}
+
+.switch-hero-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #555;
+    margin-bottom: 0.5rem;
+}
+
+.switch-hero-name {
+    font-weight: bold;
+    color: #fff;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+}
+
+.switch-hero-hp {
+    font-size: 0.85rem;
+    color: #8f8;
+}
+
+.switch-hero-hp.low {
+    color: #f88;
+}
+
+.switch-hero-hp.dead {
+    color: #888;
+}
+
+.switch-modal-cancel {
+    width: 100%;
+    padding: 0.8rem;
+    background: #444;
+    color: #fff;
+    border: 1px solid #666;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.switch-modal-cancel:hover {
+    background: #555;
+    border-color: var(--gold-accent);
 }
 
 /* Scrollbar styling (WebKit) */
@@ -937,6 +1218,15 @@ function updateCombatState() {
             }
 
             currentGameState = data;
+            
+            // DEBUG: Log actions received
+            console.log('Combat state received:', {
+                turn: data.turn,
+                waiting_for_me: data.waiting_for_me,
+                actions: data.actions,
+                needsForcedSwitch: data.needsForcedSwitch,
+                isOver: data.isOver
+            });
 
             // Check if new turn - play animations
             const hasNewAnimations = data.turn > lastTurnProcessed && data.turnActions && data.turnActions.length > 0;
@@ -967,6 +1257,25 @@ function updateCombatState() {
                 // Update effect indicators
                 updateEffectIndicators(data.me.activeEffects, 'myEffects');
                 updateEffectIndicators(data.opponent.activeEffects, 'oppEffects');
+                
+                // Update hero images if changed (after switch)
+                if (data.me.img) {
+                    const myFighterImg = document.querySelector('#myFighter img');
+                    if (myFighterImg && myFighterImg.src !== data.me.img) {
+                        myFighterImg.src = data.me.img;
+                    }
+                }
+                if (data.opponent.img) {
+                    const oppFighterImg = document.querySelector('#oppFighter img');
+                    if (oppFighterImg && oppFighterImg.src !== data.opponent.img) {
+                        oppFighterImg.src = data.opponent.img;
+                    }
+                }
+                
+                // Update 5v5 team sidebars with current HP data
+                if (IS_5V5 && data.myTeam && data.oppTeam) {
+                    updateTeamSidebarsWithData(data.myTeam, data.oppTeam, data.myActiveIndex, data.oppActiveIndex);
+                }
             }            
             // Logs
             const logBox = document.getElementById('battleLog');
@@ -976,6 +1285,11 @@ function updateCombatState() {
                     div.className = 'log-line';
                     div.innerText = data.logs[i];
                     logBox.appendChild(div);
+                    
+                    // Détecter les switchs dans les logs
+                    if (IS_5V5 && data.logs[i].includes('🔄')) {
+                        updateSwitchedHeroCard(data.logs[i]);
+                    }
                 }
                 lastLogCount = data.logs.length;
                 logBox.scrollTop = logBox.scrollHeight;
@@ -996,6 +1310,9 @@ function updateCombatState() {
             if (data.actions && data.waiting_for_me && !data.isOver) {
                 btnContainer.innerHTML = '';
                 for (const [key, action] of Object.entries(data.actions)) {
+                    // Skip switch action - it has its own button that opens the modal
+                    if (key === 'switch') continue;
+                    
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = `action-btn ${key}${action.canUse ? '' : ' disabled'}`;
@@ -1012,13 +1329,36 @@ function updateCombatState() {
                     button.innerHTML = buttonHTML;
                     btnContainer.appendChild(button);
                 }
+                
+                // Update switch button state if exists
+                const switchBtn = document.getElementById('switchBtn');
+                if (switchBtn && data.actions.switch) {
+                    switchBtn.disabled = !data.actions.switch.canUse;
+                    switchBtn.classList.toggle('disabled', !data.actions.switch.canUse);
+                }
+                
                 setupActionTooltips();
                 startActionTimer();
+            }
+            
+            // Check for forced switch (hero death)
+            if (IS_5V5 && data.needsForcedSwitch) {
+                // Hide action buttons
+                btnContainer.innerHTML = '';
+                btnContainer.style.display = 'none';
+                
+                // Show the switch modal in forced mode
+                showSwitchMenu(true);
+                
+            } else {
+                // Close switch modal if open
+                closeSwitchModal();
             }
             
             if (data.isOver) {
                 clearInterval(pollInterval);
                 stopActionTimer();
+                closeSwitchModal();
                 btnContainer.style.display = 'none';
                 waitMsg.style.display = 'none';
                 gameOverMsg.style.display = 'block';
@@ -1199,7 +1539,8 @@ function createHeroCard(heroData, index, isMyTeam) {
         card.classList.add('dead');
     }
     
-    const hpPercent = Math.max(0, (heroData.pv / heroData.pv) * 100);
+    const maxPv = heroData.max_pv || heroData.pv;
+    const hpPercent = Math.max(0, (heroData.pv / maxPv) * 100);
     
     card.innerHTML = `
         <div class="hero-card-name">${escapeHtml(heroData.name)}</div>
@@ -1216,16 +1557,12 @@ function createHeroCard(heroData, index, isMyTeam) {
             <span>⚡ ${heroData.speed}</span>
         </div>
         <div class="hero-card-hp" style="font-size: 0.85rem; color: #999;">
-            ${heroData.pv} / ${heroData.pv} PV
+            ${Math.round(heroData.pv)} / ${maxPv} PV
         </div>
     `;
     
-    // Ajouter event pour switch (plus tard)
-    card.addEventListener('click', () => {
-        if (!card.classList.contains('dead') && !card.classList.contains('active')) {
-            performSwitch(index);
-        }
-    });
+    // PAS d'event click ici - le switch se fait via le bouton SWITCH et le modal
+    // L'équipe adverse ne doit pas être cliquable
     
     return card;
 }
@@ -1240,78 +1577,210 @@ function escapeHtml(text) {
 }
 
 /**
- * Afficher le menu de switch (sélection du héros à switcher)
+ * Mettre à jour les sidebars avec les données en temps réel du serveur
  */
-function showSwitchMenu() {
+function updateTeamSidebarsWithData(myTeamData, oppTeamData, myActiveIndex, oppActiveIndex) {
     if (!IS_5V5) return;
     
-    // Marquer qu'on est en mode switch
-    const container = document.querySelector('.game-container');
-    if (container) {
-        container.classList.add('switch-mode');
+    // Mettre à jour la sidebar de mon équipe (sidebar 1)
+    updateSidebarWithTeamData('team1HeroesList', myTeamData, myActiveIndex, true);
+    
+    // Mettre à jour la sidebar adverse (sidebar 2)
+    updateSidebarWithTeamData('team2HeroesList', oppTeamData, oppActiveIndex, false);
+    
+    // Mettre à jour les données locales pour le modal de switch
+    if (IS_P1) {
+        // Mise à jour de TEAM_DATA_P1 et P2 avec les nouvelles valeurs
+        myTeamData.forEach((hero, i) => {
+            if (TEAM_DATA_P1[i]) {
+                TEAM_DATA_P1[i].pv = hero.pv;
+                TEAM_DATA_P1[i].max_pv = hero.max_pv;
+                TEAM_DATA_P1[i].isDead = hero.isDead;
+            }
+        });
+        oppTeamData.forEach((hero, i) => {
+            if (TEAM_DATA_P2[i]) {
+                TEAM_DATA_P2[i].pv = hero.pv;
+                TEAM_DATA_P2[i].max_pv = hero.max_pv;
+                TEAM_DATA_P2[i].isDead = hero.isDead;
+            }
+        });
+    } else {
+        myTeamData.forEach((hero, i) => {
+            if (TEAM_DATA_P2[i]) {
+                TEAM_DATA_P2[i].pv = hero.pv;
+                TEAM_DATA_P2[i].max_pv = hero.max_pv;
+                TEAM_DATA_P2[i].isDead = hero.isDead;
+            }
+        });
+        oppTeamData.forEach((hero, i) => {
+            if (TEAM_DATA_P1[i]) {
+                TEAM_DATA_P1[i].pv = hero.pv;
+                TEAM_DATA_P1[i].max_pv = hero.max_pv;
+                TEAM_DATA_P1[i].isDead = hero.isDead;
+            }
+        });
     }
+}
+
+/**
+ * Mettre à jour une sidebar spécifique avec les données d'équipe
+ */
+function updateSidebarWithTeamData(containerId, teamData, activeIndex, isMyTeam) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
     
-    // Ouvrir les drawers si mobile (largeur < 1400px)
-    const isMobileView = window.innerWidth < 1400;
-    let drawersOpened = [];
+    const heroCards = container.querySelectorAll('.hero-card');
     
-    if (isMobileView) {
-        const sidebar1 = document.getElementById('teamSidebar1');
-        const sidebar2 = document.getElementById('teamSidebar2');
+    teamData.forEach((heroData, index) => {
+        const card = heroCards[index];
+        if (!card) return;
         
-        if (sidebar1 && !sidebar1.classList.contains('open')) {
-            sidebar1.classList.add('open');
-            drawersOpened.push(1);
+        // Mettre à jour le statut actif
+        if (index === activeIndex) {
+            card.classList.add('active');
+        } else {
+            card.classList.remove('active');
         }
-        if (sidebar2 && !sidebar2.classList.contains('open')) {
-            sidebar2.classList.add('open');
-            drawersOpened.push(2);
-        }
-    }
-    
-    // Ajouter le marqueur des drawers automatiquement ouverts
-    container.dataset.switchDrawersOpened = JSON.stringify(drawersOpened);
-    
-    // Déterminer l'équipe du joueur
-    const myTeamData = IS_P1 ? TEAM_DATA_P1 : TEAM_DATA_P2;
-    
-    // Mettre les héros vivants en surbrillance et les rendre cliquables
-    // Les héros cliquables sont dans la première sidebar (équipe du joueur)
-    const heroCards = document.querySelectorAll('#teamSidebar1 .hero-card');
-    heroCards.forEach((card, index) => {
-        const heroData = myTeamData[index];
         
-        if (heroData && !heroData.isDead && !card.classList.contains('active')) {
-            // C'est un héros vivant et non actif de notre équipe
-            card.classList.add('selectable');
-            card.style.cursor = 'pointer';
-            
-            // Event listener pour cliquer et switcher (une seule fois)
-            card.addEventListener('click', function switchHeroHandler() {
-                performSwitch(index);
-            }, { once: true });
+        // Mettre à jour le statut mort
+        if (heroData.isDead || heroData.pv <= 0) {
+            card.classList.add('dead');
+        } else {
+            card.classList.remove('dead');
+        }
+        
+        // Mettre à jour la barre de HP
+        const maxPv = heroData.max_pv || heroData.pv;
+        const hpPercent = Math.max(0, Math.min(100, (heroData.pv / maxPv) * 100));
+        
+        const hpBar = card.querySelector('.hero-card-hp-bar .fill');
+        if (hpBar) {
+            hpBar.style.width = hpPercent + '%';
+            // Couleur selon le % de HP
+            if (hpPercent <= 25) {
+                hpBar.style.background = '#d32f2f';
+            } else if (hpPercent <= 50) {
+                hpBar.style.background = '#ff9800';
+            } else {
+                hpBar.style.background = 'var(--gold-accent)';
+            }
+        }
+        
+        // Mettre à jour le texte HP
+        const hpText = card.querySelectorAll('.hero-card-hp');
+        if (hpText.length >= 2) {
+            hpText[1].innerHTML = `${Math.round(heroData.pv)} / ${maxPv} PV`;
+        }
+        
+        // Mettre à jour le %
+        const hpPercentEl = card.querySelector('.hero-card-hp span');
+        if (hpPercentEl) {
+            hpPercentEl.textContent = Math.round(hpPercent) + '%';
         }
     });
 }
 
 /**
+ * Afficher le menu de switch (sélection du héros à switcher)
+ */
+function showSwitchMenu(isForcedSwitch = false) {
+    if (!IS_5V5) return;
+    
+    const modal = document.getElementById('switchModal');
+    const heroesGrid = document.getElementById('switchHeroesGrid');
+    const modalTitle = document.getElementById('switchModalTitle');
+    
+    if (!modal || !heroesGrid) return;
+    
+    // Configurer le titre selon le type de switch
+    if (isForcedSwitch) {
+        modal.classList.add('forced-switch');
+        modalTitle.innerHTML = '💀 HÉROS MORT - Choisissez un remplaçant!';
+        modal.querySelector('.switch-modal-cancel').style.display = 'none';
+    } else {
+        modal.classList.remove('forced-switch');
+        modalTitle.innerHTML = '🔄 Changer de Héros';
+        modal.querySelector('.switch-modal-cancel').style.display = 'block';
+    }
+    
+    // Obtenir les données de mon équipe
+    const myTeamData = IS_P1 ? TEAM_DATA_P1 : TEAM_DATA_P2;
+    
+    // Générer les cartes de héros
+    heroesGrid.innerHTML = '';
+    
+    myTeamData.forEach((heroData, index) => {
+        const card = document.createElement('div');
+        card.className = 'switch-hero-card';
+        
+        // Déterminer le statut du héros
+        const isDead = heroData.isDead || heroData.pv <= 0;
+        const isActive = index === (currentGameState?.me?.activeIndex ?? 0);
+        
+        if (isDead) {
+            card.classList.add('unavailable');
+        } else if (isActive) {
+            card.classList.add('active');
+        }
+        
+        // Calculer le % de HP
+        const hpPercent = Math.max(0, Math.round((heroData.pv / (heroData.max_pv || heroData.pv)) * 100));
+        let hpClass = '';
+        if (isDead) hpClass = 'dead';
+        else if (hpPercent < 30) hpClass = 'low';
+        
+        card.innerHTML = `
+            <img src="${heroData.images?.p1 || 'media/heroes/default.png'}" alt="${heroData.name}">
+            <div class="switch-hero-name">${escapeHtml(heroData.name)}</div>
+            <div class="switch-hero-hp ${hpClass}">${isDead ? '💀 MORT' : hpPercent + '% PV'}</div>
+        `;
+        
+        // Event click pour switcher
+        if (!isDead && !isActive) {
+            card.addEventListener('click', () => {
+                closeSwitchModal();
+                performSwitch(index, isForcedSwitch);
+            });
+        }
+        
+        heroesGrid.appendChild(card);
+    });
+    
+    // Afficher le modal
+    modal.style.display = 'flex';
+}
+
+/**
+ * Fermer le modal de switch
+ */
+function closeSwitchModal() {
+    const modal = document.getElementById('switchModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.remove('forced-switch');
+    }
+}
+
+/**
  * Effectuer un switch vers un autre héros
  */
-function performSwitch(heroIndex) {
+function performSwitch(heroIndex, isForcedSwitch = false) {
     if (!IS_5V5) return;
     
     // Envoyer l'action de switch au serveur
     stopActionTimer();
     const btnContainer = document.getElementById('actionButtons');
     const waitMsg = document.getElementById('waitingMessage');
-    const container = document.querySelector('.game-container');
     
     btnContainer.style.display = 'none';
     waitMsg.style.display = 'block';
-    waitMsg.innerText = 'Changement de héros...';
     
-    // Récupérer la liste des drawers qui ont été auto-ouverts
-    const switchDrawersOpened = JSON.parse(container.dataset.switchDrawersOpened || '[]');
+    if (isForcedSwitch) {
+        waitMsg.innerText = 'Remplacement du héros mort...';
+    } else {
+        waitMsg.innerText = 'Changement de héros...';
+    }
 
     // Mode test UI - switch local sans API
     if (IS_TEST_UI) {
@@ -1321,19 +1790,27 @@ function performSwitch(heroIndex) {
             setActiveHeroCard(heroIndex);
             updateMyHeroDisplay(heroData);
         }
-        cleanupSwitchMode();
-        switchDrawersOpened.forEach(teamNum => closeTeamDrawer(teamNum));
         waitMsg.style.display = 'none';
         btnContainer.style.display = 'flex';
         return;
     }
     
-    fetch('api.php?action=submit_move', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'match_id=' + MATCH_ID + '&move=switch:' + heroIndex
-    })
+    // Pour un switch obligatoire, utiliser l'endpoint submit_forced_switch
+    const fetchPromise = isForcedSwitch 
+        ? fetch('api.php?action=submit_forced_switch', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'match_id=' + MATCH_ID + '&target_index=' + heroIndex
+        })
+        : fetch('api.php?action=submit_move', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'match_id=' + MATCH_ID + '&move=switch:' + heroIndex
+        });
+    
+    fetchPromise
         .then(r => r.text())
         .then(text => {
             try {
@@ -1347,7 +1824,6 @@ function performSwitch(heroIndex) {
                 showErrorMessage('Erreur: réponse vide du serveur');
                 btnContainer.style.display = 'flex';
                 waitMsg.style.display = 'none';
-                cleanupSwitchMode();
                 return;
             }
             
@@ -1358,22 +1834,42 @@ function performSwitch(heroIndex) {
             } else if (data.status === 'ok') {
                 waitMsg.innerText = "En attente de l'adversaire...";
             }
-            
-            // Nettoyage du mode switch
-            cleanupSwitchMode();
-            
-            // Fermer les drawers qui ont été auto-ouverts
-            switchDrawersOpened.forEach(teamNum => {
-                closeTeamDrawer(teamNum);
-            });
         })
         .catch(err => {
             console.error('Switch error:', err);
             showErrorMessage('Erreur: ' + err.message);
             btnContainer.style.display = 'flex';
             waitMsg.style.display = 'none';
-            cleanupSwitchMode();
         });
+}
+
+/**
+ * Mettre à jour la sidebar après un switch détecté dans les logs
+ * Extrait le nom du héros switché et marque-le comme actif
+ */
+function updateSwitchedHeroCard(logLine) {
+    // Format: "🔄 Nom du Héros entre en combat!"
+    // On récupère le texte entre 🔄 et "entre en combat!"
+    const match = logLine.match(/🔄\s+(.+?)\s+entre en combat/);
+    if (!match) return;
+    
+    const switchedHeroName = match[1];
+    
+    // Chercher le héros dans la sidebar et le marquer comme actif
+    // D'abord, mettre à jour la sidebar gauche (mon équipe)
+    const heroCards = document.querySelectorAll('#teamSidebar1 .hero-card');
+    let foundIndex = -1;
+    
+    heroCards.forEach((card, index) => {
+        const nameEl = card.querySelector('.hero-card-name');
+        if (nameEl && nameEl.innerText === switchedHeroName) {
+            foundIndex = index;
+        }
+    });
+    
+    if (foundIndex !== -1) {
+        setActiveHeroCard(foundIndex);
+    }
 }
 
 /**
@@ -1407,24 +1903,6 @@ function setActiveHeroCard(heroIndex) {
         } else {
             card.classList.remove('active');
         }
-    });
-}
-
-/**
- * Nettoyer le mode switch (retirer surbrillance et classes)
- */
-function cleanupSwitchMode() {
-    const container = document.querySelector('.game-container');
-    if (container) {
-        container.classList.remove('switch-mode');
-        container.dataset.switchDrawersOpened = '[]';
-    }
-    
-    // Retirer la surbrillance des héros
-    const heroCards = document.querySelectorAll('.hero-card.selectable');
-    heroCards.forEach(card => {
-        card.classList.remove('selectable');
-        card.style.cursor = '';
     });
 }
 

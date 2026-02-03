@@ -142,11 +142,16 @@ file_put_contents($matchFile, json_encode($matchData, JSON_PRETTY_PRINT));
 
 // Initialiser le système de combat réel
 require_once __DIR__ . '/classes/MultiCombat.php';
+require_once __DIR__ . '/classes/TeamCombat.php';
 $stateFile = $matchesDir . $matchId . '.state';
 
 try {
-    // MultiCombat::create va maintenant détecter qu'il y a des 'heroes' et créer un TeamCombat
-    $combat = MultiCombat::create($matchData['player1'], $matchData['player2']);
+    // Créer directement un TeamCombat (pas MultiCombat qui ne sait pas faire le 5v5)
+    $combat = TeamCombat::create($matchData['player1'], $matchData['player2']);
+    
+    if (!$combat) {
+        die("Erreur d'initialisation du combat: Impossible de créer le match 5v5");
+    }
     
     if (!$combat->save($stateFile)) {
         die("Erreur interne: Impossible de sauvegarder l'état initial du combat.");
