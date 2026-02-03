@@ -1,0 +1,669 @@
+/* ==============================================
+   ARÈNE DE COMBAT - UI UNIFIÉE
+   Responsive, accessible, moderne
+   ============================================== */
+
+/* --- CONTENEUR PRINCIPAL --- */
+.arena {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- EN-TÊTE DE BATAILLE --- */
+.battle-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, rgba(20, 10, 10, 0.9), rgba(40, 20, 15, 0.8));
+    border: 1px solid var(--stone-gray);
+    border-radius: 10px;
+}
+
+.mode-badge {
+    padding: 6px 14px;
+    background: var(--blood-red);
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.turn-indicator {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: var(--gold-accent);
+    text-shadow: 0 0 10px rgba(184, 134, 11, 0.4);
+    flex: 1;
+}
+
+.header-timer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.header-timer .timer-icon {
+    font-size: 1rem;
+}
+
+.header-timer .timer-seconds {
+    color: var(--gold-accent);
+    min-width: 24px;
+    text-align: center;
+}
+
+.header-timer.timer-critical {
+    background: rgba(231, 76, 60, 0.3);
+}
+
+.header-timer.timer-critical .timer-seconds {
+    color: #e74c3c;
+    animation: timer-blink 0.5s ease-in-out infinite;
+}
+
+@keyframes timer-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* --- RANGÉE DE STATS --- */
+.stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+    .stats-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+.fighter-stats {
+    background: linear-gradient(135deg, rgba(15, 10, 10, 0.95), rgba(30, 15, 15, 0.9));
+    border: 2px solid var(--stone-gray);
+    border-radius: 12px;
+    padding: 16px 20px;
+    transition: border-color 0.3s ease;
+}
+
+.fighter-stats.hero-stats {
+    border-left: 4px solid var(--accent-red);
+}
+
+.fighter-stats.enemy-stats {
+    border-right: 4px solid #4a1010;
+}
+
+.fighter-identity {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.fighter-name {
+    font-size: 1.2rem;
+    color: var(--text-light);
+}
+
+.type-badge {
+    padding: 4px 10px;
+    background: var(--blood-red);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-light);
+}
+
+/* --- BARRE DE VIE --- */
+.stat-bar {
+    height: 14px;
+    background: linear-gradient(to right, #1a0a0a, #2a1515);
+    border: 1px solid var(--stone-gray);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    position: relative;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+.pv-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #2ecc71, #27ae60);
+    border-radius: 8px;
+    transition: width 0.5s ease-out;
+    box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.pv-bar.enemy-pv {
+    background: linear-gradient(90deg, #c0392b, #e74c3c);
+    box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* --- STATS DÉTAILLÉES --- */
+.stats-detail {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.9rem;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-dim);
+}
+
+.stat-icon {
+    font-size: 1rem;
+}
+
+/* --- ZONE DES COMBATTANTS --- */
+.fighters-area {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 30px;
+    padding: 30px 20px;
+    min-height: 280px;
+    background: radial-gradient(ellipse at center, rgba(139, 0, 0, 0.1) 0%, transparent 70%);
+    border-radius: 16px;
+    position: relative;
+}
+
+@media (max-width: 600px) {
+    .fighters-area {
+        gap: 15px;
+        padding: 20px 10px;
+        min-height: 200px;
+    }
+}
+
+.fighter {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1;
+    max-width: 250px;
+}
+
+.fighter-img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.5));
+    transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+@media (max-width: 600px) {
+    .fighter-img {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+.fighter.hero .fighter-img {
+    transform: scaleX(1);
+}
+
+.fighter.enemy .fighter-img {
+    transform: scaleX(-1);
+}
+
+.fighter-dead .fighter-img {
+    filter: grayscale(100%) brightness(0.5);
+    opacity: 0.5;
+    transform: rotate(-10deg) scale(0.9);
+}
+
+/* Hit animation */
+.fighter-hit .fighter-img {
+    animation: hit-shake 0.3s ease-out;
+}
+
+@keyframes hit-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+}
+
+.vs-indicator {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: var(--accent-red);
+    text-shadow: 0 0 20px rgba(196, 30, 58, 0.6);
+    animation: vs-pulse 2s ease-in-out infinite;
+}
+
+@keyframes vs-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* --- CONTENEUR D'EMOJIS --- */
+.emoji-container {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    z-index: 10;
+}
+
+.action-emoji {
+    font-size: 2.5rem;
+    animation: emoji-pop 1.5s ease-out forwards;
+}
+
+@keyframes emoji-pop {
+    0% { transform: scale(0) translateY(20px); opacity: 0; }
+    30% { transform: scale(1.3) translateY(-10px); opacity: 1; }
+    100% { transform: scale(1) translateY(-30px); opacity: 0; }
+}
+
+.action-name-display {
+    font-size: 0.9rem;
+    font-weight: bold;
+    padding: 4px 10px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 4px;
+    color: var(--gold-accent);
+    white-space: nowrap;
+    animation: name-fade 1.5s ease-out forwards;
+}
+
+@keyframes name-fade {
+    0% { opacity: 0; transform: translateY(10px); }
+    20% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* --- EFFETS ACTIFS --- */
+.effects-container {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 150px;
+}
+
+.effect-indicator {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid var(--stone-gray);
+    border-radius: 6px;
+    font-size: 1.1rem;
+    cursor: help;
+}
+
+.effect-duration {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+/* --- LOG DE COMBAT --- */
+.battle-log {
+    background: linear-gradient(135deg, rgba(10, 5, 5, 0.95), rgba(20, 10, 10, 0.9));
+    border: 1px solid var(--stone-gray);
+    border-radius: 10px;
+    padding: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.log-line {
+    padding: 4px 8px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+}
+
+.log-line.player-action {
+    background: rgba(46, 204, 113, 0.1);
+    border-left: 3px solid #2ecc71;
+}
+
+.log-line.enemy-action {
+    background: rgba(231, 76, 60, 0.1);
+    border-left: 3px solid #e74c3c;
+}
+
+.log-line.victory {
+    background: rgba(241, 196, 15, 0.2);
+    color: #f1c40f;
+    font-weight: bold;
+}
+
+.log-line.defeat {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.log-line.turn-separator {
+    color: var(--text-dim);
+    text-align: center;
+    font-style: italic;
+}
+
+/* --- PANNEAU DE CONTRÔLES --- */
+.controls-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(20, 10, 10, 0.95), rgba(35, 18, 15, 0.9));
+    border: 2px solid var(--accent-red);
+    border-radius: 12px;
+}
+
+/* --- GRILLE D'ACTIONS --- */
+.actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+@media (min-width: 1200px) {
+    .actions-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+    .actions-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- BOUTONS D'ACTION --- */
+.action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 12px;
+    background: linear-gradient(135deg, rgba(30, 15, 15, 0.9), rgba(50, 25, 20, 0.8));
+    border: 2px solid var(--stone-gray);
+    border-radius: 10px;
+    color: var(--text-light);
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-height: 80px;
+}
+
+.action-btn:hover:not(:disabled) {
+    border-color: var(--accent-red);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(196, 30, 58, 0.3);
+}
+
+.action-btn:active:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.action-btn:disabled,
+.action-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(50%);
+}
+
+.action-btn .action-emoji {
+    font-size: 1.8rem;
+    animation: none;
+    opacity: 1;
+    transform: none;
+}
+
+.action-btn .action-label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+.action-btn .action-pp {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+}
+
+/* Boutons spéciaux */
+.action-btn.abandon {
+    background: linear-gradient(135deg, #2d1a1a, #3d2020);
+    border-color: #5a2020;
+    flex-direction: row;
+    min-height: auto;
+    padding: 12px 24px;
+}
+
+.action-btn.abandon:hover:not(:disabled) {
+    border-color: #8b0000;
+    background: linear-gradient(135deg, #3d2020, #4d2525);
+}
+
+.action-btn.new-game {
+    background: linear-gradient(135deg, var(--blood-red), var(--primary-red));
+    border-color: var(--accent-red);
+    flex-direction: row;
+    min-height: auto;
+    padding: 14px 28px;
+    font-size: 1rem;
+    text-decoration: none;
+}
+
+.action-btn.new-game:hover {
+    background: linear-gradient(135deg, var(--accent-red), var(--blood-red));
+    box-shadow: 0 0 20px rgba(196, 30, 58, 0.5);
+}
+
+/* --- MESSAGE D'ATTENTE --- */
+.waiting-message {
+    text-align: center;
+    padding: 20px;
+    background: rgba(184, 134, 11, 0.1);
+    border: 1px dashed var(--gold-accent);
+    border-radius: 8px;
+    color: var(--gold-accent);
+    font-size: 1.1rem;
+    animation: pulse-waiting 2s ease-in-out infinite;
+}
+
+@keyframes pulse-waiting {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* --- PANNEAU GAME OVER --- */
+.game-over-panel {
+    text-align: center;
+    padding: 30px;
+    background: linear-gradient(135deg, rgba(20, 10, 10, 0.95), rgba(40, 20, 15, 0.9));
+    border: 2px solid var(--gold-accent);
+    border-radius: 12px;
+}
+
+.victory-text {
+    color: #f1c40f;
+    font-size: 2rem;
+    text-shadow: 0 0 20px rgba(241, 196, 15, 0.5);
+    margin-bottom: 20px;
+}
+
+.defeat-text {
+    color: #e74c3c;
+    font-size: 2rem;
+    text-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
+    margin-bottom: 20px;
+}
+
+/* --- TIMER MULTIPLAYER --- */
+.timer-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+}
+
+.timer-circle {
+    position: relative;
+    width: 60px;
+    height: 60px;
+}
+
+.timer-svg {
+    transform: rotate(-90deg);
+    width: 100%;
+    height: 100%;
+}
+
+.timer-circle-bg {
+    fill: none;
+    stroke: var(--stone-gray);
+    stroke-width: 4;
+}
+
+.timer-circle-progress {
+    fill: none;
+    stroke: var(--accent-red);
+    stroke-width: 4;
+    stroke-dasharray: 200;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+}
+
+.timer-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-light);
+}
+
+.timer-critical .timer-circle-progress {
+    stroke: #e74c3c;
+    animation: timer-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes timer-pulse {
+    0%, 100% { stroke-opacity: 1; }
+    50% { stroke-opacity: 0.5; }
+}
+
+/* --- DESCRIPTION D'ACTION --- */
+.action-description-panel {
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.4);
+    border-left: 3px solid var(--gold-accent);
+    border-radius: 0 8px 8px 0;
+    min-height: 80px;
+}
+
+.action-description-panel p {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* --- ABANDON FORM --- */
+.abandon-form {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+/* --- SCROLLBAR PERSONNALISÉE --- */
+.battle-log::-webkit-scrollbar {
+    width: 8px;
+}
+
+.battle-log::-webkit-scrollbar-track {
+    background: var(--darker-bg);
+    border-radius: 4px;
+}
+
+.battle-log::-webkit-scrollbar-thumb {
+    background: var(--stone-gray);
+    border-radius: 4px;
+}
+
+.battle-log::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-red);
+}
+
+/* --- ACCESSIBILITÉ --- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* Focus visible pour clavier */
+.action-btn:focus-visible {
+    outline: 3px solid var(--gold-accent);
+    outline-offset: 2px;
+}
+
+/* Contraste amélioré */
+@media (prefers-contrast: high) {
+    .action-btn {
+        border-width: 3px;
+    }
+    
+    .fighter-stats {
+        border-width: 3px;
+    }
+}

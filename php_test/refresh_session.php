@@ -3,7 +3,7 @@
  * Rafraîchir la session avec les données actuelles de la BDD
  */
 
-require_once __DIR__ . '/classes/Database.php';
+require_once __DIR__ . '/includes/autoload.php';
 
 session_start();
 

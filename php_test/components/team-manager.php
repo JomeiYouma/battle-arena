@@ -7,6 +7,8 @@
  * - $userId
  * - $teamManager
  * - $userTeams
+ * 
+ * Utilise asset_url() de l'autoloader pour les chemins d'images
  */
 ?>
 
@@ -87,7 +89,10 @@
                         <div class="hero-slot <?php echo $member ? 'filled' : 'empty'; ?>">
                             <?php if ($member): ?>
                                 <div class="hero-slot-content">
-                                    <img src="<?php echo htmlspecialchars($member['image_p1'] ?? 'media/heroes/default.png'); ?>" 
+                                    <?php 
+                                        $heroImage = $member['image_p1'] ?? 'media/heroes/default.png';
+                                    ?>
+                                    <img src="<?php echo htmlspecialchars(asset_url($heroImage)); ?>" 
                                          alt="<?php echo htmlspecialchars($member['name']); ?>"
                                          title="<?php echo htmlspecialchars($member['name']); ?>">
                                     <div class="hero-name"><?php echo htmlspecialchars($member['name']); ?></div>
@@ -96,7 +101,7 @@
                                     ?>
                                         <div class="blessing-badge" title="<?php echo htmlspecialchars($member['blessing_id']); ?>">
                                             <?php if ($blessingImg): ?>
-                                                <img src="media/blessings/<?php echo $blessingImg; ?>" 
+                                                <img src="<?php echo asset_url('media/blessings/' . $blessingImg); ?>" 
                                                      alt="<?php echo htmlspecialchars($member['blessing_id']); ?>">
                                             <?php endif; ?>
                                         </div>

@@ -3,12 +3,7 @@
  * Test du système de forced switch (remplacement obligatoire après mort)
  */
 
-require_once __DIR__ . '/classes/Database.php';
-require_once __DIR__ . '/classes/Personnage.php';
-require_once __DIR__ . '/classes/heroes/Guerrier.php';
-require_once __DIR__ . '/classes/Combat.php';
-require_once __DIR__ . '/classes/MultiCombat.php';
-require_once __DIR__ . '/classes/TeamCombat.php';
+require_once __DIR__ . '/includes/autoload.php';
 
 // Créer une équipe de test
 $team1 = [];

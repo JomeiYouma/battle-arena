@@ -7,34 +7,8 @@
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// Autoloader
-function chargerClasse($classe) {
-    if (file_exists(__DIR__ . '/classes/' . $classe . '.php')) {
-        require_once __DIR__ . '/classes/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/classes/Models/' . $classe . '.php')) {
-        require_once __DIR__ . '/classes/Models/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/classes/Services/' . $classe . '.php')) {
-        require_once __DIR__ . '/classes/Services/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
-        require_once __DIR__ . '/classes/effects/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/classes/heroes/' . $classe . '.php')) {
-        require_once __DIR__ . '/classes/heroes/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/classes/blessings/' . $classe . '.php')) {
-        require_once __DIR__ . '/classes/blessings/' . $classe . '.php';
-        return;
-    }
-}
-spl_autoload_register('chargerClasse');
+// Autoloader centralisé
+require_once __DIR__ . '/includes/autoload.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -55,8 +29,6 @@ try {
             }
             
             // Récupérer stats du héros depuis la BDD
-            require_once __DIR__ . '/classes/Services/HeroManager.php';
-            require_once __DIR__ . '/classes/Models/Hero.php';
             $heroManager = new HeroManager();
             $heroModel = null;
             $allHeroes = $heroManager->getAll();
@@ -127,7 +99,7 @@ try {
             $_SESSION['queue5v5Status'] = 'waiting';
             
             // Ajouter à un fichier de queue
-            $queueFile = __DIR__ . '/data/queue_5v5.json';
+            $queueFile = DATA_PATH . '/queue_5v5.json';
             $queue5v5 = file_exists($queueFile) ? json_decode(file_get_contents($queueFile), true) : [];
             
             $queue5v5[$sessionId] = [
@@ -167,7 +139,7 @@ try {
             }
             
             // Vérifier s'il y a d'autres joueurs dans la queue
-            $queueFile = __DIR__ . '/data/queue_5v5.json';
+            $queueFile = DATA_PATH . '/queue_5v5.json';
             if (file_exists($queueFile)) {
                 $queue5v5 = json_decode(file_get_contents($queueFile), true);
                 
@@ -259,7 +231,7 @@ try {
                         ];
                         
                         // Sauvegarder le match
-                        $matchesDir = __DIR__ . '/data/matches/';
+                        $matchesDir = DATA_PATH . '/matches/';
                         if (!is_dir($matchesDir)) {
                             mkdir($matchesDir, 0777, true);
                         }
@@ -269,7 +241,6 @@ try {
                         error_log("5v5 Match file created: $matchFile (saved: $saved bytes)");
                         
                         // Initialiser le combat
-                        require_once __DIR__ . '/classes/TeamCombat.php';
                         $stateFile = $matchesDir . $matchId . '.state';
                         try {
                             $combat = TeamCombat::create($matchData['player1'], $matchData['player2']);
@@ -317,14 +288,13 @@ try {
             }
             
             // Créer une équipe bot aléatoire
-            require_once __DIR__ . '/classes/Database.php';
             $db = Database::getInstance();
             $allHeroes = $db->getAllHeroes();
             shuffle($allHeroes);
             $botTeam = array_slice($allHeroes, 0, 5);
             
             // Récupérer les données du joueur depuis la queue ou la session
-            $queueFile = __DIR__ . '/data/queue_5v5.json';
+            $queueFile = DATA_PATH . '/queue_5v5.json';
             $queue5v5 = file_exists($queueFile) ? json_decode(file_get_contents($queueFile), true) : [];
             $currentPlayerData = $queue5v5[$sessionId] ?? null;
             $currentDisplayName = $currentPlayerData['display_name'] ?? $_SESSION['queue5v5DisplayName'] ?? 'Joueur';
@@ -365,7 +335,7 @@ try {
                 'last_update' => $now
             ];
             
-            $matchesDir = __DIR__ . '/data/matches/';
+            $matchesDir = DATA_PATH . '/matches/';
             if (!is_dir($matchesDir)) {
                 mkdir($matchesDir, 0777, true);
             }
@@ -373,7 +343,6 @@ try {
             $matchFile = $matchesDir . $matchId . '.json';
             file_put_contents($matchFile, json_encode($matchData, JSON_PRETTY_PRINT));
             
-            require_once __DIR__ . '/classes/TeamCombat.php';
             $stateFile = $matchesDir . $matchId . '.state';
             $combat = TeamCombat::create($matchData['player1'], $matchData['player2']);
             if ($combat) {
@@ -388,7 +357,7 @@ try {
         
         // ===== LEAVE QUEUE 5v5 =====
         case 'leave_queue_5v5':
-            $queueFile = __DIR__ . '/data/queue_5v5.json';
+            $queueFile = DATA_PATH . '/queue_5v5.json';
             if (file_exists($queueFile)) {
                 $queue5v5 = json_decode(file_get_contents($queueFile), true);
                 unset($queue5v5[$sessionId]);
@@ -409,7 +378,7 @@ try {
                 throw new Exception("Match ID manquant");
             }
             
-            $matchFile = __DIR__ . '/data/matches/' . $matchId . '.json';
+            $matchFile = DATA_PATH . '/matches/' . $matchId . '.json';
             if (!file_exists($matchFile)) {
                 throw new Exception("Match non trouvé: $matchFile");
             }
@@ -460,7 +429,7 @@ try {
             fclose($fp);
             
             // Charger état du combat
-            $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+            $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
             $multiCombat = MultiCombat::load($stateFile);
             
             if (!$multiCombat) {
@@ -468,7 +437,6 @@ try {
                 try {
                     // Vérifier si c'est un match 5v5
                     if (($metaData['mode'] ?? '') === '5v5') {
-                        require_once __DIR__ . '/classes/TeamCombat.php';
                         $multiCombat = TeamCombat::create($metaData['player1'], $metaData['player2']);
                     } else {
                         $multiCombat = MultiCombat::create($metaData['player1'], $metaData['player2']);
@@ -538,7 +506,7 @@ try {
             
             if (!$matchId || !$move) throw new Exception("Données manquantes");
             
-            $matchFile = __DIR__ . '/data/matches/' . $matchId . '.json';
+            $matchFile = DATA_PATH . '/matches/' . $matchId . '.json';
             if (!file_exists($matchFile)) {
                 throw new Exception("Match non trouvé");
             }
@@ -587,7 +555,7 @@ try {
             
             if ($bothPlayed) {
                 // Résoudre le tour
-                $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+                $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
                 $multiCombat = MultiCombat::load($stateFile);
                 
                 if (!$multiCombat) {
@@ -710,7 +678,7 @@ try {
                 throw new Exception("Données manquantes");
             }
             
-            $matchFile = __DIR__ . '/data/matches/' . $matchId . '.json';
+            $matchFile = DATA_PATH . '/matches/' . $matchId . '.json';
             if (!file_exists($matchFile)) {
                 throw new Exception("Match non trouvé");
             }
@@ -741,7 +709,7 @@ try {
             $playerNum = $isP1 ? 1 : 2;
             
             // Charger le combat
-            $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+            $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
             $multiCombat = MultiCombat::load($stateFile);
             
             if (!$multiCombat || !($multiCombat instanceof TeamCombat)) {
@@ -794,7 +762,7 @@ function generateBotMove($metaData, $botRole = 'p2') {
     // Mode 5v5 - charger le combat pour obtenir les vraies actions du héros actif
     if ($metaData['mode'] === '5v5') {
         $matchId = $metaData['match_id'] ?? null;
-        $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+        $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
         
         if ($matchId && file_exists($stateFile)) {
             $combat = MultiCombat::load($stateFile);
@@ -837,7 +805,7 @@ function generateBotMove($metaData, $botRole = 'p2') {
     
     // Mode 1v1 classique - charger les vraies actions aussi
     $matchId = $metaData['match_id'] ?? null;
-    $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+    $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
     
     if ($matchId && file_exists($stateFile)) {
         $combat = MultiCombat::load($stateFile);

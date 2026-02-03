@@ -4,26 +4,8 @@
  * Chargé via AJAX
  */
 
-// Autoloader
-function chargerClasse($classe) {
-    if (file_exists(__DIR__ . '/../classes/' . $classe . '.php')) {
-        require __DIR__ . '/../classes/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/../classes/heroes/' . $classe . '.php')) {
-        require __DIR__ . '/../classes/heroes/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/../classes/blessings/' . $classe . '.php')) {
-        require __DIR__ . '/../classes/blessings/' . $classe . '.php';
-        return;
-    }
-    if (file_exists(__DIR__ . '/../classes/Services/' . $classe . '.php')) {
-        require __DIR__ . '/../classes/Services/' . $classe . '.php';
-        return;
-    }
-}
-spl_autoload_register('chargerClasse');
+// Autoloader centralisé
+require_once __DIR__ . '/../includes/autoload.php';
 
 $teamId = (int) ($_GET['team_id'] ?? 0);
 $position = (int) ($_GET['position'] ?? 0);

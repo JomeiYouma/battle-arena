@@ -6,9 +6,7 @@
  * Ou via navigateur: http://localhost/.../scripts/migrate_heroes.php
  */
 
-require_once __DIR__ . '/../classes/Services/Database.php';
-require_once __DIR__ . '/../classes/Services/HeroManager.php';
-require_once __DIR__ . '/../classes/Models/Hero.php';
+require_once __DIR__ . '/../includes/autoload.php';
 
 echo "=== MIGRATION DES HÉROS JSON → BDD ===\n\n";
 

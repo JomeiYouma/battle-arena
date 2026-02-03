@@ -7,10 +7,16 @@
  */
 
 $showBackLink = $showBackLink ?? true;
+
+// Calculer le chemin relatif vers index.php en utilisant getBasePath()
+if (!defined('BASE_PATH')) {
+    require_once __DIR__ . '/autoload.php';
+}
+$indexPath = getBasePath() . 'index.php';
 ?>
 
 <?php if ($showBackLink): ?>
-<a href="index.php" class="back-link">← Retour au menu</a>
+<a href="<?php echo $indexPath; ?>" class="back-link">← Retour au menu</a>
 <?php endif; ?>
 
 </body>

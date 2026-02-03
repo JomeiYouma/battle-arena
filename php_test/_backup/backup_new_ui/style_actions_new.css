@@ -1,0 +1,160 @@
+/* ==============================================
+   UI DÉTAILLÉE DES CAPACITÉS - NOUVELLE VERSION
+   Format liste verticale
+   ============================================== */
+
+/* --- PANEL CONTENEUR --- */
+.actions-panel-detailed {
+    background: linear-gradient(135deg, rgba(20, 10, 10, 0.95) 0%, rgba(40, 20, 10, 0.9) 100%);
+    border: 1px solid var(--stone-gray);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.actions-title {
+    color: var(--gold-accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 25px;
+    font-size: 1.4rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(184, 134, 11, 0.3);
+    font-weight: bold;
+}
+
+/* --- LISTE VERTICALE --- */
+.actions-grid-detailed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+/* --- BOUTON CAPACITÉ --- */
+.action-btn-detailed {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(30, 15, 15, 0.9) 0%, rgba(50, 25, 20, 0.8) 100%);
+    border: 2px solid var(--stone-gray);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    font-family: inherit;
+}
+
+.action-btn-detailed:hover:not(:disabled) {
+    border-color: var(--accent-red);
+    transform: translateX(4px);
+    box-shadow: 0 4px 15px rgba(196, 30, 58, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(45, 20, 15, 0.95) 0%, rgba(70, 35, 25, 0.9) 100%);
+}
+
+.action-btn-detailed:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+}
+
+/* Style standard uniforme */
+.action-btn-detailed {
+    --action-color: var(--stone-gray);
+}
+
+/* --- CONTENU HORIZONTAL --- */
+.action-detailed-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    color: var(--text-light);
+}
+
+.action-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 200px;
+    flex-shrink: 0;
+}
+
+.action-emoji-large {
+    font-size: 1.8rem;
+    min-width: 40px;
+    text-align: center;
+}
+
+.action-label-large {
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gold-accent);
+    white-space: nowrap;
+}
+
+.action-pp-badge {
+    background: var(--stone-gray);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-left: auto;
+}
+
+.action-description-detailed {
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-dim);
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    .actions-panel-detailed {
+        padding: 15px;
+    }
+
+    .action-btn-detailed {
+        padding: 12px 15px;
+    }
+
+    .action-detailed-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .action-header {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .action-emoji-large {
+        font-size: 1.5rem;
+        min-width: 30px;
+    }
+
+    .action-label-large {
+        font-size: 1rem;
+    }
+
+    .action-description-detailed {
+        font-size: 0.85rem;
+    }
+
+    .action-pp-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+}

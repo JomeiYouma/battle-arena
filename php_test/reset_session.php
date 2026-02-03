@@ -5,12 +5,13 @@
  * PROTÉGÉ PAR MOT DE PASSE
  */
 
-require_once __DIR__ . '/auth_helper.php';
+require_once __DIR__ . '/includes/autoload.php';
+require_once __DIR__ . '/includes/auth_helper.php';
 requireDebugAuth();
 
 // Retirer de la queue si présent (via BDD)
 $sessionId = session_id();
-require_once __DIR__ . '/classes/MatchQueue.php';
+// MatchQueue est chargé par l'autoloader
 $queue = new MatchQueue();
 $queue->removeFromQueue($sessionId);
 

@@ -11,6 +11,8 @@
  * - position
  * - hero_id
  * - blessing_id
+ * 
+ * Utilise asset_url() de l'autoloader pour les chemins d'images
  */
 
 // Charger les utilitaires si pas déjà chargés
@@ -42,7 +44,10 @@ function renderTeamHeroSelector($teamId, $position) {
                     ?>
                         <div class="hero-card" onclick="selectTeamHero(<?php echo htmlspecialchars(json_encode($perso)); ?>)">
                             <div class="hero-image">
-                                <img src="<?php echo htmlspecialchars($perso['image_p1'] ?? 'media/heroes/default.png'); ?>" 
+                                <?php 
+                                    $heroImg = $perso['image_p1'] ?? 'media/heroes/default.png';
+                                ?>
+                                <img src="<?php echo htmlspecialchars(asset_url($heroImg)); ?>" 
                                      alt="<?php echo htmlspecialchars($perso['name']); ?>">
                             </div>
                             <div class="hero-info">

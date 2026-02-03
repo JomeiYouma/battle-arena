@@ -72,7 +72,7 @@ function renderSelectionScreen($config = []) {
                         <label class="hero-row">
                             <input type="radio" name="hero_choice" value="<?php echo $perso['id']; ?>" required checked>
                             <div class="hero-row-content">
-                                <img src="<?php echo $perso['images']['p1']; ?>" alt="<?php echo $perso['name']; ?>" class="hero-thumb">
+                                <img src="<?php echo asset_url($perso['images']['p1']); ?>" alt="<?php echo $perso['name']; ?>" class="hero-thumb">
                                 <div class="hero-info">
                                     <h4><?php echo $perso['name']; ?></h4>
                                     <span class="type-badge"><?php echo $perso['type']; ?></span>
@@ -117,7 +117,7 @@ function renderSelectionScreen($config = []) {
                             <input type="radio" name="blessing_choice" value="<?php echo $b['id']; ?>">
                             <div class="hero-row-content">
                                 <div class="blessing-img-container">
-                                    <img src="media/blessings/<?php echo $b['img']; ?>" alt="<?php echo $b['name']; ?>" class="blessing-thumb">
+                                    <img src="<?php echo asset_url('media/blessings/' . $b['img']); ?>" alt="<?php echo $b['name']; ?>" class="blessing-thumb">
                                 </div>
                                 <div class="hero-info">
                                     <h4><?php echo $b['name']; ?></h4>

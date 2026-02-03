@@ -1,0 +1,374 @@
+/* ==============================================
+   UI DÉTAILLÉE DES CAPACITÉS (ACTIONS EXPANDABLES)
+   Format desktop extensible sur les côtés
+   ============================================== */
+
+/* --- PANEL CONTENEUR --- */
+.actions-panel-detailed {
+    background: linear-gradient(135deg, rgba(20, 10, 10, 0.95) 0%, rgba(40, 20, 10, 0.9) 100%);
+    border: 1px solid var(--stone-gray);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.actions-title {
+    color: var(--gold-accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 25px;
+    font-size: 1.4rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(184, 134, 11, 0.3);
+    font-weight: bold;
+}
+
+/* --- LISTE VERTICALE (PLUS LISIBLE) --- */
+.actions-grid-detailed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+/* --- BOUTON CAPACITÉ DÉTAILLÉE --- */
+.action-btn-detailed {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, rgba(30, 15, 15, 0.9) 0%, rgba(50, 25, 20, 0.8) 100%);
+    border: 2px solid var(--stone-gray);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 
+        0 2px 8px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    font-family: inherit;
+}
+
+/* Effet de hover principal */
+.action-btn-detailed:hover:not(:disabled) {
+    border-color: var(--accent-red);
+    transform: translateX(4px);
+    box-shadow: 
+        0 4px 15px rgba(196, 30, 58, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(45, 20, 15, 0.95) 0%, rgba(70, 35, 25, 0.9) 100%);
+}
+
+/* Bouton désactivé */
+.action-btn-detailed:disabled,
+.action-btn-detailed.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(0.7);
+    transform: none;
+}
+
+.action-btn-detailed:disabled:hover,
+.action-btn-detailed.disabled:hover {
+    border-color: var(--stone-gray);
+    transform: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+/* Style standard uniforme pour toutes les actions */
+.action-btn-detailed {
+    --action-color: var(--stone-gray);
+}
+
+/* --- CONTENU STRUCTURÉ (FORMAT HORIZONTAL) --- */
+.action-detailed-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    color: var(--text-light);
+}
+
+/* Header: Emoji + Label */
+.action-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 200px;
+    flex-shrink: 0;
+}
+
+.action-emoji-large {
+    font-size: 1.8rem;
+    min-width: 40px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.action-label-large {
+    font-size: 1.1rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--gold-accent);
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.action-pp-badge {
+    background: var(--stone-gray);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+/* Description de l'action */
+.action-description-detailed {
+    flex: 1;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-dim);
+    padding: 0;
+    background: none;
+    border: none;
+    min-height: auto;
+}
+
+/* Infos supplémentaires */
+.action-extra-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: auto;
+}
+
+.action-extra-badge {
+    background: rgba(184, 134, 11, 0.2);
+    border: 1px solid var(--gold-accent);
+    color: var(--gold-accent);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    display: inline-block;
+    box-shadow: 0 0 8px rgba(184, 134, 11, 0.2);
+}
+
+/* --- STATS COMPLETS (SANS ABRÉVIATIONS) --- */
+.character-stats-full {
+    background: linear-gradient(135deg, rgba(20, 10, 10, 0.95) 0%, rgba(40, 20, 15, 0.9) 100%);
+    border: 2px solid var(--stone-gray);
+    border-radius: 10px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+    .character-stats-full {
+        grid-template-columns: 1fr;
+    }
+}
+
+.stats-health,
+.stats-combat {
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    border-left: 3px solid var(--gold-accent);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-light);
+}
+
+.stats-health {
+    border-left-color: #4caf50;
+}
+
+.stats-combat {
+    border-left-color: var(--accent-red);
+}
+
+/* --- TEXTE COMPLET SANS ABRÉVIATIONS --- */
+.stat-label {
+    color: var(--gold-accent);
+    font-weight: bold;
+    display: inline-block;
+    min-width: 100px;
+}
+
+.stat-value {
+    color: var(--text-light);
+    font-weight: 600;
+}
+
+/* --- SÉPARATEURS --- */
+.stats-health .stat-label,
+.stats-combat .stat-label {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* --- INDICATEURS DE STATUT --- */
+.effect-indicator-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: rgba(139, 0, 0, 0.2);
+    border: 1px solid var(--blood-red);
+    border-radius: 4px;
+    font-size: 0.8rem;
+    color: #ff8a80;
+    margin-top: 4px;
+}
+
+/* Mobile: compact */
+@media (max-width: 767px) {
+    .actions-panel-detailed {
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .action-btn-detailed {
+        padding: 12px 15px;
+    }
+
+    .action-detailed-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .action-header {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .action-emoji-large {
+        font-size: 1.5rem;
+        min-width: 30px;
+    }
+
+    .action-label-large {
+        font-size: 1rem;
+    }
+
+    .action-description-detailed {
+        font-size: 0.85rem;
+    }
+
+    .action-pp-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+}
+
+/* --- ANIMATION DE SURVOL POUR CARDS --- */
+@keyframes action-hover-glow {
+    0% {
+        box-shadow: 
+            0 4px 15px rgba(0, 0, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+    50% {
+        box-shadow: 
+            0 8px 20px rgba(196, 30, 58, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+    100% {
+        box-shadow: 
+            0 12px 30px rgba(196, 30, 58, 0.4),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+}
+
+.action-btn-detailed:focus:not(:disabled) {
+    outline: none;
+    border-color: var(--gold-accent);
+    box-shadow: 
+        0 12px 30px rgba(196, 30, 58, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 20px rgba(184, 134, 11, 0.3);
+    animation: action-hover-glow 0.3s ease-out;
+}
+
+/* --- ICÔNES D'ÉTAT --- */
+.action-state-icon {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 1.2rem;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+}
+
+.action-btn-detailed:hover .action-state-icon:not(:disabled) {
+    opacity: 1;
+}
+
+/* --- SECTION INFOS SUPPLÉMENTAIRES --- */
+.action-extended-info {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.info-label {
+    color: var(--gold-accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+}
+
+.info-value {
+    color: var(--text-light);
+}
+
+/* ==============================================
+   STYLES DE TRANSITION FLUIDE
+   ============================================== */
+
+/* Transitions globales pour cohérence */
+.action-btn-detailed,
+.action-btn-detailed * {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Exception: pas de transition pour les éléments texte */
+.action-btn-detailed strong,
+.action-btn-detailed span {
+    transition: color 0.3s ease;
+}

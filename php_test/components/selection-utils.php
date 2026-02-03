@@ -8,14 +8,18 @@
  *   $blessings = getBlessingsList();
  */
 
+// S'assurer que l'autoloader est chargé
+if (!defined('BASE_PATH')) {
+    require_once __DIR__ . '/../includes/autoload.php';
+}
+
 function getHeroesList() {
     static $heroesCache = null;
     if ($heroesCache !== null) return $heroesCache;
     
     // Forcer l'utilisation de la BDD, pas de fallback JSON
     try {
-        require_once __DIR__ . '/../classes/Services/HeroManager.php';
-        require_once __DIR__ . '/../classes/Models/Hero.php';
+        // HeroManager et Hero sont chargés par l'autoloader
         $manager = new HeroManager();
         $heroModels = $manager->getAll();
         
@@ -40,7 +44,7 @@ function getBlessingsList() {
     if ($blessingsCache !== null) return $blessingsCache;
     
     $blessingsCache = [];
-    $blessingsDir = __DIR__ . '/../classes/blessings';
+    $blessingsDir = CORE_PATH . '/blessings';
     
     // Mapping des noms de fichiers vers les images (peut être personnalisé)
     $imageMapping = [

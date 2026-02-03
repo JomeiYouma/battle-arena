@@ -1,29 +1,7 @@
 <?php
-// Autoloader (AVANT session_start pour la désérialisation des objets StatusEffect)
-function chargerClasse($classe) {
-    // Chercher dans classes/
-    if (file_exists(__DIR__ . '/classes/' . $classe . '.php')) {
-        require __DIR__ . '/classes/' . $classe . '.php';
-        return;
-    }
-    // Chercher dans classes/effects/
-    if (file_exists(__DIR__ . '/classes/effects/' . $classe . '.php')) {
-        require __DIR__ . '/classes/effects/' . $classe . '.php';
-        return;
-    }
-    // Chercher dans classes/blessings/
-    if (file_exists(__DIR__ . '/classes/blessings/' . $classe . '.php')) {
-        require __DIR__ . '/classes/blessings/' . $classe . '.php';
-        return;
-    }
-    // Chercher dans classes/heroes/
-    if (file_exists(__DIR__ . '/classes/heroes/' . $classe . '.php')) {
-        require __DIR__ . '/classes/heroes/' . $classe . '.php';
-        return;
-    }
-}
-spl_autoload_register('chargerClasse');
-session_start();
+// Autoloader centralisé (AVANT session_start pour la désérialisation des objets StatusEffect)
+require_once __DIR__ . '/includes/autoload.php';
+// Note: autoload.php démarre déjà la session
 
 // --- LOGIQUE DE RESET GLOBALE ---
 // Doit être ici car les formulaires de reset sont soumis vers index.php
@@ -62,8 +40,8 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Horus Battle Arena</title>
-    <link rel="icon" href="./media/website/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="./public/media/website/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="public/css/style.css">
 </head>
 <body>
 
@@ -131,23 +109,23 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
                 </button>
             </form>
             
-            <a href="simulation.php" class="menu-btn simulate-link">
+            <a href="pages/game/simulation.php" class="menu-btn simulate-link">
                 Simuler
             </a>
             
             <?php if (User::isLoggedIn()): ?>
-                <a href="account.php" class="menu-btn account-link">
+                <a href="pages/account.php" class="menu-btn account-link">
                     Mon compte
                 </a>
             <?php else: ?>
-                <a href="login.php" class="menu-btn account-link">
+                <a href="pages/auth/login.php" class="menu-btn account-link">
                     Connexion
                 </a>
             <?php endif; ?>
             
             <!-- DEBUG TOOLS (visible localement) -->
             <?php if (strpos($_SERVER['HTTP_HOST'], 'localhost') !== false || strpos($_SERVER['HTTP_HOST'], '127.0.0.1') !== false): ?>
-                <a href="debug.php" class="menu-btn debug-btn">
+                <a href="pages/debug/debug.php" class="menu-btn debug-btn">
                     Debug
                 </a>
             <?php endif; ?>
@@ -168,9 +146,9 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
         <div class="mode-container">
             <?php
             if ($modeChoisi === 'single') {
-                require 'single_player.php'; 
+                require PAGES_PATH . '/game/single_player.php'; 
             } elseif ($modeChoisi === 'multi') {
-                require 'multiplayer.php'; 
+                require PAGES_PATH . '/game/multiplayer.php'; 
             }
             ?>
 
