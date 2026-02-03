@@ -38,6 +38,14 @@ $stmt = $pdo->prepare("
 $stmt->execute([$userId]);
 $userTeams = $stmt->fetchAll();
 
+// Charger les bénédictions pour l'affichage
+require_once COMPONENTS_PATH . '/selection-utils.php';
+$blessingsList = getBlessingsList();
+$blessingsById = [];
+foreach ($blessingsList as $b) {
+    $blessingsById[$b['id']] = $b;
+}
+
 $pageTitle = 'Multijoueur 5v5 - Horus Battle Arena';
 $extraCss = ['shared-selection', 'multiplayer'];
 $showUserBadge = true;
@@ -50,14 +58,14 @@ require_once INCLUDES_PATH . '/header.php';
     <div id="selectionScreen">
         <div class="selection-header">
             <a href="multiplayer.php" class="back-link">← Retour aux modes</a>
-            <h2>🛡️ SÉLECTIONNEZ VOTRE ÉQUIPE 5v5</h2>
+            <h2>SÉLECTIONNEZ VOTRE ÉQUIPE 5v5</h2>
             <p>Choisissez l'une de vos équipes pré-créées pour le combat</p>
-            <a href="../account.php?tab=teams" class="btn-manage-teams">⚙️ Gérer mes équipes</a>
+            <a href="../account.php?tab=teams" class="btn-manage-teams">Gérer mes équipes</a>
         </div>
 
         <?php if (empty($userTeams)): ?>
             <div class="no-teams-message">
-                <div class="message-icon">🛡️</div>
+                <div class="message-icon"><img src="<?php echo $basePath; ?>public/media/website/players.png" alt="Équipe"></div>
                 <h3>Aucune équipe disponible</h3>
                 <p>Vous devez d'abord créer une équipe de 5 héros pour jouer en mode 5v5.</p>
                 <a href="../account.php?tab=teams" class="btn-create-team">Créer une équipe</a>
@@ -85,12 +93,23 @@ require_once INCLUDES_PATH . '/header.php';
                         </div>
                         
                         <div class="team-members-preview">
-                            <?php foreach ($members as $member): ?>
+                            <?php foreach ($members as $member): 
+                                $heroImg = $member['image_p1'] ?? 'media/heroes/default.png';
+                                $blessingId = $member['blessing_id'] ?? null;
+                                $blessingData = $blessingId && isset($blessingsById[$blessingId]) ? $blessingsById[$blessingId] : null;
+                            ?>
                                 <div class="member-preview">
-                                    <?php $heroImg = $member['image_p1'] ?? 'media/heroes/default.png'; ?>
-                                    <img src="<?php echo htmlspecialchars(asset_url($heroImg)); ?>" 
-                                         alt="<?php echo htmlspecialchars($member['name']); ?>"
-                                         title="<?php echo htmlspecialchars($member['name'] . ' - ' . $member['type']); ?>">
+                                    <div class="member-img-container">
+                                        <img src="<?php echo htmlspecialchars(asset_url($heroImg)); ?>" 
+                                             alt="<?php echo htmlspecialchars($member['name']); ?>"
+                                             title="<?php echo htmlspecialchars($member['name'] . ' - ' . $member['type']); ?>">
+                                        <?php if ($blessingData): ?>
+                                            <div class="member-blessing" title="<?php echo htmlspecialchars($blessingData['name']); ?>">
+                                                <img src="<?php echo asset_url('media/blessings/' . $blessingData['img']); ?>" 
+                                                     alt="<?php echo htmlspecialchars($blessingData['name']); ?>">
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                     <div class="member-name"><?php echo htmlspecialchars($member['name']); ?></div>
                                 </div>
                             <?php endforeach; ?>
@@ -102,7 +121,7 @@ require_once INCLUDES_PATH . '/header.php';
                         $membersJson = json_encode($members);
                         ?>
                         <button class="btn-select-team" onclick="selectTeam(<?php echo $team['id']; ?>, <?php echo htmlspecialchars($teamNameJson, ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars($membersJson, ENT_QUOTES, 'UTF-8'); ?>)">
-                            ⚔️ Combattre avec cette équipe
+                            Combattre avec cette équipe
                         </button>
                     </div>
                 <?php endforeach; ?>
@@ -113,7 +132,7 @@ require_once INCLUDES_PATH . '/header.php';
     <!-- ÉCRAN 2: QUEUE / MATCHMAKING -->
     <div id="queueScreen" style="display:none;">
         <div class="queue-box">
-            <h2>🔍 RECHERCHE D'ADVERSAIRE...</h2>
+            <h2>RECHERCHE D'ADVERSAIRE...</h2>
             <div class="queue-spinner"></div>
             
             <div class="queue-team-preview" id="queueTeamPreview">
@@ -228,11 +247,11 @@ require_once INCLUDES_PATH . '/header.php';
 
 /* ===== TEAMS LIST ===== */
 .teams-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
     padding: 0 2rem 2rem;
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -242,62 +261,99 @@ require_once INCLUDES_PATH . '/header.php';
     border-radius: 12px;
     padding: 1.5rem;
     transition: all 0.3s;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.5rem;
 }
 
 .team-card:hover {
     border-color: var(--gold-accent);
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(184, 134, 11, 0.2);
+    box-shadow: 0 5px 15px rgba(184, 134, 11, 0.2);
+}
+
+.team-header {
+    flex: 0 0 auto;
+    min-width: 150px;
 }
 
 .team-header h3 {
     color: var(--gold-accent);
     font-size: 1.3rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
 }
 
 .team-description {
     color: var(--text-dim);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    margin: 0;
 }
 
 .team-members-preview {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.5rem;
-    margin: 1.5rem 0;
+    display: flex;
+    gap: 0.8rem;
+    flex: 1;
+    justify-content: center;
 }
 
 .member-preview {
     text-align: center;
+    flex: 0 0 auto;
 }
 
-.member-preview img {
+.member-img-container {
+    position: relative;
+    width: 70px;
+    height: 70px;
+}
+
+.member-img-container > img {
     width: 100%;
-    height: 80px;
+    height: 100%;
     object-fit: cover;
     border-radius: 6px;
     border: 2px solid var(--stone-gray);
-    margin-bottom: 0.3rem;
     transition: all 0.2s;
 }
 
-.team-card:hover .member-preview img {
+.member-blessing {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 50%;
+    border: 1px solid var(--gold-accent);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.member-blessing img {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+.team-card:hover .member-img-container > img {
     border-color: var(--gold-accent);
 }
 
 .member-name {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: var(--text-dim);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 70px;
+    margin-top: 0.3rem;
 }
 
 .btn-select-team {
-    width: 100%;
-    padding: 1rem;
+    flex: 0 0 auto;
+    padding: 0.8rem 1.5rem;
     background: var(--stone-gray);
     color: var(--text-light);
     border: 2px solid var(--gold-accent);
@@ -411,16 +467,28 @@ require_once INCLUDES_PATH . '/header.php';
 /* ===== RESPONSIVE ===== */
 /* Tablettes et écrans moyens */
 @media (max-width: 1024px) {
-    .teams-list {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
+    .team-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+    
+    .team-header {
+        text-align: center;
+    }
+    
+    .team-members-preview {
+        justify-content: center;
+    }
+    
+    .btn-select-team {
+        width: 100%;
     }
 }
 
 /* Mobiles et petits écrans */
 @media (max-width: 768px) {
     .teams-list {
-        grid-template-columns: 1fr;
         padding: 0 1rem 1rem;
         gap: 1rem;
     }
@@ -429,12 +497,24 @@ require_once INCLUDES_PATH . '/header.php';
         padding: 1rem;
     }
     
-    .team-members-preview {
-        gap: 0.3rem;
+    .member-img-container {
+        width: 55px;
+        height: 55px;
     }
     
-    .member-preview img {
-        height: 60px;
+    .member-blessing {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .member-blessing img {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .member-name {
+        font-size: 0.55rem;
+        max-width: 55px;
     }
     
     .selection-header {
@@ -460,20 +540,17 @@ require_once INCLUDES_PATH . '/header.php';
 /* Très petits écrans */
 @media (max-width: 480px) {
     .team-members-preview {
-        grid-template-columns: repeat(3, 1fr);
+        flex-wrap: wrap;
     }
     
-    .member-preview:nth-child(4),
-    .member-preview:nth-child(5) {
-        grid-column: span 1;
-    }
-    
-    .member-preview img {
+    .member-img-container {
+        width: 50px;
         height: 50px;
     }
     
     .member-name {
-        font-size: 0.6rem;
+        font-size: 0.5rem;
+        max-width: 50px;
     }
     
     .team-header h3 {

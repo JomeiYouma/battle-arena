@@ -6,13 +6,8 @@
 // Autoloader centralisé
 require_once __DIR__ . '/../../includes/autoload.php';
 
-// Déterminer le chemin de base pour les assets (selon si inclus depuis index.php ou accès direct)
-$basePath = '';
-if (strpos($_SERVER['SCRIPT_NAME'], 'index.php') !== false) {
-    $basePath = ''; // Inclus depuis index.php à la racine
-} else {
-    $basePath = '../../'; // Accès direct depuis pages/game/
-}
+// Chemin de base pour les assets (accès direct depuis pages/game/)
+$basePath = '../../';
 
 // --- RESET ---
 if (isset($_POST['logout']) || isset($_POST['new_game'])) {

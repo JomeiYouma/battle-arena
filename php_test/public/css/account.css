@@ -43,7 +43,7 @@
     display: flex;
     gap: 10px;
     margin-bottom: 20px;
-    border-bottom: 2px solid #ddd;
+    border-bottom: 2px solid var(--stone-gray, #2d2d2d);
 }
 
 .tab-button {
@@ -52,7 +52,7 @@
     padding: 12px 20px;
     font-size: 15px;
     font-weight: 600;
-    color: #666;
+    color: var(--text-dim, #888);
     cursor: pointer;
     transition: all 0.3s;
     border-bottom: 3px solid transparent;
@@ -60,12 +60,12 @@
 }
 
 .tab-button:hover {
-    color: #4CAF50;
+    color: var(--gold-accent, #b8860b);
 }
 
 .tab-button.active {
-    color: #4CAF50;
-    border-bottom-color: #4CAF50;
+    color: var(--gold-accent, #b8860b);
+    border-bottom-color: var(--accent-red, #c41e3a);
 }
 
 .tab-content {
@@ -101,30 +101,30 @@
 }
 
 .btn-primary {
-    background: #4CAF50;
+    background: var(--accent-red, #c41e3a);
     color: white;
 }
 
 .btn-primary:hover {
-    background: #45a049;
+    background: var(--primary-red, #8b0000);
 }
 
 .btn-secondary {
-    background: #9e9e9e;
+    background: var(--stone-gray, #2d2d2d);
     color: white;
 }
 
 .btn-secondary:hover {
-    background: #858585;
+    background: var(--dungeon-gray, #1a1a1a);
 }
 
 .btn-success {
-    background: #4CAF50;
+    background: var(--gold-accent, #b8860b);
     color: white;
 }
 
 .btn-success:hover {
-    background: #45a049;
+    background: #9a7209;
 }
 
 .btn-danger {
@@ -207,9 +207,9 @@
     letter-spacing: 1px;
 }
 
-.stat-card.wins .value { color: #4CAF50; }
-.stat-card.losses .value { color: #f44336; }
-.stat-card.ratio .value { color: #2196F3; }
+.stat-card.wins .value { color: var(--gold-accent, #b8860b); }
+.stat-card.losses .value { color: var(--accent-red, #c41e3a); }
+.stat-card.ratio .value { color: var(--parchment-text, #c9a66b); }
 
 /* Section */
 .section {
@@ -263,7 +263,7 @@
 }
 
 .hero-item .winrate {
-    color: #4CAF50;
+    color: var(--gold-accent, #b8860b);
     font-weight: bold;
 }
 
@@ -293,7 +293,7 @@
 }
 
 .result-victory {
-    color: #4CAF50;
+    color: var(--gold-accent, #b8860b);
     font-weight: bold;
 }
 
@@ -420,12 +420,12 @@
 
 /* Streak cards */
 .streak-win {
-    border-color: #2e7d32;
-    background: linear-gradient(135deg, rgba(46, 125, 50, 0.2), rgba(0, 0, 0, 0.4));
+    border-color: var(--gold-accent, #b8860b);
+    background: linear-gradient(135deg, rgba(184, 134, 11, 0.2), rgba(0, 0, 0, 0.4));
 }
 
 .streak-win .highlight-value {
-    color: #4CAF50;
+    color: var(--gold-accent, #b8860b);
 }
 
 .streak-loss {
@@ -452,7 +452,7 @@
 
 /* Winrate badges */
 .winrate-good {
-    color: #4CAF50 !important;
+    color: var(--gold-accent, #b8860b) !important;
 }
 
 .winrate-bad {
@@ -468,7 +468,7 @@
 }
 
 .winrate-badge.winrate-good {
-    background: rgba(76, 175, 80, 0.2);
+    background: rgba(184, 134, 11, 0.2);
 }
 
 .winrate-badge.winrate-bad {
@@ -477,7 +477,7 @@
 
 /* Row styling for history */
 .row-victory {
-    border-left: 3px solid #4CAF50;
+    border-left: 3px solid var(--gold-accent, #b8860b);
 }
 
 .row-defeat {
@@ -512,8 +512,8 @@
 }
 
 .mode-card.mode-highlight {
-    border-color: #3f51b5;
-    background: linear-gradient(135deg, rgba(63, 81, 181, 0.2), rgba(0, 0, 0, 0.3));
+    border-color: var(--accent-red, #c41e3a);
+    background: linear-gradient(135deg, rgba(196, 30, 58, 0.2), rgba(0, 0, 0, 0.3));
 }
 
 .mode-icon {
@@ -540,7 +540,7 @@
 }
 
 .mode-ratio {
-    color: #4CAF50;
+    color: var(--gold-accent, #b8860b);
     font-weight: bold;
 }
 
@@ -553,7 +553,7 @@
 
 .mode-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    background: linear-gradient(90deg, var(--gold-accent, #b8860b), var(--parchment-text, #c9a66b));
     border-radius: 3px;
     transition: width 0.5s ease;
 }

@@ -48,7 +48,7 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
     <h1>Horus Battle Arena</h1>
     <?php if (User::isLoggedIn()): ?>
         <div class="user-badge">
-            ⚔️ <?php echo htmlspecialchars(User::getCurrentUsername()); ?>
+            <?php echo htmlspecialchars(User::getCurrentUsername()); ?>
         </div>
     <?php endif; ?>
 
@@ -143,14 +143,17 @@ if (isset($_POST['logout']) || isset($_POST['new_game'])) {
 
     <?php else: ?>
 
-        <div class="mode-container">
-            <?php
-            if ($modeChoisi === 'single') {
-                require PAGES_PATH . '/game/single_player.php'; 
-            } elseif ($modeChoisi === 'multi') {
-                require PAGES_PATH . '/game/multiplayer.php'; 
-            }
-            ?>
+        <?php
+        // Rediriger vers les pages au lieu de les inclure
+        // Cela évite les problèmes de navigation/retour arrière
+        if ($modeChoisi === 'single') {
+            header('Location: pages/game/single_player.php');
+            exit;
+        } elseif ($modeChoisi === 'multi') {
+            header('Location: pages/game/multiplayer.php');
+            exit;
+        }
+        ?>
 
     <?php endif; ?>
     

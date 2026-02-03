@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="auth-container">
         <div class="auth-box">
-            <h2>⚔️ Connexion</h2>
+            <h2>Connexion</h2>
             
             <?php if ($success): ?>
                 <div class="success-msg">Compte créé avec succès ! Connectez-vous.</div>

@@ -332,7 +332,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
         <div class="loading-combat-count" id="loadingCombatCount">0 combats</div>
         <div class="loading-time-estimate" id="loadingTimeEstimate">Temps estimé : ~0s</div>
         <div class="loading-subtext" id="loadingSubtext">Préparation des combats</div>
-        <div class="loading-tips">💡 Conseil : Réduisez le nombre de combats pour des résultats plus rapides</div>
+        <div class="loading-tips">Conseil : Réduisez le nombre de combats pour des résultats plus rapides</div>
     </div>
 
     <h1>Simulateur de Matchs</h1>
@@ -384,7 +384,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
                     <div class="form-group">
                         <label for="hero_select">Personnage à tester :</label>
                         <select name="hero_select" id="hero_select">
-                            <option value="all" <?php echo $selectedHero === 'all' ? 'selected' : ''; ?>>📋 Tous les personnages</option>
+                            <option value="all" <?php echo $selectedHero === 'all' ? 'selected' : ''; ?>>Tous les personnages</option>
                             <?php foreach ($personnages as $p): ?>
                             <option value="<?php echo $p['id']; ?>" <?php echo $selectedHero === $p['id'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($p['name']); ?> (<?php echo $p['type']; ?>)
@@ -409,10 +409,10 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
                         <label for="opponent_blessing_mode">Bénédiction adversaires :</label>
                         <select name="opponent_blessing_mode" id="opponent_blessing_mode">
                             <option value="same" <?php echo $opponentBlessingMode === 'same' ? 'selected' : ''; ?>>
-                                🔗 Même bénédiction (miroir)
+                                Même bénédiction (miroir)
                             </option>
                             <option value="all" <?php echo $opponentBlessingMode === 'all' ? 'selected' : ''; ?>>
-                                🌈 Toutes les bénédictions
+                                Toutes les bénédictions
                             </option>
                         </select>
                     </div>
@@ -430,8 +430,8 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
                 </div>
                 
                 <div class="form-info">
-                    <p>💡 <strong>Mode Miroir</strong> : Teste chaque personnage contre tous les autres avec la même bénédiction</p>
-                    <p>💡 <strong>Toutes bénédictions</strong> : Teste contre toutes les combinaisons adverses (plus long)</p>
+                    <p><strong>Mode Miroir</strong> : Teste chaque personnage contre tous les autres avec la même bénédiction</p>
+                    <p><strong>Toutes bénédictions</strong> : Teste contre toutes les combinaisons adverses (plus long)</p>
                 </div>
                 
                 <div class="form-info estimate-box">
@@ -457,7 +457,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
             
             <!-- SECTION: CLASSEMENT GÉNÉRAL -->
             <details class="result-section" open>
-                <summary>📊 Classement Général</summary>
+                <summary>Classement Général</summary>
                 
                 <!-- LÉGENDE -->
                 <div class="balance-legend">
@@ -506,7 +506,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
             
             <!-- SECTION: MATRICE DE MATCHUPS -->
             <details class="result-section">
-                <summary>⚔️ Matrice des Matchups</summary>
+                <summary>Matrice des Matchups</summary>
                 <p class="section-subtitle">Taux de victoire du personnage en ligne contre celui en colonne</p>
                 
                 <div class="matchup-matrix-wrapper">
@@ -560,7 +560,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
             
             <!-- TABLEAU RÉCAPITULATIF -->
             <details class="result-section" open>
-                <summary>📋 Tableau Récapitulatif</summary>
+                <summary>Tableau Récapitulatif</summary>
                 
                 <!-- LÉGENDE -->
                 <div class="balance-legend">
@@ -611,7 +611,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
             
             <!-- PERFORMANCES PAR BÉNÉDICTION -->
             <details class="result-section">
-                <summary>✨ Performances par Bénédiction</summary>
+                <summary>Performances par Bénédiction</summary>
                 <?php
                 // Agréger les stats par bénédiction
                 $blessingStats = [];
@@ -681,7 +681,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
             
             <!-- PERFORMANCES PAR PERSONNAGE -->
             <details class="result-section">
-                <summary>🦸 Performances par Personnage</summary>
+                <summary>Performances par Personnage</summary>
                 <?php
                 // Agréger les stats par personnage
                 $heroStats = [];

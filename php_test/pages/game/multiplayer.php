@@ -2,9 +2,8 @@
 // Autoloader centralisé (démarre la session automatiquement)
 require_once __DIR__ . '/../../includes/autoload.php';
 
-// Déterminer si on est inclus depuis index.php ou en accès direct
-$isIncludedFromIndex = (strpos($_SERVER['SCRIPT_NAME'], 'index.php') !== false);
-$basePath = $isIncludedFromIndex ? '' : '../../';
+// Chemin de base pour les assets (accès direct depuis pages/game/)
+$basePath = '../../';
 
 // Nettoyer les données de match précédent pour éviter les conflits
 unset($_SESSION['matchId']);
@@ -21,19 +20,17 @@ unset($_SESSION['queueBlessingId']);
 
 // L'autoloader se charge des classes User, Database, etc.
 
-// Seulement si accès direct (pas inclus depuis index.php)
-if (!$isIncludedFromIndex) {
-    $pageTitle = 'Multijoueur - Horus Battle Arena';
-    $extraCss = ['shared-selection'];
-    $showUserBadge = true;
-    $showMainTitle = false;
-    require_once INCLUDES_PATH . '/header.php';
-}
+// Charger le header
+$pageTitle = 'Multijoueur - Horus Battle Arena';
+$extraCss = ['shared-selection'];
+$showUserBadge = true;
+$showMainTitle = false;
+require_once INCLUDES_PATH . '/header.php';
 ?>
 
 <div class="multi-container">
     <div class="mode-selection-header">
-        <h2 class="page-title">⚔️ MODE MULTIJOUEUR</h2>
+        <h2 class="page-title">MODE MULTIJOUEUR</h2>
         <p class="page-subtitle">Choisissez votre mode de jeu</p>
     </div>
 
@@ -103,6 +100,17 @@ if (!$isIncludedFromIndex) {
     .mode-icon {
         font-size: 4rem;
         margin-bottom: 1rem;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .mode-icon img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
     }
     
     .mode-btn {
@@ -162,7 +170,7 @@ if (!$isIncludedFromIndex) {
 <div class="mode-cards">
     <!-- 1v1 DUEL -->
     <a href="<?php echo $basePath; ?>pages/game/multiplayer-selection.php" class="mode-card card-1v1">
-        <div class="mode-icon">⚔️</div>
+        <div class="mode-icon"><img src="<?php echo $basePath; ?>public/media/website/people.png" alt="1v1"></div>
         <h2>DUEL 1v1</h2>
         <p>Affrontez un adversaire en combat singulier.<br>Choisissez votre meilleur champion.</p>
         <span class="mode-btn">Sélectionner</span>
@@ -170,14 +178,13 @@ if (!$isIncludedFromIndex) {
     
     <!-- 5v5 TEAM -->
     <a href="<?php echo $basePath; ?>pages/game/multiplayer_5v5_selection.php" class="mode-card card-5v5">
-        <div class="mode-icon">🛡️</div>
+        <div class="mode-icon"><img src="<?php echo $basePath; ?>public/media/website/players.png" alt="5v5"></div>
         <h2>ÉQUIPE 5v5</h2>
         <p>Dirigez une escouade de 5 héros.<br>Stratégie d'équipe et switch tactique.</p>
         <span class="mode-btn">Sélectionner</span>
     </a>
 </div>
 
+</div>
 
-<?php if (!$isIncludedFromIndex): ?>
 <?php require_once INCLUDES_PATH . '/footer.php'; ?>
-<?php endif; ?>

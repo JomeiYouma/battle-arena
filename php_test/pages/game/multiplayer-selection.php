@@ -56,12 +56,12 @@ require_once INCLUDES_PATH . '/header.php';
         </div>
         
         <p class="queue-message">
-            🎮 Si aucun joueur ne se présente,<br>
+            Si aucun joueur ne se présente,<br>
             un <strong>bot</strong> vous affrontera !
         </p>
         
         <button type="button" class="cancel-queue-btn" onclick="cancelQueue()">
-            ❌ Annuler la recherche
+            Annuler la recherche
         </button>
     </div>
 

@@ -105,7 +105,7 @@ $matchData = [
         'heroes' => $team2,
         'last_poll' => $now
     ],
-    'logs' => ["🏆 MATCH 5v5 DE TEST"],
+    'logs' => ["MATCH 5v5 DE TEST"],
     'current_turn_actions' => [],
     'last_update' => $now
 ];
@@ -206,7 +206,7 @@ $_SESSION['test_5v5_mode'] = true;
 </head>
 <body>
     <div class="container">
-        <h1>🏆 Match 5v5 de Test Généré ✅</h1>
+        <h1>Match 5v5 de Test Généré</h1>
         <p>Un match 5v5 fictif a été créé pour tester l'UI</p>
         
         <div class="match-id">
@@ -217,7 +217,7 @@ $_SESSION['test_5v5_mode'] = true;
         <p>Équipe 2: 5 héros Bot</p>
         
         <a href="multiplayer-combat.php?match_id=<?php echo urlencode($matchId); ?>" class="button">
-            ⚔️ Lancer le combat
+            Lancer le combat
         </a>
         
         <br><br>

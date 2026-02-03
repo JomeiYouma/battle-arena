@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="account-header">
             <div>
                 <h1>Mon Compte</h1>
-                <span class="username">⚔️ <?php echo htmlspecialchars($username); ?></span>
+                <span class="username"><?php echo htmlspecialchars($username); ?></span>
             </div>
             <form method="POST">
                 <button type="submit" name="logout" class="logout-btn">Déconnexion</button>
@@ -159,9 +159,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- Système de Tabs -->
         <div class="tabs-navigation">
-            <button class="tab-button active" onclick="switchTab('stats')">🎮 Statistiques 1v1</button>
-            <button class="tab-button" onclick="switchTab('stats5v5')">⚔️ Statistiques 5v5</button>
-            <button class="tab-button" onclick="switchTab('teams')">🏆 Mes Équipes</button>
+            <button class="tab-button active" onclick="switchTab('stats')">Statistiques 1v1</button>
+            <button class="tab-button" onclick="switchTab('stats5v5')">Statistiques 5v5</button>
+            <button class="tab-button" onclick="switchTab('teams')">Mes Équipes</button>
         </div>
 
         <!-- TAB 1: Statistiques -->
@@ -187,10 +187,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- Personnages les plus joués -->
         <div class="section">
-            <h2>🎮 Personnages les plus joués</h2>
+            <h2>Personnages les plus joués</h2>
             <?php if (empty($mostPlayed)): ?>
                 <div class="empty-state">
-                    <div class="icon">⚔️</div>
+                    <div class="icon"></div>
                     <p>Aucun combat enregistré. Lancez-vous dans l'arène !</p>
                 </div>
             <?php else: ?>
@@ -212,10 +212,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- Historique récent -->
         <div class="section">
-            <h2>📜 Historique récent</h2>
+            <h2>Historique récent</h2>
             <?php if (empty($recentCombats)): ?>
                 <div class="empty-state">
-                    <div class="icon">📜</div>
+                    <div class="icon"></div>
                     <p>Aucun historique disponible.</p>
                 </div>
             <?php else: ?>
@@ -253,7 +253,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Stats par héros -->
         <?php if (!empty($heroStats)): ?>
         <div class="section">
-            <h2>📊 Statistiques par héros</h2>
+            <h2>Statistiques par héros</h2>
             <table class="history-table">
                 <thead>
                     <tr>
@@ -337,10 +337,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- Historique récent -->
         <div class="section">
-            <h2>📜 Historique récent</h2>
+            <h2>Historique récent</h2>
             <?php if (empty($recentCombats5v5)): ?>
                 <div class="empty-state">
-                    <div class="icon">📜</div>
+                    <div class="icon"></div>
                     <p>Aucun historique disponible.</p>
                 </div>
             <?php else: ?>
@@ -374,7 +374,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Stats par héros -->
         <?php if (!empty($heroStats5v5)): ?>
         <div class="section">
-            <h2>📊 Statistiques par héros</h2>
+            <h2>Statistiques par héros</h2>
             <table class="history-table">
                 <thead>
                     <tr>

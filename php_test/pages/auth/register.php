@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="auth-container">
         <div class="auth-box">
-            <h2>🛡️ Inscription</h2>
+            <h2>Inscription</h2>
             
             <?php if ($error): ?>
                 <div class="error-msg"><?php echo htmlspecialchars($error); ?></div>
