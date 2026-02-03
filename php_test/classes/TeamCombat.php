@@ -89,15 +89,22 @@ class TeamCombat extends MultiCombat {
                 return null;
             }
             
+            // Blessing global pour l'équipe (fallback si les héros n'ont pas leur propre blessing)
+            $p1GlobalBlessing = $p1Data['blessing_id'] ?? null;
+            $p2GlobalBlessing = $p2Data['blessing_id'] ?? null;
+            
             // Créer les objets Personnage pour chaque héros
+            // Priorité: blessing du héros > blessing global de l'équipe
             $team1 = [];
             foreach ($p1Heroes as $heroData) {
-                $team1[] = self::createHeroFromData($heroData, $p1Data['blessing_id'] ?? null);
+                $blessingId = $heroData['blessing_id'] ?? $p1GlobalBlessing;
+                $team1[] = self::createHeroFromData($heroData, $blessingId);
             }
             
             $team2 = [];
             foreach ($p2Heroes as $heroData) {
-                $team2[] = self::createHeroFromData($heroData, $p2Data['blessing_id'] ?? null);
+                $blessingId = $heroData['blessing_id'] ?? $p2GlobalBlessing;
+                $team2[] = self::createHeroFromData($heroData, $blessingId);
             }
             
             return new TeamCombat($team1, $team2);
@@ -150,9 +157,14 @@ class TeamCombat extends MultiCombat {
         
         // Appliquer une bénédiction si fournie
         if ($blessingId) {
-            $blessing = BlessingFactory::createBlessing($blessingId);
-            if ($blessing) {
-                $hero->addBlessing($blessing);
+            $blessingClass = $blessingId;
+            $blessingPath = __DIR__ . '/blessings/' . $blessingClass . '.php';
+            if (file_exists($blessingPath)) {
+                require_once $blessingPath;
+                if (class_exists($blessingClass)) {
+                    $hero->addBlessing(new $blessingClass());
+                    error_log("Blessing applied: $blessingClass");
+                }
             }
         }
         
@@ -550,6 +562,20 @@ class TeamCombat extends MultiCombat {
             'player2' => $this->currentPlayer2Index
         ];
     }
+    
+    /**
+     * Récupérer l'index actuel du joueur 1
+     */
+    public function getCurrentPlayer1Index(): int {
+        return $this->currentPlayer1Index;
+    }
+    
+    /**
+     * Récupérer l'index actuel du joueur 2
+     */
+    public function getCurrentPlayer2Index(): int {
+        return $this->currentPlayer2Index;
+    }
 
     /**
      * Récupérer un héros par équipe et index
@@ -690,5 +716,87 @@ class TeamCombat extends MultiCombat {
         }
 
         return false;
+    }
+
+    // ============================================
+    // OVERRIDE COMBAT METHODS FOR 5v5
+    // ============================================
+
+    /**
+     * Override checkDeath pour gérer le switch forcé en 5v5
+     * Ne termine le combat que si toute l'équipe est morte
+     */
+    protected function checkDeath(Personnage $character): bool {
+        if (!$character->isDead()) {
+            return false;
+        }
+
+        // Déterminer quelle équipe perd ce héros
+        $isTeam1 = in_array($character, $this->player1Team, true);
+        $teamNum = $isTeam1 ? 1 : 2;
+        $team = $isTeam1 ? $this->player1Team : $this->player2Team;
+
+        // Ajouter action de mort pour animation
+        $isPlayer = ($character === $this->player);
+        $this->turnActions[] = [
+            'phase' => 'death',
+            'actor' => $isPlayer ? 'player' : 'enemy',
+            'emoji' => '💀',
+            'label' => 'K.O.',
+            'isDeath' => true,
+            'statesAfter' => $this->getStatesSnapshot()
+        ];
+
+        $this->logs[] = "💀 " . $character->getName() . " est tombé au combat!";
+
+        // Vérifier si l'équipe entière est éliminée
+        if (!$this->isTeamAlive($teamNum)) {
+            $this->isFinished = true;
+            $this->winner = $isTeam1 ? $this->player2Team[0] : $this->player1Team[0];
+            $this->logs[] = "🎉 Équipe $teamNum entièrement éliminée! Victoire de l'équipe adverse!";
+            return true;
+        }
+
+        // Sinon, marquer le forced switch nécessaire
+        if ($isTeam1) {
+            $this->player1NeedsForcedSwitch = true;
+            $this->logs[] = "🔄 Équipe 1 doit choisir un remplaçant!";
+        } else {
+            $this->player2NeedsForcedSwitch = true;
+            $this->logs[] = "🔄 Équipe 2 doit choisir un remplaçant!";
+        }
+
+        // Retourner true pour stopper le tour actuel (le joueur doit switch)
+        return true;
+    }
+
+    /**
+     * Override isOver pour vérifier si une équipe entière est éliminée
+     */
+    public function isOver(): bool {
+        if ($this->isFinished) {
+            return true;
+        }
+        
+        // Le combat n'est terminé que si une équipe ENTIÈRE est morte
+        return !$this->isTeamAlive(1) || !$this->isTeamAlive(2);
+    }
+
+    /**
+     * Override getWinner pour retourner le bon gagnant en 5v5
+     */
+    public function getWinner(): ?Personnage {
+        if ($this->winner) {
+            return $this->winner;
+        }
+        
+        if (!$this->isTeamAlive(1)) {
+            return $this->player2Team[$this->currentPlayer2Index];
+        }
+        if (!$this->isTeamAlive(2)) {
+            return $this->player1Team[$this->currentPlayer1Index];
+        }
+        
+        return null;
     }
 }

@@ -21,4 +21,8 @@ class ImmunityEffect extends StatusEffect {
             'type' => 'immunity'
         ];
     }
+
+    public function getDescription(): string {
+        return "🛡️ Immunité aux effets négatifs ({$this->duration} tour(s))";
+    }
 }

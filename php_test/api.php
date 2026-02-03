@@ -115,12 +115,14 @@ try {
             }
             
             $displayName = $input['display_name'] ?? 'Joueur';
+            $teamName = $input['team_name'] ?? $displayName; // Nom de l'équipe (peut être différent du display_name)
             $blessingId = $input['blessing_id'] ?? null;
             
             // Stocker dans la session
             $_SESSION['queue5v5StartTime'] = time();
             $_SESSION['queue5v5Team'] = $input['team'];
             $_SESSION['queue5v5DisplayName'] = $displayName;
+            $_SESSION['queue5v5TeamName'] = $teamName;
             $_SESSION['queue5v5BlessingId'] = $blessingId;
             $_SESSION['queue5v5Status'] = 'waiting';
             
@@ -133,6 +135,7 @@ try {
                 'user_id' => $_SESSION['user_id'] ?? null,
                 'team' => $input['team'],
                 'display_name' => $displayName,
+                'team_name' => $teamName,
                 'blessing_id' => $blessingId,
                 'joined_at' => time()
             ];
@@ -217,10 +220,12 @@ try {
                         // Récupérer les données du joueur courant depuis la queue (plus fiable que la session)
                         $currentPlayerData = $queue5v5[$sessionId] ?? null;
                         $currentDisplayName = $currentPlayerData['display_name'] ?? $_SESSION['queue5v5DisplayName'] ?? 'Joueur 1';
+                        $currentTeamName = $currentPlayerData['team_name'] ?? $_SESSION['queue5v5TeamName'] ?? $currentDisplayName;
                         $currentTeam = $currentPlayerData['team'] ?? $_SESSION['queue5v5Team'] ?? [];
                         $currentBlessingId = $currentPlayerData['blessing_id'] ?? $_SESSION['queue5v5BlessingId'] ?? null;
                         $currentUserId = $currentPlayerData['user_id'] ?? $_SESSION['user_id'] ?? null;
                         $opponentUserId = $player['user_id'] ?? null;
+                        $opponentTeamName = $player['team_name'] ?? $player['display_name'] ?? 'Équipe adverse';
                         
                         $matchData = [
                             'id' => $matchId,
@@ -231,6 +236,7 @@ try {
                             'player1' => [
                                 'session' => $sessionId,
                                 'display_name' => $currentDisplayName,
+                                'team_name' => $currentTeamName,
                                 'user_id' => $currentUserId,
                                 'team_id' => 1,
                                 'heroes' => $currentTeam,
@@ -240,6 +246,7 @@ try {
                             'player2' => [
                                 'session' => $sid,
                                 'display_name' => $player['display_name'],
+                                'team_name' => $opponentTeamName,
                                 'user_id' => $opponentUserId,
                                 'team_id' => 2,
                                 'heroes' => $player['team'],
@@ -620,40 +627,63 @@ try {
                         $p1UserId = $metaData['player1']['user_id'] ?? null;
                         $p2UserId = $metaData['player2']['user_id'] ?? null;
                         
-                        if ($p1UserId || $p2UserId) {
-                            // Pour 5v5, utiliser le premier héros de l'équipe comme représentant
-                            // Pour 1v1, utiliser hero.id
-                            if ($mode === '5v5') {
-                                $p1HeroId = $metaData['player1']['heroes'][0]['id'] ?? 'unknown';
-                                $p2HeroId = $metaData['player2']['heroes'][0]['id'] ?? 'unknown';
-                                $gameMode = '5v5';
-                            } else {
-                                $p1HeroId = $metaData['player1']['hero']['id'] ?? null;
-                                $p2HeroId = $metaData['player2']['hero']['id'] ?? null;
-                                $gameMode = 'multi';
+                        $userModel = new User();
+                        $matchUuid = $matchId; // Utiliser le matchId comme UUID unique
+                        
+                        if ($mode === '5v5') {
+                            // Mode 5v5 : enregistrer tous les héros de chaque équipe
+                            $p1Heroes = array_column($metaData['player1']['heroes'] ?? [], 'id');
+                            $p2Heroes = array_column($metaData['player2']['heroes'] ?? [], 'id');
+                            $p1TeamName = $metaData['player1']['team_name'] ?? 'Équipe 1';
+                            $p2TeamName = $metaData['player2']['team_name'] ?? 'Équipe 2';
+                            $p1DisplayName = $metaData['player1']['display_name'] ?? 'Joueur 1';
+                            $p2DisplayName = $metaData['player2']['display_name'] ?? 'Joueur 2';
+                            
+                            // Enregistrer pour P1 (tous les héros de son équipe)
+                            if ($p1UserId && !empty($p1Heroes)) {
+                                $userModel->recordTeamCombat(
+                                    $p1UserId,
+                                    $p1Heroes,
+                                    $winnerId === 'p1',
+                                    $p1TeamName,
+                                    $p2DisplayName,
+                                    $matchUuid
+                                );
                             }
                             
-                            $userModel = new User();
+                            // Enregistrer pour P2 (tous les héros de son équipe)
+                            if ($p2UserId && !empty($p2Heroes)) {
+                                $userModel->recordTeamCombat(
+                                    $p2UserId,
+                                    $p2Heroes,
+                                    $winnerId === 'p2',
+                                    $p2TeamName,
+                                    $p1DisplayName,
+                                    $matchUuid
+                                );
+                            }
+                        } else {
+                            // Mode 1v1 : ancien comportement
+                            $p1HeroId = $metaData['player1']['hero']['id'] ?? null;
+                            $p2HeroId = $metaData['player2']['hero']['id'] ?? null;
                             
-                            // Enregistrer pour P1
                             if ($p1UserId && $p1HeroId) {
                                 $userModel->recordCombat(
                                     $p1UserId,
                                     $p1HeroId,
                                     $winnerId === 'p1',
                                     $p2HeroId,
-                                    $gameMode
+                                    'multi'
                                 );
                             }
                             
-                            // Enregistrer pour P2
                             if ($p2UserId && $p2HeroId) {
                                 $userModel->recordCombat(
                                     $p2UserId,
                                     $p2HeroId,
                                     $winnerId === 'p2',
                                     $p1HeroId,
-                                    $gameMode
+                                    'multi'
                                 );
                             }
                         }
@@ -761,40 +791,79 @@ function generateBotMove($metaData, $botRole = 'p2') {
     $botPlayerKey = $botRole === 'p1' ? 'player1' : 'player2';
     $botPlayer = $metaData[$botPlayerKey];
     
-    // Mode 5v5 - plusieurs héros
-    if (isset($botPlayer['heroes']) && is_array($botPlayer['heroes'])) {
-        // Actions de base pour le 5v5
-        $actions = ['attack', 'spell', 'defend'];
+    // Mode 5v5 - charger le combat pour obtenir les vraies actions du héros actif
+    if ($metaData['mode'] === '5v5') {
+        $matchId = $metaData['match_id'] ?? null;
+        $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
         
-        // Parfois switch (20% de chance si plus d'un héros vivant)
-        if (count($botPlayer['heroes']) > 1 && rand(1, 100) <= 20) {
-            // Trouver un héros vivant à switcher
-            foreach ($botPlayer['heroes'] as $idx => $hero) {
-                if (($hero['pv'] ?? 0) > 0 && $idx > 0) {
-                    return 'switch:' . $idx;
+        if ($matchId && file_exists($stateFile)) {
+            $combat = MultiCombat::load($stateFile);
+            if ($combat && $combat instanceof TeamCombat) {
+                // Récupérer le héros actif du bot
+                $botChar = $botRole === 'p1' ? $combat->getPlayer() : $combat->getEnemy();
+                $allActions = $botChar->getAllActions();
+                
+                // Filtrer les actions utilisables (avec PP)
+                $usableActions = [];
+                foreach ($allActions as $key => $action) {
+                    if ($botChar->canUseAction($key)) {
+                        $usableActions[] = $key;
+                    }
                 }
+                
+                // Parfois switch (20% de chance si plus d'un héros vivant)
+                if (rand(1, 100) <= 20) {
+                    $team = $botRole === 'p1' ? $combat->getPlayer1Team() : $combat->getPlayer2Team();
+                    $currentIdx = $botRole === 'p1' ? $combat->getCurrentPlayer1Index() : $combat->getCurrentPlayer2Index();
+                    foreach ($team as $idx => $hero) {
+                        if ($idx !== $currentIdx && !$hero->isDead()) {
+                            return 'switch:' . $idx;
+                        }
+                    }
+                }
+                
+                // Choisir une action aléatoire parmi les utilisables
+                if (!empty($usableActions)) {
+                    return $usableActions[array_rand($usableActions)];
+                }
+                
+                return 'attack'; // Fallback
             }
         }
         
-        return $actions[array_rand($actions)];
+        // Fallback si on ne peut pas charger le combat
+        return 'attack';
     }
     
-    // Mode 1v1 classique
-    $botHero = $botPlayer['hero'] ?? null;
-    if (!$botHero) {
-        return 'attack'; // Fallback
+    // Mode 1v1 classique - charger les vraies actions aussi
+    $matchId = $metaData['match_id'] ?? null;
+    $stateFile = __DIR__ . '/data/matches/' . $matchId . '.state';
+    
+    if ($matchId && file_exists($stateFile)) {
+        $combat = MultiCombat::load($stateFile);
+        if ($combat) {
+            $botChar = $botRole === 'p1' ? $combat->getPlayer() : $combat->getEnemy();
+            $allActions = $botChar->getAllActions();
+            
+            $usableActions = [];
+            foreach ($allActions as $key => $action) {
+                if ($botChar->canUseAction($key)) {
+                    $usableActions[] = $key;
+                }
+            }
+            
+            if (!empty($usableActions)) {
+                // IA simple: préférer heal si <30% HP
+                $healthPct = $botChar->getPv() / $botChar->getBasePv();
+                if ($healthPct < 0.3 && in_array('heal', $usableActions)) {
+                    return 'heal';
+                }
+                
+                return $usableActions[array_rand($usableActions)];
+            }
+        }
     }
     
-    $botHp = $metaData[$botPlayerKey]['hp'] ?? $botHero['pv'];
-    
-    // IA simple: defend si <30%, sinon random
-    $healthPct = $botHp / $botHero['pv'];
-    if ($healthPct < 0.3) {
-        return 'defend';
-    }
-    
-    // Sinon random entre attack et spell
-    $actions = ['attack', 'spell'];
-    return $actions[array_rand($actions)];
+    return 'attack'; // Fallback
 }
 

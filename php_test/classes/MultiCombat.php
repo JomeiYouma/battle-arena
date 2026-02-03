@@ -247,19 +247,23 @@ class MultiCombat extends Combat {
             error_log("Error getting available actions: " . $e->getMessage());
         }
         
-        // Récupérer les effets actifs
+        // Récupérer les effets (actifs + pending) pour affichage UI complet
         $myEffects = [];
         $oppEffects = [];
         
         try {
-            if (method_exists($myChar, 'getActiveEffects')) {
+            if (method_exists($myChar, 'getAllEffectsForUI')) {
+                $myEffects = $myChar->getAllEffectsForUI();
+            } elseif (method_exists($myChar, 'getActiveEffects')) {
                 $myEffects = $myChar->getActiveEffects();
             }
-            if (method_exists($oppChar, 'getActiveEffects')) {
+            if (method_exists($oppChar, 'getAllEffectsForUI')) {
+                $oppEffects = $oppChar->getAllEffectsForUI();
+            } elseif (method_exists($oppChar, 'getActiveEffects')) {
                 $oppEffects = $oppChar->getActiveEffects();
             }
         } catch (Exception $e) {
-            error_log("Error getting active effects: " . $e->getMessage());
+            error_log("Error getting effects for UI: " . $e->getMessage());
         }
         
         // Renvoyer l'état

@@ -53,4 +53,8 @@ class StatRedistributionEffect extends StatusEffect {
         }
         return "✨ Le jugement prend fin. Stats restaurées.";
     }
+
+    public function getDescription(): string {
+        return "⚖️ Jugement : ATK/DEF/VIT égalisées ({$this->duration} tour(s))";
+    }
 }

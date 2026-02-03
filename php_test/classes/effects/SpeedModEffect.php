@@ -22,4 +22,9 @@ class SpeedModEffect extends StatusEffect {
     public function getStatModifiers(): array {
         return ['speed' => $this->amount];
     }
+
+    public function getDescription(): string {
+        $sign = $this->amount > 0 ? '+' : '';
+        return ($this->amount > 0 ? '⏩' : '🐌') . " Vitesse : {$sign}{$this->amount} ({$this->duration} tour(s))";
+    }
 }

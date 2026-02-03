@@ -34,4 +34,9 @@ class BurningEffect extends StatusEffect {
     public function onActivate(Personnage $target): string {
         return "💥 La Brûlure s'embrase sur " . $target->getName() . " !";
     }
+
+    public function getDescription(): string {
+        $damage = max(1, (int)(0.2 * $this->attackerAtk + 4));
+        return "🔥 Brûlure : ~{$damage} dégâts/tour ({$this->duration} tour(s))";
+    }
 }

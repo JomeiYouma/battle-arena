@@ -97,6 +97,7 @@ $isBotMatch = ($matchData['mode'] ?? '') === 'bot';
             <div class="fighter hero" id="myFighter">
                 <img src="<?php echo $myImg; ?>" alt="<?php echo $myHero['name']; ?>">
                 <div id="myEmoji"></div>
+                <div class="effects-container hero-effects" id="myEffects"></div>
             </div>
             
             <div class="vs-indicator">VS</div>
@@ -104,6 +105,7 @@ $isBotMatch = ($matchData['mode'] ?? '') === 'bot';
             <div class="fighter enemy" id="oppFighter">
                 <img src="<?php echo $oppImg; ?>" alt="<?php echo $oppHero['name']; ?>" class="enemy-img">
                 <div id="oppEmoji"></div>
+                <div class="effects-container enemy-effects" id="oppEffects"></div>
             </div>
         </div>
         
@@ -133,6 +135,51 @@ const IS_BOT_MATCH = <?php echo $isBotMatch ? 'true' : 'false'; ?>;
 
 let pollInterval = null;
 let lastLogCount = 0;
+
+// Update effect indicators (active effects displayed as emojis with duration badge and tooltip)
+function updateEffectIndicators(effects, containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // Clear existing indicators
+    container.innerHTML = '';
+    
+    // If no effects, nothing to show
+    if (!effects || typeof effects !== 'object') return;
+    
+    // Add effect indicators
+    for (const [name, effect] of Object.entries(effects)) {
+        const indicator = document.createElement('div');
+        indicator.className = 'effect-indicator' + (effect.isPending ? ' pending' : '');
+        
+        // Emoji de l'effet
+        const emoji = document.createElement('span');
+        emoji.className = 'effect-emoji';
+        emoji.textContent = effect.emoji || '✨';
+        indicator.appendChild(emoji);
+        
+        // Badge de durée (en bas à droite)
+        const duration = effect.duration || effect.turnsDelay || 0;
+        if (duration > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'effect-duration-badge';
+            badge.textContent = duration;
+            indicator.appendChild(badge);
+        }
+        
+        // Tooltip (infobulle)
+        const tooltip = document.createElement('div');
+        tooltip.className = 'effect-tooltip';
+        tooltip.innerHTML = `
+            <div class="effect-tooltip-title">${effect.emoji || '✨'} ${name}</div>
+            <div class="effect-tooltip-desc">${effect.description || name}</div>
+            <div class="effect-tooltip-duration">${effect.isPending ? '⏳ Actif dans' : '⌛ Durée restante'}: ${duration} tour(s)</div>
+        `;
+        indicator.appendChild(tooltip);
+        
+        container.appendChild(indicator);
+    }
+}
 
 function updateCombatState() {
     fetch('api.php?action=poll_status&match_id=' + MATCH_ID)
@@ -179,6 +226,10 @@ function updateCombatState() {
             document.getElementById('oppType').innerText = data.opponent.type;
             document.getElementById('oppStats').innerText = Math.round(data.opponent.pv) + " / " + data.opponent.max_pv + " | ATK: " + data.opponent.atk + " | DEF: " + data.opponent.def;
             document.getElementById('oppPvBar').style.width = (data.opponent.pv / data.opponent.max_pv * 100) + "%";
+            
+            // Update effect indicators
+            updateEffectIndicators(data.me.activeEffects, 'myEffects');
+            updateEffectIndicators(data.opponent.activeEffects, 'oppEffects');
             
             // Logs
             const logBox = document.getElementById('battleLog');

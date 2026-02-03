@@ -39,10 +39,16 @@ $userId = User::getCurrentUserId();
 $username = User::getCurrentUsername();
 $userModel = new User();
 
-$globalStats = $userModel->getGlobalStats($userId);
-$mostPlayed = $userModel->getMostPlayedHeroes($userId);
-$heroStats = $userModel->getHeroStats($userId);
-$recentCombats = $userModel->getRecentCombats($userId);
+// Statistiques 1v1 (single + multi, EXCLUT 5v5)
+$globalStats = $userModel->get1v1GlobalStats($userId);
+$mostPlayed = $userModel->getMostPlayedHeroes($userId, 3, null, true); // true = exclure 5v5
+$heroStats = $userModel->getHeroStats($userId, null, true); // true = exclure 5v5
+$recentCombats = $userModel->getRecentCombats($userId, 10, null, true); // true = exclure 5v5
+
+// Statistiques 5v5 détaillées
+$stats5v5 = $userModel->get5v5Stats($userId);
+$statsByMode = $userModel->getStatsByMode($userId);
+$bestHero5v5 = $userModel->getBestHeroByWinrate($userId, '5v5', 2);
 
 // Charger les héros pour les noms depuis la BDD
 require_once __DIR__ . '/classes/Services/HeroManager.php';
@@ -168,7 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- Système de Tabs -->
         <div class="tabs-navigation">
-            <button class="tab-button active" onclick="switchTab('stats')">📊 Statistiques</button>
+            <button class="tab-button active" onclick="switchTab('stats')">🎮 Statistiques 1v1</button>
+            <button class="tab-button" onclick="switchTab('stats5v5')">⚔️ Statistiques 5v5</button>
             <button class="tab-button" onclick="switchTab('teams')">🏆 Mes Équipes</button>
         </div>
 
@@ -290,7 +297,128 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
     </div>
 
-    <!-- TAB 2: Gestion des Équipes -->
+    <!-- TAB 2: Statistiques 5v5 -->
+    <div id="stats5v5-tab" class="tab-content">
+        <?php 
+        $s5v5 = $stats5v5['global'];
+        $mostPlayed5v5 = $stats5v5['mostPlayed'];
+        $heroStats5v5 = $stats5v5['heroStats'];
+        $recentCombats5v5 = $stats5v5['recentCombats'];
+        ?>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="value"><?php echo $s5v5['total']; ?></div>
+                <div class="label">Combats</div>
+            </div>
+            <div class="stat-card wins">
+                <div class="value"><?php echo $s5v5['wins']; ?></div>
+                <div class="label">Victoires</div>
+            </div>
+            <div class="stat-card losses">
+                <div class="value"><?php echo $s5v5['losses']; ?></div>
+                <div class="label">Défaites</div>
+            </div>
+            <div class="stat-card ratio">
+                <div class="value"><?php echo $s5v5['ratio']; ?>%</div>
+                <div class="label">Ratio</div>
+            </div>
+        </div>
+        
+        <!-- Personnages les plus joués -->
+        <div class="section">
+            <h2>🎮 Personnages les plus joués</h2>
+            <?php if (empty($mostPlayed5v5)): ?>
+                <div class="empty-state">
+                    <div class="icon">⚔️</div>
+                    <p>Aucun combat 5v5 enregistré. Lancez-vous dans l'arène avec votre équipe !</p>
+                    <a href="multiplayer_5v5_setup.php" class="btn-primary">Jouer en 5v5</a>
+                </div>
+            <?php else: ?>
+                <div class="hero-list">
+                    <?php foreach ($mostPlayed5v5 as $i => $hero): 
+                        $winrate = $hero['games'] > 0 ? round(($hero['wins'] / $hero['games']) * 100) : 0;
+                        $rankEmoji = ['🥇', '🥈', '🥉'][$i] ?? ($i + 1);
+                    ?>
+                        <div class="hero-item">
+                            <span class="rank"><?php echo $rankEmoji; ?></span>
+                            <span class="name"><?php echo htmlspecialchars($heroNames[$hero['hero_id']] ?? $hero['hero_id']); ?></span>
+                            <span class="games"><?php echo $hero['games']; ?> parties</span>
+                            <span class="winrate"><?php echo $winrate; ?>% winrate</span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Historique récent -->
+        <div class="section">
+            <h2>📜 Historique récent</h2>
+            <?php if (empty($recentCombats5v5)): ?>
+                <div class="empty-state">
+                    <div class="icon">📜</div>
+                    <p>Aucun historique disponible.</p>
+                </div>
+            <?php else: ?>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Équipe</th>
+                            <th>Adversaire</th>
+                            <th>Résultat</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($recentCombats5v5 as $combat): ?>
+                            <tr>
+                                <td>
+                                    <strong><?php echo htmlspecialchars($combat['team_name'] ?? 'Mon équipe'); ?></strong>
+                                </td>
+                                <td><?php echo htmlspecialchars($combat['opponent_name'] ?? '-'); ?></td>
+                                <td class="<?php echo $combat['victory'] ? 'result-victory' : 'result-defeat'; ?>">
+                                    <?php echo $combat['victory'] ? '✓ Victoire' : '✗ Défaite'; ?>
+                                </td>
+                                <td><?php echo date('d/m/Y H:i', strtotime($combat['played_at'])); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Stats par héros -->
+        <?php if (!empty($heroStats5v5)): ?>
+        <div class="section">
+            <h2>📊 Statistiques par héros</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Héros</th>
+                        <th>Parties</th>
+                        <th>Victoires</th>
+                        <th>Défaites</th>
+                        <th>Winrate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($heroStats5v5 as $stat): 
+                        $winrate = $stat['games'] > 0 ? round(($stat['wins'] / $stat['games']) * 100) : 0;
+                    ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($heroNames[$stat['hero_id']] ?? $stat['hero_id']); ?></td>
+                            <td><?php echo $stat['games']; ?></td>
+                            <td class="result-victory"><?php echo $stat['wins']; ?></td>
+                            <td class="result-defeat"><?php echo $stat['losses']; ?></td>
+                            <td><?php echo $winrate; ?>%</td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- TAB 3: Gestion des Équipes -->
     <div id="teams-tab" class="tab-content">
         <?php include 'components/team-manager.php'; ?>
     </div>
@@ -302,7 +430,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Initialiser le système de tooltip
 document.addEventListener('DOMContentLoaded', initializeTooltipSystem);
 
-// Sélectionner automatiquement l'onglet "Mes Équipes" si on vient d'ajouter un héros ou si ?tab=teams dans l'URL
+// Sélectionner automatiquement l'onglet approprié
 document.addEventListener('DOMContentLoaded', function() {
     // Priorité 1: Paramètre ?tab= dans l'URL
     const urlTab = new URLSearchParams(window.location.search).get('tab');
@@ -310,13 +438,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const postTabToSelect = '<?php echo isset($_POST['action']) ? ($_POST['action'] === 'add_hero_to_team' ? 'teams' : '') : ''; ?>';
     
     const tabToSelect = urlTab || postTabToSelect || 'stats';
+    const validTabs = ['stats', 'stats5v5', 'teams'];
     
-    if (tabToSelect === 'teams' || tabToSelect === 'stats') {
-        switchTab(tabToSelect);
+    if (validTabs.includes(tabToSelect)) {
+        // Trouver le bon bouton
+        const buttons = document.querySelectorAll('.tab-button');
+        const tabIndex = validTabs.indexOf(tabToSelect);
+        if (buttons[tabIndex]) {
+            switchTabDirect(tabToSelect, buttons[tabIndex]);
+        }
     }
 });
 
 function switchTab(tabName) {
+    switchTabDirect(tabName, event.target);
+}
+
+function switchTabDirect(tabName, buttonElement) {
     // Masquer tous les tabs
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
@@ -326,8 +464,13 @@ function switchTab(tabName) {
     });
     
     // Afficher le tab sélectionné
-    document.getElementById(tabName + '-tab').classList.add('active');
-    event.target.classList.add('active');
+    const tabElement = document.getElementById(tabName + '-tab');
+    if (tabElement) {
+        tabElement.classList.add('active');
+    }
+    if (buttonElement) {
+        buttonElement.classList.add('active');
+    }
 }
 
 function confirmDelete(teamName) {

@@ -51,11 +51,83 @@ if (isset($_POST['abandon_multi'])) {
                     $sessionId = session_id();
                     $isP1 = ($metaData['player1']['session'] === $sessionId);
                     $winnerKey = $isP1 ? 'player2' : 'player1';
+                    $loserKey = $isP1 ? 'player1' : 'player2';
                     $loserName = $isP1 ? ($metaData['player1']['display_name'] ?? 'Joueur 1') : ($metaData['player2']['display_name'] ?? 'Joueur 2');
                     
                     $metaData['status'] = 'finished';
                     $metaData['winner'] = $winnerKey;
                     $metaData['logs'][] = "🏳️ " . $loserName . " a abandonné !";
+                    
+                    // === ENREGISTRER LES STATS LORS DE L'ABANDON ===
+                    $mode = $metaData['mode'] ?? '';
+                    $isVsBotMatch = $mode === 'bot' || !empty($metaData['player2']['is_bot']);
+                    
+                    if (!$isVsBotMatch && ($mode === 'pvp' || $mode === '5v5')) {
+                        $p1UserId = $metaData['player1']['user_id'] ?? null;
+                        $p2UserId = $metaData['player2']['user_id'] ?? null;
+                        
+                        $userModel = new User();
+                        $matchUuid = $matchId; // Utiliser le matchId comme UUID unique
+                        
+                        if ($mode === '5v5') {
+                            // Mode 5v5 : enregistrer tous les héros de chaque équipe
+                            $p1Heroes = array_column($metaData['player1']['heroes'] ?? [], 'id');
+                            $p2Heroes = array_column($metaData['player2']['heroes'] ?? [], 'id');
+                            $p1TeamName = $metaData['player1']['team_name'] ?? 'Équipe 1';
+                            $p2TeamName = $metaData['player2']['team_name'] ?? 'Équipe 2';
+                            $p1DisplayName = $metaData['player1']['display_name'] ?? 'Joueur 1';
+                            $p2DisplayName = $metaData['player2']['display_name'] ?? 'Joueur 2';
+                            
+                            // Enregistrer pour P1 (tous les héros de son équipe)
+                            if ($p1UserId && !empty($p1Heroes)) {
+                                $userModel->recordTeamCombat(
+                                    $p1UserId,
+                                    $p1Heroes,
+                                    $winnerKey === 'player1',
+                                    $p1TeamName,
+                                    $p2DisplayName,
+                                    $matchUuid
+                                );
+                            }
+                            
+                            // Enregistrer pour P2 (tous les héros de son équipe)
+                            if ($p2UserId && !empty($p2Heroes)) {
+                                $userModel->recordTeamCombat(
+                                    $p2UserId,
+                                    $p2Heroes,
+                                    $winnerKey === 'player2',
+                                    $p2TeamName,
+                                    $p1DisplayName,
+                                    $matchUuid
+                                );
+                            }
+                        } else {
+                            // Mode 1v1 : ancien comportement
+                            $p1HeroId = $metaData['player1']['hero']['id'] ?? null;
+                            $p2HeroId = $metaData['player2']['hero']['id'] ?? null;
+                            
+                            if ($p1UserId && $p1HeroId) {
+                                $userModel->recordCombat(
+                                    $p1UserId,
+                                    $p1HeroId,
+                                    $winnerKey === 'player1',
+                                    $p2HeroId,
+                                    'multi'
+                                );
+                            }
+                            
+                            if ($p2UserId && $p2HeroId) {
+                                $userModel->recordCombat(
+                                    $p2UserId,
+                                    $p2HeroId,
+                                    $winnerKey === 'player2',
+                                    $p1HeroId,
+                                    'multi'
+                                );
+                            }
+                        }
+                    }
+                    // === FIN ENREGISTREMENT STATS ===
                     
                     ftruncate($fp, 0);
                     rewind($fp);
@@ -196,7 +268,7 @@ try {
                 'atk' => $myHero['atk'] ?? 20,
                 'def' => $myHero['def'] ?? 5,
                 'speed' => $myHero['speed'] ?? 10,
-                'img' => $myHero['images']['p1'] ?? 'media/heroes/default.png',
+                'img' => $myHero['images'][$isP1 ? 'p1' : 'p2'] ?? 'media/heroes/default.png',
                 'activeEffects' => []
             ],
             'opponent' => [
@@ -207,7 +279,7 @@ try {
                 'atk' => $oppHero['atk'] ?? 20,
                 'def' => $oppHero['def'] ?? 5,
                 'speed' => $oppHero['speed'] ?? 10,
-                'img' => $oppHero['images']['p1'] ?? 'media/heroes/default.png',
+                'img' => $oppHero['images'][$isP1 ? 'p2' : 'p1'] ?? 'media/heroes/default.png',
                 'activeEffects' => []
             ],
             'actions' => [
@@ -1225,6 +1297,9 @@ function triggerSwitchAnimation(fighterElement, newImgSrc) {
     const img = fighterElement.querySelector('img');
     if (!img) return;
     
+    // Conserver la classe enemy-img si c'est l'opponent
+    const isEnemy = img.classList.contains('enemy-img') || fighterElement.id === 'oppFighter';
+    
     // Add switch-out animation
     fighterElement.classList.add('switch-out');
     
@@ -1237,6 +1312,10 @@ function triggerSwitchAnimation(fighterElement, newImgSrc) {
     // After fade out, change image and fade in
     setTimeout(() => {
         img.src = newImgSrc;
+        // S'assurer que la classe enemy-img est présente pour l'opponent
+        if (isEnemy) {
+            img.classList.add('enemy-img');
+        }
         fighterElement.classList.remove('switch-out');
         fighterElement.classList.add('switch-in');
         
@@ -1331,7 +1410,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// Update effect indicators (active effects displayed as emojis)
+// Update effect indicators (active effects displayed as emojis with duration badge and tooltip)
 function updateEffectIndicators(effects, containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -1345,9 +1424,33 @@ function updateEffectIndicators(effects, containerId) {
     // Add effect indicators
     for (const [name, effect] of Object.entries(effects)) {
         const indicator = document.createElement('div');
-        indicator.className = 'effect-indicator';
-        indicator.title = name;
-        indicator.textContent = effect.emoji || '✨';
+        indicator.className = 'effect-indicator' + (effect.isPending ? ' pending' : '');
+        
+        // Emoji de l'effet
+        const emoji = document.createElement('span');
+        emoji.className = 'effect-emoji';
+        emoji.textContent = effect.emoji || '✨';
+        indicator.appendChild(emoji);
+        
+        // Badge de durée (en bas à droite)
+        const duration = effect.duration || effect.turnsDelay || 0;
+        if (duration > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'effect-duration-badge';
+            badge.textContent = duration;
+            indicator.appendChild(badge);
+        }
+        
+        // Tooltip (infobulle)
+        const tooltip = document.createElement('div');
+        tooltip.className = 'effect-tooltip';
+        tooltip.innerHTML = `
+            <div class="effect-tooltip-title">${effect.emoji || '✨'} ${name}</div>
+            <div class="effect-tooltip-desc">${effect.description || name}</div>
+            <div class="effect-tooltip-duration">${effect.isPending ? '⏳ Actif dans' : '⌛ Durée restante'}: ${duration} tour(s)</div>
+        `;
+        indicator.appendChild(tooltip);
+        
         container.appendChild(indicator);
     }
 }
@@ -1538,6 +1641,13 @@ function updateCombatState() {
                 stopActionTimer();
                 closeSwitchModal(true); // Force close on game over
                 btnContainer.style.display = 'none';
+                
+                // Masquer aussi le bouton switch
+                const switchBtn = document.getElementById('switchBtn');
+                if (switchBtn) {
+                    switchBtn.style.display = 'none';
+                }
+                
                 waitMsg.style.display = 'none';
                 gameOverMsg.style.display = 'block';
                 
@@ -1562,6 +1672,8 @@ function updateCombatState() {
                 if (data.waiting_for_me) {
                     // Afficher le conteneur d'actions (contient switch + boutons)
                     if (actionContainer) actionContainer.style.display = 'flex';
+                    // Réafficher aussi le conteneur de boutons (peut être caché par performSwitch)
+                    if (btnContainer) btnContainer.style.display = '';
                     waitMsg.style.display = 'none';
                 } else {
                     // Cacher le conteneur d'actions (cache automatiquement switch + boutons)

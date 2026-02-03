@@ -40,4 +40,8 @@ class StatSwapEffect extends StatusEffect {
         }
         return "✨ " . $this->name . " sur " . $target->getName() . " s'est dissipé. Stats restaurées !";
     }
+
+    public function getDescription(): string {
+        return "🔄 ATK et DEF inversées ({$this->duration} tour(s))";
+    }
 }

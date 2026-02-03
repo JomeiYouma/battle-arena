@@ -527,6 +527,7 @@ function selectTeam(teamId, teamName, membersData) {
     console.log('Équipe sélectionnée:', teamId, teamName, membersData);
     
     // Convertir les données des membres en format attendu par l'API
+    // Inclure blessing_id pour chaque héros
     const teamHeroes = membersData.map(member => ({
         id: member.hero_id,
         name: member.name,
@@ -535,6 +536,7 @@ function selectTeam(teamId, teamName, membersData) {
         atk: parseInt(member.atk),
         def: parseInt(member.def),
         speed: parseInt(member.speed),
+        blessing_id: member.blessing_id || null,
         images: {
             p1: member.image_p1 || 'media/heroes/default.png',
             p2: member.image_p2 || 'media/heroes/default.png'
@@ -572,10 +574,10 @@ function startQueue() {
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            team: selectedTeamData.heroes,
+            team: selectedTeamData.heroes,  // Contient blessing_id pour chaque héros
             team_id: selectedTeamData.team_id,
-            blessing_id: null,
-            display_name: selectedTeamData.team_name
+            team_name: selectedTeamData.team_name,
+            display_name: '<?php echo htmlspecialchars($_SESSION['username'] ?? 'Joueur'); ?>'
         })
     })
     .then(r => r.json())

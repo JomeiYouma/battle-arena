@@ -19,4 +19,8 @@ class ParalysisEffect extends StatusEffect {
     public function resolveStats(Personnage $target): ?array {
         return null;
     }
+
+    public function getDescription(): string {
+        return "⚡ Paralysie : 50% de chance de ne pas agir ({$this->duration} tour(s))";
+    }
 }

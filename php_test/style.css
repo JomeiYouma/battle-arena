@@ -519,7 +519,7 @@ h3 {
     border-radius: 8px;
     border: 2px solid var(--stone-gray);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* Effet de brume au sol */
@@ -1172,8 +1172,9 @@ select option {
     position: absolute;
     bottom: -15px;
     display: flex;
-    gap: 5px;
+    gap: 8px;
     z-index: 50;
+    overflow: visible;
 }
 
 .effects-container.hero-effects {
@@ -1187,15 +1188,102 @@ select option {
 
 /* Indicateurs d'effets actifs (brûlure, etc.) */
 .effect-indicator {
+    position: relative;
     font-size: 1.4rem;
-    animation: pulse-effect 1s ease-in-out infinite;
     text-shadow: 0 0 10px rgba(255, 100, 0, 0.8);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+}
+
+.effect-indicator .effect-emoji {
+    display: block;
+}
+
+/* Badge de durée en bas à droite de l'icône */
+.effect-duration-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -6px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0a0a15 100%);
+    border: 1px solid var(--gold-accent);
+    border-radius: 50%;
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: var(--gold-accent);
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-shadow: none;
+    animation: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+/* Tooltip au hover */
+.effect-tooltip {
+    position: absolute !important;
+    bottom: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0d0d1a 100%) !important;
+    border: 1px solid var(--gold-accent) !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    min-width: 180px;
+    max-width: 250px;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: opacity 0.2s, visibility 0.2s, transform 0.2s;
+    z-index: 1000 !important;
+    pointer-events: none !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 
+                0 0 20px rgba(184, 134, 11, 0.2);
+    margin-bottom: 8px;
+    white-space: nowrap;
+}
+
+.effect-indicator:hover .effect-tooltip {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translateX(-50%) translateY(-5px) !important;
+}
+
+.effect-tooltip-title {
+    font-size: 0.95rem;
+    font-weight: bold;
+    color: var(--gold-accent);
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(184, 134, 11, 0.3);
+    padding-bottom: 4px;
+}
+
+.effect-tooltip-desc {
+    font-size: 0.8rem;
+    color: #ccc;
+    margin-bottom: 6px;
+    line-height: 1.3;
+}
+
+.effect-tooltip-duration {
+    font-size: 0.75rem;
+    color: #888;
+    font-style: italic;
 }
 
 /* Effet en attente (brûlure à venir) */
 .effect-indicator.pending {
     opacity: 0.6;
-    animation: pulse-pending 1.5s ease-in-out infinite;
+}
+
+.effect-indicator.pending .effect-duration-badge {
+    background: linear-gradient(135deg, #2a1a0a 0%, #1a0a00 100%);
+    border-color: #ff6b00;
+    color: #ff6b00;
 }
 
 @keyframes pulse-effect {

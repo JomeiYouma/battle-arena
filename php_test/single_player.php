@@ -174,8 +174,18 @@ if (isset($_SESSION['combat'])):
             <!-- Emojis and effects injected via JS -->
             <div id="heroEmojiContainer"></div>
             <div class="effects-container hero-effects">
-                <?php foreach ($hero->getActiveEffects() as $name => $effect): ?>
-                    <div class="effect-indicator" title="<?php echo $name; ?>"><?php echo $effect['emoji']; ?></div>
+                <?php foreach ($hero->getAllEffectsForUI() as $name => $effect): ?>
+                    <div class="effect-indicator<?php echo $effect['isPending'] ? ' pending' : ''; ?>">
+                        <span class="effect-emoji"><?php echo $effect['emoji']; ?></span>
+                        <?php if ($effect['duration'] > 0): ?>
+                            <span class="effect-duration-badge"><?php echo $effect['duration']; ?></span>
+                        <?php endif; ?>
+                        <div class="effect-tooltip">
+                            <div class="effect-tooltip-title"><?php echo $effect['emoji'] . ' ' . htmlspecialchars($name); ?></div>
+                            <div class="effect-tooltip-desc"><?php echo htmlspecialchars($effect['description']); ?></div>
+                            <div class="effect-tooltip-duration"><?php echo $effect['isPending'] ? '⏳ Actif dans' : '⌛ Durée restante'; ?>: <?php echo $effect['duration']; ?> tour(s)</div>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -187,11 +197,18 @@ if (isset($_SESSION['combat'])):
             <!-- Emojis and effects injected via JS -->
             <div id="enemyEmojiContainer"></div>
             <div class="effects-container enemy-effects">
-                <?php foreach ($enemy->getActiveEffects() as $name => $effect): ?>
-                    <div class="effect-indicator" title="<?php echo $name; ?>"><?php echo $effect['emoji']; ?></div>
-                <?php endforeach; ?>
-                <?php foreach ($enemy->getPendingEffects() as $name => $effect): ?>
-                    <div class="effect-indicator pending" title="<?php echo $name; ?> (<?php echo $effect['turnsDelay']; ?> tour)"><?php echo $effect['emoji']; ?></div>
+                <?php foreach ($enemy->getAllEffectsForUI() as $name => $effect): ?>
+                    <div class="effect-indicator<?php echo $effect['isPending'] ? ' pending' : ''; ?>">
+                        <span class="effect-emoji"><?php echo $effect['emoji']; ?></span>
+                        <?php if ($effect['duration'] > 0): ?>
+                            <span class="effect-duration-badge"><?php echo $effect['duration']; ?></span>
+                        <?php endif; ?>
+                        <div class="effect-tooltip">
+                            <div class="effect-tooltip-title"><?php echo $effect['emoji'] . ' ' . htmlspecialchars($name); ?></div>
+                            <div class="effect-tooltip-desc"><?php echo htmlspecialchars($effect['description']); ?></div>
+                            <div class="effect-tooltip-duration"><?php echo $effect['isPending'] ? '⏳ Actif dans' : '⌛ Durée restante'; ?>: <?php echo $effect['duration']; ?> tour(s)</div>
+                        </div>
+                    </div>
                 <?php endforeach; ?>
             </div>
         </div>

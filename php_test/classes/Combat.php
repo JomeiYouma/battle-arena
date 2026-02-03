@@ -197,6 +197,13 @@ class Combat {
         }
 
         $actions = $actor->getAllActions();
+        
+        // Vérifier que l'action existe pour cet acteur
+        if (!isset($actions[$actionKey])) {
+            $this->logs[] = "❌ Action invalide: " . $actionKey . " n'existe pas pour " . $actor->getName();
+            return;
+        }
+        
         $action = $actions[$actionKey];
         $actor->usePP($actionKey);
 

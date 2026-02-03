@@ -536,7 +536,9 @@ abstract class Personnage {
             if (!$effect->isPending()) {
                 $active[$effect->getName()] = [
                     'emoji' => $effect->getEmoji(),
-                    'duration' => $effect->getDuration()
+                    'duration' => $effect->getDuration(),
+                    'description' => $effect->getDescription(),
+                    'isPending' => false
                 ];
             }
         }
@@ -552,11 +554,31 @@ abstract class Personnage {
             if ($effect->isPending()) {
                 $pending[$effect->getName()] = [
                     'emoji' => $effect->getEmoji(),
-                    'turnsDelay' => $effect->getTurnsDelay()
+                    'turnsDelay' => $effect->getTurnsDelay(),
+                    'description' => $effect->getDescription(),
+                    'isPending' => true
                 ];
             }
         }
         return $pending;
+    }
+
+    /**
+     * Retourne TOUS les effets (actifs + pending) pour affichage UI complet
+     * Avec durée restante et description pour les tooltips
+     */
+    public function getAllEffectsForUI(): array {
+        $effects = [];
+        foreach ($this->statusEffects as $effect) {
+            $isPending = $effect->isPending();
+            $effects[$effect->getName()] = [
+                'emoji' => $effect->getEmoji(),
+                'duration' => $isPending ? $effect->getTurnsDelay() : $effect->getDuration(),
+                'description' => $effect->getDescription(),
+                'isPending' => $isPending
+            ];
+        }
+        return $effects;
     }
 
     /**

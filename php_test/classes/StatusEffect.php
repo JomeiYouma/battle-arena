@@ -25,6 +25,18 @@ abstract class StatusEffect {
     public function getTurnsDelay(): int { return $this->turnsDelay; }
     public function getDamagePerTurn(): int { return $this->damagePerTurn; }
 
+    /**
+     * Retourne une description de l'effet pour l'UI
+     * À surcharger dans les classes enfants pour plus de détails
+     */
+    public function getDescription(): string {
+        $desc = $this->name;
+        if ($this->damagePerTurn > 0) {
+            $desc .= " ({$this->damagePerTurn} dégâts/tour)";
+        }
+        return $desc;
+    }
+
     public function setDuration(int $duration): void {
         $this->duration = max(0, $duration);
     }

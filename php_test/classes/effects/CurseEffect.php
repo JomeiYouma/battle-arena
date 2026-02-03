@@ -25,4 +25,8 @@ class CurseEffect extends StatusEffect {
     public function resolveStats(Personnage $target): ?array {
         return null;
     }
+
+    public function getDescription(): string {
+        return "💀 Malédiction : {$this->damageAmount} dégâts/tour ({$this->duration} tour(s))";
+    }
 }

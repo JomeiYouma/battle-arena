@@ -30,4 +30,11 @@ class BombEffect extends StatusEffect {
     public function onActivate(Personnage $target): string {
         return "💣 La bombe va exploser sur " . $target->getName() . " !";
     }
+
+    public function getDescription(): string {
+        if ($this->isPending()) {
+            return "💣 Explosion dans {$this->turnsDelay} tour(s) ({$this->explosionDamage} dégâts)";
+        }
+        return "💥 Va exploser ! ({$this->explosionDamage} dégâts)";
+    }
 }
