@@ -171,7 +171,7 @@ require_once __DIR__ . '/includes/header.php';
     position: absolute;
     left: 2rem;
     top: 2rem;
-    color: #888;
+    color: var(--text-dim);
     text-decoration: none;
     transition: color 0.2s;
 }
@@ -187,7 +187,7 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .selection-header p {
-    color: #aaa;
+    color: var(--text-dim);
     margin-bottom: 1rem;
 }
 
@@ -195,7 +195,7 @@ require_once __DIR__ . '/includes/header.php';
     display: inline-block;
     padding: 0.8rem 1.5rem;
     background: var(--stone-gray);
-    color: #fff;
+    color: var(--text-light);
     text-decoration: none;
     border-radius: 6px;
     border: 1px solid var(--gold-accent);
@@ -215,7 +215,7 @@ require_once __DIR__ . '/includes/header.php';
     margin: 0 auto;
     background: rgba(0, 0, 0, 0.3);
     border-radius: 12px;
-    border: 2px solid #555;
+    border: 2px solid var(--stone-gray);
 }
 
 .message-icon {
@@ -230,7 +230,7 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .no-teams-message p {
-    color: #aaa;
+    color: var(--text-dim);
     margin-bottom: 2rem;
 }
 
@@ -262,7 +262,7 @@ require_once __DIR__ . '/includes/header.php';
 
 .team-card {
     background: linear-gradient(145deg, rgba(20, 20, 20, 0.9), rgba(30, 30, 30, 0.95));
-    border: 2px solid #444;
+    border: 2px solid var(--stone-gray);
     border-radius: 12px;
     padding: 1.5rem;
     transition: all 0.3s;
@@ -281,7 +281,7 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .team-description {
-    color: #aaa;
+    color: var(--text-dim);
     font-size: 0.9rem;
     margin-bottom: 1rem;
 }
@@ -302,7 +302,7 @@ require_once __DIR__ . '/includes/header.php';
     height: 80px;
     object-fit: cover;
     border-radius: 6px;
-    border: 2px solid #555;
+    border: 2px solid var(--stone-gray);
     margin-bottom: 0.3rem;
     transition: all 0.2s;
 }
@@ -313,7 +313,7 @@ require_once __DIR__ . '/includes/header.php';
 
 .member-name {
     font-size: 0.7rem;
-    color: #aaa;
+    color: var(--text-dim);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -323,7 +323,7 @@ require_once __DIR__ . '/includes/header.php';
     width: 100%;
     padding: 1rem;
     background: var(--stone-gray);
-    color: #fff;
+    color: var(--text-light);
     border: 2px solid var(--gold-accent);
     border-radius: 8px;
     font-size: 1rem;
@@ -410,7 +410,7 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .queue-hint {
-    color: #888;
+    color: var(--text-dim);
     font-size: 0.9rem;
     margin-top: 1rem;
 }
@@ -418,9 +418,9 @@ require_once __DIR__ . '/includes/header.php';
 .btn-cancel {
     margin-top: 2rem;
     padding: 0.8rem 2rem;
-    background: #444;
-    color: #fff;
-    border: 1px solid #666;
+    background: var(--stone-gray);
+    color: var(--text-light);
+    border: 1px solid var(--text-dim);
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
@@ -428,15 +428,29 @@ require_once __DIR__ . '/includes/header.php';
 }
 
 .btn-cancel:hover {
-    background: #c00;
-    border-color: #f00;
+    background: var(--accent-red);
+    border-color: var(--accent-red);
 }
 
 /* ===== RESPONSIVE ===== */
+/* Tablettes et écrans moyens */
+@media (max-width: 1024px) {
+    .teams-list {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+/* Mobiles et petits écrans */
 @media (max-width: 768px) {
     .teams-list {
         grid-template-columns: 1fr;
         padding: 0 1rem 1rem;
+        gap: 1rem;
+    }
+    
+    .team-card {
+        padding: 1rem;
     }
     
     .team-members-preview {
@@ -455,6 +469,47 @@ require_once __DIR__ . '/includes/header.php';
         position: static;
         display: block;
         margin-bottom: 1rem;
+    }
+    
+    .selection-header h2 {
+        font-size: 1.3rem;
+    }
+    
+    .btn-manage-teams {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+/* Très petits écrans */
+@media (max-width: 480px) {
+    .team-members-preview {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .member-preview:nth-child(4),
+    .member-preview:nth-child(5) {
+        grid-column: span 1;
+    }
+    
+    .member-preview img {
+        height: 50px;
+    }
+    
+    .member-name {
+        font-size: 0.6rem;
+    }
+    
+    .team-header h3 {
+        font-size: 1.1rem;
+    }
+    
+    .queue-container {
+        padding: 1rem;
+    }
+    
+    .queue-title {
+        font-size: 1.2rem;
     }
 }
 </style>

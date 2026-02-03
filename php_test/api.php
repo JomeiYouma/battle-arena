@@ -130,6 +130,7 @@ try {
             
             $queue5v5[$sessionId] = [
                 'session_id' => $sessionId,
+                'user_id' => $_SESSION['user_id'] ?? null,
                 'team' => $input['team'],
                 'display_name' => $displayName,
                 'blessing_id' => $blessingId,
@@ -218,6 +219,8 @@ try {
                         $currentDisplayName = $currentPlayerData['display_name'] ?? $_SESSION['queue5v5DisplayName'] ?? 'Joueur 1';
                         $currentTeam = $currentPlayerData['team'] ?? $_SESSION['queue5v5Team'] ?? [];
                         $currentBlessingId = $currentPlayerData['blessing_id'] ?? $_SESSION['queue5v5BlessingId'] ?? null;
+                        $currentUserId = $currentPlayerData['user_id'] ?? $_SESSION['user_id'] ?? null;
+                        $opponentUserId = $player['user_id'] ?? null;
                         
                         $matchData = [
                             'id' => $matchId,
@@ -228,7 +231,7 @@ try {
                             'player1' => [
                                 'session' => $sessionId,
                                 'display_name' => $currentDisplayName,
-                                'user_id' => null,
+                                'user_id' => $currentUserId,
                                 'team_id' => 1,
                                 'heroes' => $currentTeam,
                                 'blessing_id' => $currentBlessingId,
@@ -237,7 +240,7 @@ try {
                             'player2' => [
                                 'session' => $sid,
                                 'display_name' => $player['display_name'],
-                                'user_id' => null,
+                                'user_id' => $opponentUserId,
                                 'team_id' => 2,
                                 'heroes' => $player['team'],
                                 'blessing_id' => $player['blessing_id'],
@@ -320,6 +323,7 @@ try {
             $currentDisplayName = $currentPlayerData['display_name'] ?? $_SESSION['queue5v5DisplayName'] ?? 'Joueur';
             $currentTeam = $currentPlayerData['team'] ?? $_SESSION['queue5v5Team'] ?? [];
             $currentBlessingId = $currentPlayerData['blessing_id'] ?? $_SESSION['queue5v5BlessingId'] ?? null;
+            $currentUserId = $currentPlayerData['user_id'] ?? $_SESSION['user_id'] ?? null;
             
             $matchId = uniqid('match_5v5_bot_');
             $now = time();
@@ -333,7 +337,7 @@ try {
                 'player1' => [
                     'session' => $sessionId,
                     'display_name' => $currentDisplayName,
-                    'user_id' => null,
+                    'user_id' => $currentUserId,
                     'team_id' => 1,
                     'heroes' => $currentTeam,
                     'blessing_id' => $currentBlessingId,
@@ -605,8 +609,11 @@ try {
                 if ($multiCombat->isOver()) {
                     $metaData['status'] = 'finished';
                     
-                    // Enregistrer les stats pour PvP seulement (pas pour les bots)
-                    if (($metaData['mode'] ?? '') === 'pvp') {
+                    // Enregistrer les stats pour PvP et 5v5 (pas pour les bots)
+                    $mode = $metaData['mode'] ?? '';
+                    $isVsBotMatch = $mode === 'bot' || !empty($metaData['player2']['is_bot']);
+                    
+                    if (!$isVsBotMatch && ($mode === 'pvp' || $mode === '5v5')) {
                         $winnerId = $multiCombat->getWinnerId(); // 'p1' ou 'p2'
                         
                         // Récupérer les infos utilisateur si disponibles
@@ -614,8 +621,18 @@ try {
                         $p2UserId = $metaData['player2']['user_id'] ?? null;
                         
                         if ($p1UserId || $p2UserId) {
-                            $p1HeroId = $metaData['player1']['hero']['id'] ?? null;
-                            $p2HeroId = $metaData['player2']['hero']['id'] ?? null;
+                            // Pour 5v5, utiliser le premier héros de l'équipe comme représentant
+                            // Pour 1v1, utiliser hero.id
+                            if ($mode === '5v5') {
+                                $p1HeroId = $metaData['player1']['heroes'][0]['id'] ?? 'unknown';
+                                $p2HeroId = $metaData['player2']['heroes'][0]['id'] ?? 'unknown';
+                                $gameMode = '5v5';
+                            } else {
+                                $p1HeroId = $metaData['player1']['hero']['id'] ?? null;
+                                $p2HeroId = $metaData['player2']['hero']['id'] ?? null;
+                                $gameMode = 'multi';
+                            }
+                            
                             $userModel = new User();
                             
                             // Enregistrer pour P1
@@ -625,7 +642,7 @@ try {
                                     $p1HeroId,
                                     $winnerId === 'p1',
                                     $p2HeroId,
-                                    'multi'
+                                    $gameMode
                                 );
                             }
                             
@@ -636,7 +653,7 @@ try {
                                     $p2HeroId,
                                     $winnerId === 'p2',
                                     $p1HeroId,
-                                    'multi'
+                                    $gameMode
                                 );
                             }
                         }

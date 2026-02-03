@@ -309,6 +309,91 @@ class TeamCombat extends MultiCombat {
     }
 
     // ============================================
+    // RÉSOLUTION DU TOUR (override pour switch prioritaire)
+    // ============================================
+
+    /**
+     * Override resolveMultiTurn pour que les switchs soient exécutés EN PREMIER
+     * avant toutes les autres actions, indépendamment de la vitesse.
+     */
+    public function resolveMultiTurn($p1ActionKey, $p2ActionKey) {
+        $this->turnActions = [];
+        $this->captureInitialStates();
+        $this->logs[] = "--- Tour " . $this->turn . " ---";
+
+        // ===== PHASE SWITCH (PRIORITAIRE) =====
+        // Les switchs sont toujours exécutés en premier
+        $p1IsSwitch = strpos($p1ActionKey, 'switch:') === 0;
+        $p2IsSwitch = strpos($p2ActionKey, 'switch:') === 0;
+
+        if ($p1IsSwitch) {
+            $parts = explode(':', $p1ActionKey);
+            if (count($parts) === 2 && is_numeric($parts[1])) {
+                $targetIndex = (int)$parts[1];
+                $this->executeSwitchAction($targetIndex, $this->player);
+            }
+        }
+
+        if ($p2IsSwitch) {
+            $parts = explode(':', $p2ActionKey);
+            if (count($parts) === 2 && is_numeric($parts[1])) {
+                $targetIndex = (int)$parts[1];
+                $this->executeSwitchAction($targetIndex, $this->enemy);
+            }
+        }
+
+        // Si les deux ont switché, passer le tour sans actions de combat
+        if ($p1IsSwitch && $p2IsSwitch) {
+            $this->turn++;
+            return;
+        }
+
+        // Déterminer les actions non-switch
+        $p1FinalAction = $p1IsSwitch ? 'attack' : $p1ActionKey; // Si switch déjà fait, attaque par défaut
+        $p2FinalAction = $p2IsSwitch ? 'attack' : $p2ActionKey;
+
+        // ===== PHASES EFFETS (Identique à Combat) =====
+        if ($this->turn > 1) {
+            $first = $this->player;
+            $second = $this->enemy;
+            
+            $this->resolveDamageEffectsFor($first);
+            if ($this->checkDeath($first)) return;
+            
+            $this->resolveDamageEffectsFor($second);
+            if ($this->checkDeath($second)) return;
+            
+            $this->resolveStatEffectsFor($first);
+            $this->processBuffsFor($first);
+            
+            $this->resolveStatEffectsFor($second);
+            $this->processBuffsFor($second);
+        }
+
+        // ===== PHASE ACTIONS DE COMBAT =====
+        // Déterminer l'ordre par vitesse
+        [$first, $second] = $this->getOrderedFighters();
+        $playerIsFirst = ($first === $this->player);
+
+        $firstActionKey = $playerIsFirst ? $p1FinalAction : $p2FinalAction;
+        $secondActionKey = $playerIsFirst ? $p2FinalAction : $p1FinalAction;
+
+        // Action 1
+        $target1 = ($first === $this->player) ? $this->enemy : $this->player;
+        $this->performAction($first, $target1, $firstActionKey);
+        
+        if ($this->checkDeath($target1)) return;
+
+        // Action 2
+        $target2 = ($second === $this->player) ? $this->enemy : $this->player;
+        $this->performAction($second, $target2, $secondActionKey);
+        
+        if ($this->checkDeath($target2)) return;
+
+        $this->turn++;
+    }
+
+    // ============================================
     // ACTIONS DE COMBAT
     // ============================================
 

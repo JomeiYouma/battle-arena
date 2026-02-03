@@ -302,13 +302,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Initialiser le système de tooltip
 document.addEventListener('DOMContentLoaded', initializeTooltipSystem);
 
-// Sélectionner automatiquement l'onglet "Mes Équipes" si on vient d'ajouter un héros
+// Sélectionner automatiquement l'onglet "Mes Équipes" si on vient d'ajouter un héros ou si ?tab=teams dans l'URL
 document.addEventListener('DOMContentLoaded', function() {
-    const actionParam = new URLSearchParams(window.location.search).get('action');
-    const tabToSelect = '<?php echo isset($_POST['action']) ? ($_POST['action'] === 'add_hero_to_team' ? 'teams' : 'stats') : 'stats'; ?>';
+    // Priorité 1: Paramètre ?tab= dans l'URL
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    // Priorité 2: Action POST (ajouter un héros -> teams)
+    const postTabToSelect = '<?php echo isset($_POST['action']) ? ($_POST['action'] === 'add_hero_to_team' ? 'teams' : '') : ''; ?>';
     
-    if (tabToSelect === 'teams') {
-        switchTab('teams');
+    const tabToSelect = urlTab || postTabToSelect || 'stats';
+    
+    if (tabToSelect === 'teams' || tabToSelect === 'stats') {
+        switchTab(tabToSelect);
     }
 });
 

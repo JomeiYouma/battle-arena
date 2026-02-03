@@ -307,13 +307,23 @@ try {
         <!-- CONTROLS -->
         <div class="controls">
             <div class="controls-row">
-                <!-- LEFT: Action list -->
-                <div id="actionButtons" class="action-list">
-                    <!-- Actions générées dynamiquement par JS -->
+                <!-- LEFT: Action list + Switch -->
+                <div class="action-container-5v5" id="actionContainer">
+                    <?php if ($is5v5): ?>
+                    <!-- BOUTON DE SWITCH EN PREMIER pour 5v5 -->
+                    <button type="button" class="action-btn switch-btn" id="switchBtn" onclick="showSwitchMenu()" data-tooltip="Changer de héros actif">
+                        <span class="action-emoji-icon">🔄</span>
+                        <span class="action-label">SWITCH</span>
+                    </button>
+                    <?php endif; ?>
+                    
+                    <div id="actionButtons" class="action-list">
+                        <!-- Actions générées dynamiquement par JS -->
+                    </div>
                 </div>
                 
-                <!-- RIGHT: Info panel (timer + description) -->
-                <div id="infoPanel" class="info-panel info-panel-hidden">
+                <!-- RIGHT: Timer + Abandonner -->
+                <div id="infoPanel" class="info-panel">
                     <div id="actionTimer" class="action-timer-circle">
                         <!-- SVG Ring -->
                         <svg class="timer-svg" viewBox="0 0 70 70">
@@ -322,9 +332,10 @@ try {
                         </svg>
                         <span id="timerValue">60</span>
                     </div>
-                    <div id="actionDescription" class="action-description">
-                        Survolez une action pour voir sa description
-                    </div>
+                    
+                    <form method="POST" class="abandon-form-inline">
+                        <button type="submit" name="abandon_multi" class="action-btn abandon">Abandonner</button>
+                    </form>
                 </div>
             </div>
             
@@ -337,19 +348,6 @@ try {
                 <button class="action-btn new-game" onclick="location.href='multiplayer.php'">Rejouer</button>
                 <button class="action-btn" onclick="location.href='index.php'" style="margin-left: 10px;">Menu Principal</button>
             </div>
-            
-            <?php if ($is5v5): ?>
-            <!-- BOUTON DE SWITCH POUR 5v5 -->
-            <div class="switch-button-container">
-                <button type="button" class="action-btn switch-btn" id="switchBtn" onclick="showSwitchMenu()">
-                    <span class="action-label">SWITCH</span>
-                </button>
-            </div>
-            <?php endif; ?>
-            
-            <form method="POST" class="abandon-form">
-                <button type="submit" name="abandon_multi" class="action-btn abandon">Abandonner</button>
-            </form>
         </div>
     </div>
     
@@ -371,43 +369,53 @@ try {
         <div class="switch-modal-content">
             <div class="switch-modal-header">
                 <h3 id="switchModalTitle">🔄 Changer de Héros</h3>
-                <button class="switch-modal-close" onclick="closeSwitchModal()">✕</button>
+                <button class="switch-modal-close" onclick="closeSwitchModal(true)">✕</button>
             </div>
             <p class="switch-modal-subtitle">Sélectionnez un héros pour remplacer votre combattant actuel</p>
             <div id="switchHeroesGrid" class="switch-heroes-grid">
                 <!-- Héros disponibles générés par JS -->
             </div>
-            <button class="switch-modal-cancel" onclick="closeSwitchModal()">Annuler</button>
+            <button class="switch-modal-cancel" onclick="closeSwitchModal(true)">Annuler</button>
         </div>
     </div>
     <?php endif; ?>
 </div>
+
+<!-- Tooltip System -->
+<div id="customTooltip" class="custom-tooltip"></div>
+
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 <script src="js/combat-animations.js"></script>
+<script src="js/selection-tooltip.js"></script>
 <style>
 /* ===== 5v5 TEAM SIDEBARS ===== */
 .game-container.mode-5v5 {
     display: flex;
-    gap: 1rem;
+    gap: 0.5rem;
     align-items: flex-start;
     justify-content: center;
     position: relative;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
 }
 
 .game-container.mode-5v5 .arena {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 700px;
 }
 
 .team-sidebar {
     display: flex;
     flex-direction: column;
-    gap: 0.8rem;
-    padding: 1rem;
+    gap: 0.5rem;
+    padding: 0.8rem;
     background: rgba(10, 10, 10, 0.85);
     border: 1px solid var(--gold-accent);
     border-radius: 8px;
-    min-width: 200px;
-    max-height: 90vh;
+    flex: 0 0 180px;
+    max-height: 85vh;
     overflow-y: auto;
     scrollbar-color: rgba(184, 134, 11, 0.7) rgba(20, 20, 20, 0.8);
     scrollbar-width: thin;
@@ -417,22 +425,22 @@ try {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
+    padding-bottom: 0.3rem;
     border-bottom: 1px solid rgba(184, 134, 11, 0.5);
 }
 
 .team-sidebar h3 {
     margin: 0;
     color: var(--parchment-text);
-    font-size: 1rem;
+    font-size: 0.9rem;
 }
 
 .sidebar-close {
     background: none;
     border: none;
     color: var(--parchment-text);
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     cursor: pointer;
     padding: 0;
     display: none;
@@ -451,9 +459,9 @@ try {
 .hero-card {
     background: rgba(20, 20, 20, 0.9);
     border: 1px solid #3a3a3a;
-    border-radius: 6px;
-    padding: 0.8rem;
-    font-size: 0.9rem;
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 0.75rem;
     transition: all 0.2s ease;
 }
 
@@ -465,7 +473,7 @@ try {
 .hero-card.active {
     border-color: var(--gold-accent);
     background: rgba(40, 35, 20, 0.9);
-    box-shadow: 0 0 10px rgba(184, 134, 11, 0.25);
+    box-shadow: 0 0 8px rgba(184, 134, 11, 0.25);
 }
 
 .hero-card.dead {
@@ -476,49 +484,54 @@ try {
 .hero-card-name {
     font-weight: bold;
     color: var(--text-light);
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .hero-card-position {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: #999;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.2rem;
 }
 
 .hero-card-hp {
     display: flex;
     align-items: center;
-    gap: 0.3rem;
-    margin-bottom: 0.3rem;
+    gap: 0.2rem;
+    margin-bottom: 0.2rem;
 }
 
 .hero-card-hp-bar {
     flex: 1;
-    height: 6px;
+    height: 4px;
     background: #333;
-    border-radius: 3px;
+    border-radius: 2px;
     overflow: hidden;
 }
 
 .hero-card-hp-bar .fill {
     height: 100%;
     background: linear-gradient(90deg, #ff4444, #ffaa00);
-    border-radius: 3px;
+    border-radius: 2px;
 }
 
 .hero-card-stats {
     display: flex;
-    gap: 0.3rem;
-    font-size: 0.8rem;
+    gap: 0.2rem;
+    font-size: 0.7rem;
     color: #ccc;
 }
 
 .hero-card-stats span {
     flex: 1;
+    white-space: nowrap;
 }
 
-/* DRAWER MODE (Mobile/Small screens) */
-@media (max-width: 1399px) {
+/* DRAWER MODE (Mobile/Tablet screens) */
+@media (max-width: 1199px) {
     .game-container.mode-5v5 {
         flex-direction: column;
     }
@@ -637,27 +650,111 @@ try {
 }
 
 /* ===== AMÉLIORATION BOUTONS D'ACTION 5v5 ===== */
-.mode-5v5 .action-list {
-    display: flex;
+
+/* Override controls-row pour 5v5 - plus d'espace pour les actions */
+.mode-5v5 .controls-row {
+    height: auto;
+    min-height: 200px;
+    max-height: 400px;
     flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    padding: 10px;
-    min-height: 80px;
+    align-items: flex-start;
 }
 
-.mode-5v5 .action-list .action-btn {
-    /* Taille fixe pour éviter le décalage au hover */
-    min-width: 140px;
-    min-height: 70px;
-    max-width: 180px;
-    padding: 10px 15px;
-    
+/* Panneau info à droite (timer + abandonner) */
+.mode-5v5 .info-panel {
+    flex: 0 0 auto;
+    min-width: 120px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
+    gap: 15px;
+    padding: 10px;
+}
+
+/* Form abandonner inline dans le panneau droit */
+.abandon-form-inline {
+    margin: 0;
+}
+
+.abandon-form-inline .action-btn.abandon {
+    font-size: 0.8rem;
+    padding: 8px 16px;
+}
+
+/* Container pour les actions 5v5 */
+.action-container-5v5 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 5px;
+    
+    /* Scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-accent) var(--dungeon-gray);
+}
+
+.action-container-5v5::-webkit-scrollbar {
+    width: 6px;
+}
+
+.action-container-5v5::-webkit-scrollbar-track {
+    background: var(--dungeon-gray);
+    border-radius: 3px;
+}
+
+.action-container-5v5::-webkit-scrollbar-thumb {
+    background: var(--gold-accent);
+    border-radius: 3px;
+}
+
+/* Switch button en haut */
+.mode-5v5 .switch-btn {
+    width: 100%;
+    max-width: 300px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 10px;
+    background: linear-gradient(180deg, var(--stone-gray) 0%, var(--dungeon-gray) 100%);
+    border: 2px solid var(--gold-accent) !important;
+    color: var(--text-light);
+    font-size: 1rem;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.mode-5v5 .switch-btn:hover:not(.disabled) {
+    box-shadow: 0 0 15px rgba(184, 134, 11, 0.5);
+    background: linear-gradient(180deg, rgba(60, 50, 30, 0.95) 0%, rgba(40, 35, 20, 0.98) 100%);
+}
+
+.mode-5v5 .action-list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    width: 100%;
+    max-width: 300px;
+}
+
+.mode-5v5 .action-list .action-btn {
+    /* Largeur complète, layout horizontal dans le bouton */
+    width: 100%;
+    min-height: 55px;
+    padding: 10px 15px;
+    
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
     
     /* Style */
     background: linear-gradient(180deg, rgba(40, 40, 40, 0.95) 0%, rgba(25, 25, 25, 0.98) 100%);
@@ -678,22 +775,27 @@ try {
 }
 
 .mode-5v5 .action-list .action-btn .action-emoji-icon {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     line-height: 1;
+    min-width: 30px;
+    text-align: center;
 }
 
 .mode-5v5 .action-list .action-btn .action-label {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    text-align: center;
+    text-align: left;
     line-height: 1.2;
+    flex: 1;
 }
 
 .mode-5v5 .action-list .action-btn .action-pp {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--gold-accent);
+    margin-left: auto;
+    white-space: nowrap;;
     font-weight: normal;
     opacity: 0.9;
 }
@@ -951,6 +1053,58 @@ try {
     background: rgba(184, 134, 11, 0.9);
 }
 
+/* ===== SWITCH ANIMATIONS ===== */
+.switch-out {
+    animation: switchOut 0.4s ease forwards;
+}
+
+.switch-in {
+    animation: switchIn 0.5s ease forwards;
+}
+
+@keyframes switchOut {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.8) rotate(-10deg); opacity: 0.5; }
+    100% { transform: scale(0.5) translateY(-30px); opacity: 0; }
+}
+
+@keyframes switchIn {
+    0% { transform: scale(0.5) translateY(30px); opacity: 0; }
+    50% { transform: scale(1.1) rotate(5deg); opacity: 0.7; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.switch-emoji-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    animation: switchEmoji 0.9s ease forwards;
+    z-index: 10;
+    pointer-events: none;
+}
+
+@keyframes switchEmoji {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+    30% { transform: translate(-50%, -50%) scale(1.5) rotate(180deg); opacity: 1; }
+    70% { transform: translate(-50%, -50%) scale(1.2) rotate(360deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(0.8) rotate(720deg); opacity: 0; }
+}
+
+/* Fighter hit animation */
+.fighter-hit {
+    animation: fighterShake 0.4s ease-in-out;
+}
+
+@keyframes fighterShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-10px); }
+    40% { transform: translateX(10px); }
+    60% { transform: translateX(-8px); }
+    80% { transform: translateX(8px); }
+}
+
 </style>
 <script>
 const MATCH_ID = '<?php echo addslashes($matchId); ?>';
@@ -966,6 +1120,7 @@ let lastLogCount = <?php echo count($gameState['logs']); ?>;
 let currentGameState = INITIAL_STATE;
 let lastTurnProcessed = <?php echo $gameState['turn'] ?? 1; ?>;
 let isPlayingAnimations = false;
+let isSwitchModalManuallyOpen = false; // Flag pour éviter que le polling ferme le modal
 
 // Timer system
 let actionTimer = null;
@@ -1063,28 +1218,47 @@ function triggerHitAnimation(fighterElement) {
     setTimeout(() => fighterElement.classList.remove('fighter-hit'), 400);
 }
 
-// Description handling for action buttons
-function setupActionTooltips() {
-    const descBox = document.getElementById('actionDescription');
-    const defaultText = "Survolez une action pour voir sa description";
-    const defaultColor = "#e0e0e0"; // Theme light text color
-    const highlightColor = "#ffd700"; // Theme gold accent
+// Switch animation - fade out old hero, change image, fade in new hero
+function triggerSwitchAnimation(fighterElement, newImgSrc) {
+    if (!fighterElement) return;
     
-    // Reset style initially
-    descBox.style.color = defaultColor;
+    const img = fighterElement.querySelector('img');
+    if (!img) return;
     
-    document.querySelectorAll('.action-btn').forEach(btn => {
-        btn.addEventListener('mouseenter', (e) => {
-            const desc = btn.getAttribute('data-description');
-            if (desc) {
-                descBox.textContent = desc;
-                descBox.style.color = highlightColor;
+    // Add switch-out animation
+    fighterElement.classList.add('switch-out');
+    
+    // Show switch emoji indicator
+    const switchEmoji = document.createElement('div');
+    switchEmoji.className = 'switch-emoji-animation';
+    switchEmoji.textContent = '🔄';
+    fighterElement.appendChild(switchEmoji);
+    
+    // After fade out, change image and fade in
+    setTimeout(() => {
+        img.src = newImgSrc;
+        fighterElement.classList.remove('switch-out');
+        fighterElement.classList.add('switch-in');
+        
+        // Remove switch-in class after animation
+        setTimeout(() => {
+            fighterElement.classList.remove('switch-in');
+            if (switchEmoji.parentElement) {
+                switchEmoji.remove();
             }
-        });
-        btn.addEventListener('mouseleave', () => {
-            descBox.textContent = defaultText;
-            descBox.style.color = defaultColor;
-        });
+        }, 500);
+    }, 400);
+}
+
+// Description handling for action buttons - using data-tooltip for hover tooltip
+function setupActionTooltips() {
+    // Le système de tooltip est géré par selection-tooltip.js via data-tooltip
+    // On s'assure juste que les boutons ont bien l'attribut data-tooltip
+    document.querySelectorAll('.action-btn[data-description]').forEach(btn => {
+        const desc = btn.getAttribute('data-description');
+        if (desc && !btn.hasAttribute('data-tooltip')) {
+            btn.setAttribute('data-tooltip', desc);
+        }
     });
 }
 
@@ -1258,17 +1432,18 @@ function updateCombatState() {
                 updateEffectIndicators(data.me.activeEffects, 'myEffects');
                 updateEffectIndicators(data.opponent.activeEffects, 'oppEffects');
                 
-                // Update hero images if changed (after switch)
+                // Update hero images if changed (after switch) with animation
                 if (data.me.img) {
                     const myFighterImg = document.querySelector('#myFighter img');
-                    if (myFighterImg && myFighterImg.src !== data.me.img) {
-                        myFighterImg.src = data.me.img;
+                    // Comparer avec endsWith car src est une URL complète et data.me.img est relatif
+                    if (myFighterImg && !myFighterImg.src.endsWith(data.me.img)) {
+                        triggerSwitchAnimation(document.getElementById('myFighter'), data.me.img);
                     }
                 }
                 if (data.opponent.img) {
                     const oppFighterImg = document.querySelector('#oppFighter img');
-                    if (oppFighterImg && oppFighterImg.src !== data.opponent.img) {
-                        oppFighterImg.src = data.opponent.img;
+                    if (oppFighterImg && !oppFighterImg.src.endsWith(data.opponent.img)) {
+                        triggerSwitchAnimation(document.getElementById('oppFighter'), data.opponent.img);
                     }
                 }
                 
@@ -1316,7 +1491,10 @@ function updateCombatState() {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = `action-btn ${key}${action.canUse ? '' : ' disabled'}`;
-                    button.setAttribute('data-description', action.description || '');
+                    // Utiliser data-tooltip pour le système de tooltip flottant
+                    if (action.description) {
+                        button.setAttribute('data-tooltip', action.description);
+                    }
                     button.disabled = !action.canUse;
                     button.onclick = () => sendAction(key);
                     
@@ -1358,7 +1536,7 @@ function updateCombatState() {
             if (data.isOver) {
                 clearInterval(pollInterval);
                 stopActionTimer();
-                closeSwitchModal();
+                closeSwitchModal(true); // Force close on game over
                 btnContainer.style.display = 'none';
                 waitMsg.style.display = 'none';
                 gameOverMsg.style.display = 'block';
@@ -1378,11 +1556,16 @@ function updateCombatState() {
             } else {
                 gameOverMsg.style.display = 'none';
                 
+                // Récupérer le container d'actions
+                const actionContainer = document.getElementById('actionContainer');
+                
                 if (data.waiting_for_me) {
-                    btnContainer.style.display = 'flex';
+                    // Afficher le conteneur d'actions (contient switch + boutons)
+                    if (actionContainer) actionContainer.style.display = 'flex';
                     waitMsg.style.display = 'none';
                 } else {
-                    btnContainer.style.display = 'none';
+                    // Cacher le conteneur d'actions (cache automatiquement switch + boutons)
+                    if (actionContainer) actionContainer.style.display = 'none';
                     waitMsg.style.display = 'block';
                     waitMsg.innerText = "En attente de l'adversaire...";
                 }
@@ -1408,11 +1591,12 @@ function showErrorMessage(message) {
 }
 
 function sendAction(action) {
-    const btnContainer = document.getElementById('actionButtons');
+    const actionContainer = document.getElementById('actionContainer');
     const waitMsg = document.getElementById('waitingMessage');
     
     stopActionTimer();
-    btnContainer.style.display = 'none';
+    // Cacher le conteneur d'actions (cache automatiquement switch et boutons)
+    if (actionContainer) actionContainer.style.display = 'none';
     waitMsg.style.display = 'block';
     waitMsg.innerText = 'Envoi de l\'action...';
     
@@ -1433,14 +1617,14 @@ function sendAction(action) {
         .then(data => {
             if (!data) {
                 showErrorMessage('Erreur: réponse vide du serveur');
-                btnContainer.style.display = 'flex';
+                if (actionContainer) actionContainer.style.display = 'flex';
                 waitMsg.style.display = 'none';
                 return;
             }
             
             if (data.status === 'error') {
                 showErrorMessage("Erreur: " + (data.message || "Erreur inconnue"));
-                btnContainer.style.display = 'flex';
+                if (actionContainer) actionContainer.style.display = 'flex';
                 waitMsg.style.display = 'none';
             } else if (data.status === 'ok') {
                 waitMsg.innerText = "En attente de l'adversaire...";
@@ -1449,7 +1633,7 @@ function sendAction(action) {
         .catch(err => {
             console.error('Action error:', err);
             showErrorMessage('Erreur: ' + err.message);
-            btnContainer.style.display = 'flex';
+            if (actionContainer) actionContainer.style.display = 'flex';
             waitMsg.style.display = 'none';
         });
 }
@@ -1739,7 +1923,7 @@ function showSwitchMenu(isForcedSwitch = false) {
         // Event click pour switcher
         if (!isDead && !isActive) {
             card.addEventListener('click', () => {
-                closeSwitchModal();
+                closeSwitchModal(true);
                 performSwitch(index, isForcedSwitch);
             });
         }
@@ -1747,19 +1931,28 @@ function showSwitchMenu(isForcedSwitch = false) {
         heroesGrid.appendChild(card);
     });
     
-    // Afficher le modal
+    // Afficher le modal et marquer comme ouvert manuellement (sauf forced switch)
     modal.style.display = 'flex';
+    if (!isForcedSwitch) {
+        isSwitchModalManuallyOpen = true;
+    }
 }
 
 /**
- * Fermer le modal de switch
+ * Fermer le modal de switch (force = true pour ignorer le flag manuel)
  */
-function closeSwitchModal() {
+function closeSwitchModal(force = false) {
+    // Si le modal est ouvert manuellement et qu'on ne force pas, ne pas fermer
+    if (isSwitchModalManuallyOpen && !force) {
+        return;
+    }
+    
     const modal = document.getElementById('switchModal');
     if (modal) {
         modal.style.display = 'none';
         modal.classList.remove('forced-switch');
     }
+    isSwitchModalManuallyOpen = false;
 }
 
 /**

@@ -11,7 +11,7 @@ foreach ($userTeams as $team) {
     $stmtMembers->execute([$team["id"]]);
     $members = $stmtMembers->fetchAll();
     
-    // Nouvelle méthode
+    // Nouvelle mï¿½thode
     $teamNameJson = json_encode($team["team_name"]);
     $membersJson = json_encode($members);
     
@@ -20,6 +20,6 @@ foreach ($userTeams as $team) {
     echo "onclick (first 300 chars):\n";
     echo substr($onclick, 0, 300) . "...\n\n";
     
-    // Vérifier que c''est du HTML valide
+    // Vï¿½rifier que c''est du HTML valide
     echo "Quotes check - contains unescaped double quotes in data: " . (strpos($onclick, "\"Trudor\"") !== false ? "YES (BAD)" : "NO (GOOD)") . "\n";
 }
