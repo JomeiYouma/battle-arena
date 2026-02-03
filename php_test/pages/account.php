@@ -311,7 +311,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         <!-- Personnages les plus joués -->
         <div class="section">
-            <h2>🎮 Personnages les plus joués</h2>
+            <h2>Personnages les plus joués</h2>
             <?php if (empty($mostPlayed5v5)): ?>
                 <div class="empty-state">
                     <div class="icon">⚔️</div>
@@ -411,54 +411,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </html>
 
 <script src="../public/js/selection-tooltip.js"></script>
+<script src="../public/js/account.js"></script>
 <script>
-// Initialiser le système de tooltip
-document.addEventListener('DOMContentLoaded', initializeTooltipSystem);
-
-// Sélectionner automatiquement l'onglet approprié
 document.addEventListener('DOMContentLoaded', function() {
-    // Priorité 1: Paramètre ?tab= dans l'URL
-    const urlTab = new URLSearchParams(window.location.search).get('tab');
-    // Priorité 2: Action POST (ajouter un héros -> teams)
-    const postTabToSelect = '<?php echo isset($_POST['action']) ? ($_POST['action'] === 'add_hero_to_team' ? 'teams' : '') : ''; ?>';
-    
-    const tabToSelect = urlTab || postTabToSelect || 'stats';
-    const validTabs = ['stats', 'stats5v5', 'teams'];
-    
-    if (validTabs.includes(tabToSelect)) {
-        // Trouver le bon bouton
-        const buttons = document.querySelectorAll('.tab-button');
-        const tabIndex = validTabs.indexOf(tabToSelect);
-        if (buttons[tabIndex]) {
-            switchTabDirect(tabToSelect, buttons[tabIndex]);
-        }
-    }
+    initAccountPage({
+        postTabToSelect: '<?php echo isset($_POST['action']) ? ($_POST['action'] === 'add_hero_to_team' ? 'teams' : '') : ''; ?>'
+    });
 });
-
-function switchTab(tabName) {
-    switchTabDirect(tabName, event.target);
-}
-
-function switchTabDirect(tabName, buttonElement) {
-    // Masquer tous les tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-    });
-    document.querySelectorAll('.tab-button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Afficher le tab sélectionné
-    const tabElement = document.getElementById(tabName + '-tab');
-    if (tabElement) {
-        tabElement.classList.add('active');
-    }
-    if (buttonElement) {
-        buttonElement.classList.add('active');
-    }
-}
-
-function confirmDelete(teamName) {
-    return confirm(`Êtes-vous sûr de vouloir supprimer l'équipe "${teamName}" ?`);
-}
 </script>

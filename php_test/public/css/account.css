@@ -147,7 +147,9 @@
 
 .account-header h1 {
     color: #ffd700;
+    
     margin: 0;
+    margin-bottom: 12px;
 }
 
 .account-header .username {

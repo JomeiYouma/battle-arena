@@ -114,6 +114,10 @@ if (isset($_SESSION['combat'])):
     $combat = $_SESSION['combat'];
     $hero = $combat->getPlayer();
     $enemy = $combat->getEnemy();
+    
+    // Calculer les pourcentages de vie pour éviter le flash à 100%
+    $heroPvPct = ($hero->getBasePv() > 0) ? ($hero->getPv() / $hero->getBasePv()) * 100 : 0;
+    $enemyPvPct = ($enemy->getBasePv() > 0) ? ($enemy->getPv() / $enemy->getBasePv()) * 100 : 0;
 ?>
 
 <div class="arena">
@@ -127,18 +131,18 @@ if (isset($_SESSION['combat'])):
             <strong><?php echo htmlspecialchars($hero->getName()); ?></strong>
             <span class="type-badge"><?php echo $hero->getType(); ?></span>
             <div class="stat-bar">
-                <div class="pv-bar" id="heroPvBar" style="width: 100%"></div>
+                <div class="pv-bar" id="heroPvBar" style="width: <?php echo $heroPvPct; ?>%"></div>
             </div>
-            <span class="stat-numbers" id="heroStats">-- PV | -- ATK | -- DEF | -- SPE</span>
+            <span class="stat-numbers" id="heroStats"><?php echo $hero->getPv() . '/' . $hero->getBasePv(); ?> PV | <?php echo $hero->getAtk(); ?> ATK | <?php echo $hero->getDef(); ?> DEF | <?php echo $hero->getSpeed(); ?> SPE</span>
         </div>
         
         <div class="stats enemy-stats">
             <strong><?php echo htmlspecialchars($enemy->getName()); ?></strong>
             <span class="type-badge"><?php echo $enemy->getType(); ?></span>
             <div class="stat-bar">
-                <div class="pv-bar enemy-pv" id="enemyPvBar" style="width: 100%"></div>
+                <div class="pv-bar enemy-pv" id="enemyPvBar" style="width: <?php echo $enemyPvPct; ?>%"></div>
             </div>
-            <span class="stat-numbers" id="enemyStats">-- PV | -- ATK | -- DEF | -- SPE</span>
+            <span class="stat-numbers" id="enemyStats"><?php echo $enemy->getPv() . '/' . $enemy->getBasePv(); ?> PV | <?php echo $enemy->getAtk(); ?> ATK | <?php echo $enemy->getDef(); ?> DEF | <?php echo $enemy->getSpeed(); ?> SPE</span>
         </div>
     </div>
     
@@ -265,105 +269,15 @@ if (isset($_SESSION['combat'])):
 const ASSET_BASE_PATH = '<?php echo $basePath; ?>public/';
 </script>
 <script src="<?php echo $basePath; ?>public/js/combat-animations.js"></script>
+<script src="<?php echo $basePath; ?>public/js/single-player.js"></script>
 <script>
-
-    // Récupération des données depuis PHP
-    const turnActions = <?php echo json_encode($combat->getTurnActions()); ?>;
-    const initialStates = <?php echo json_encode($combat->getInitialStates()); ?>;
-    const heroName = <?php echo json_encode(htmlspecialchars($hero->getName())); ?>;
-    const enemyName = <?php echo json_encode(htmlspecialchars($enemy->getName())); ?>;
-    
-    // Fonctions de mise à jour de l'UI
-    function updateStats(states, instant = false) {
-        if (!states) return;
-        
-        // Mise à jour Hero
-        const heroPvBar = document.getElementById('heroPvBar');
-        const heroStats = document.getElementById('heroStats');
-        if (heroPvBar && states.player) {
-            if (instant) heroPvBar.style.transition = 'none';
-            const pct = (states.player.pv / states.player.basePv) * 100;
-            heroPvBar.style.width = pct + '%';
-            if (instant) heroPvBar.offsetHeight; // Force reflow
-            if (instant) heroPvBar.style.transition = '';
-        }
-        if (heroStats && states.player) {
-            heroStats.textContent = `${states.player.pv}/${states.player.basePv} PV | ${states.player.atk} ATK | ${states.player.def} DEF | ${states.player.speed} SPE`;
-        }
-        
-        // Mise à jour Enemy
-        const enemyPvBar = document.getElementById('enemyPvBar');
-        const enemyStats = document.getElementById('enemyStats');
-        if (enemyPvBar && states.enemy) {
-            if (instant) enemyPvBar.style.transition = 'none';
-            const pct = (states.enemy.pv / states.enemy.basePv) * 100;
-            enemyPvBar.style.width = pct + '%';
-            if (instant) enemyPvBar.offsetHeight; // Force reflow
-            if (instant) enemyPvBar.style.transition = '';
-        }
-        if (enemyStats && states.enemy) {
-            enemyStats.textContent = `${states.enemy.pv}/${states.enemy.basePv} PV | ${states.enemy.atk} ATK | ${states.enemy.def} DEF | ${states.enemy.speed} SPE`;
-        }
-    }
-    
-    // Configuration pour le système d'animations partagé
-    let isPlayingAnimations = false;
-    const combatAnimConfig = {
-        isMyAction: (actor) => actor === 'player',
-        getActorContainer: (isMe) => document.getElementById(isMe ? 'heroEmojiContainer' : 'enemyEmojiContainer'),
-        getTargetContainer: (isMe) => document.getElementById(isMe ? 'enemyEmojiContainer' : 'heroEmojiContainer'),
-        getActorFighter: (isMe) => document.getElementById(isMe ? 'heroFighter' : 'enemyFighter'),
-        getTargetFighter: (isMe) => document.getElementById(isMe ? 'enemyFighter' : 'heroFighter'),
-        updateStats: (states) => updateStats(states),
-        triggerHitAnimation: (fighter) => {
-            if (!fighter) return;
-            fighter.classList.add('fighter-hit');
-            setTimeout(() => fighter.classList.remove('fighter-hit'), 400);
-        }
-    };
-
-    // Wrapper pour intégrer avec le reste du code single_player
-    async function playTurnAnimationsWrapper() {
-        if (!turnActions || turnActions.length === 0) {
-            showGameOver();
-            return;
-        }
-        await playTurnAnimations(turnActions);
-        showGameOver();
-    }
-
-    function showGameOver() {
-        const gameOver = document.getElementById('gameOverSection');
-        const actionForm = document.getElementById('actionForm');
-        if (gameOver) {
-            if (actionForm) {
-                actionForm.style.display = 'none';
-            }
-            gameOver.style.display = 'block';
-        }
-    }
-
-    // Appliquer les états initiaux IMMÉDIATEMENT sans transition
-    if (initialStates && Object.keys(initialStates).length > 0) {
-        updateStats(initialStates, true);
-    }
-
-    // Fonction pour scroller les logs en bas
-    function scrollLogsToBottom() {
-        const logBox = document.getElementById('logBox');
-        if (logBox) {
-            logBox.scrollTop = logBox.scrollHeight;
-        }
-    }
-
-    // Lancer les animations au chargement puis scroller les logs
-    window.addEventListener('load', async () => {
-        await playTurnAnimationsWrapper();
-        scrollLogsToBottom();
-    });
-    
-    // Scroller immédiatement aussi (avant les animations)
-    scrollLogsToBottom();
+// Initialiser le combat avec les données PHP
+initSinglePlayerCombat({
+    turnActions: <?php echo json_encode($combat->getTurnActions()); ?>,
+    initialStates: <?php echo json_encode($combat->getInitialStates()); ?>,
+    heroName: <?php echo json_encode(htmlspecialchars($hero->getName())); ?>,
+    enemyName: <?php echo json_encode(htmlspecialchars($enemy->getName())); ?>
+});
 </script>
 
 <?php 
