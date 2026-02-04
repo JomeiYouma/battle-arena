@@ -635,10 +635,29 @@ abstract class Personnage {
 
     public function addBlessing(Blessing $blessing): void {
         $this->blessings[$blessing->getId()] = $blessing;
+        
+        // Initialiser les PP pour les actions du blessing
+        $extraActions = $blessing->getExtraActions();
+        foreach ($extraActions as $key => $action) {
+            if (isset($action['pp'])) {
+                $this->pp[$key] = [
+                    'current' => $action['pp'],
+                    'max' => $action['pp']
+                ];
+            }
+        }
     }
 
     public function removeBlessing(string $id): void {
         if (isset($this->blessings[$id])) {
+            // Supprimer les PP des actions de ce blessing
+            $blessing = $this->blessings[$id];
+            $extraActions = $blessing->getExtraActions();
+            foreach ($extraActions as $key => $action) {
+                if (isset($this->pp[$key])) {
+                    unset($this->pp[$key]);
+                }
+            }
             unset($this->blessings[$id]);
         }
     }

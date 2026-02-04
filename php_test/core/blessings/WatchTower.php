@@ -6,7 +6,7 @@ class WatchTower extends Blessing {
         parent::__construct(
             'WatchTower', 
             'La Tour de Garde', 
-            'Passif : Attaquer utilise la stat de DEF. La défense utilise la stat d\'ATK + 20% de DEF.', 
+            'Passif : Attaquer utilise la stat de DEF. La défense utilise la stat d\'ATK.', 
             '🏰'
         );
     }
