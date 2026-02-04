@@ -8,25 +8,21 @@ class WatchTower extends Blessing {
         parent::__construct(
             'WatchTower', 
             'La Tour de Garde', 
-            'Passif : Attaquer utilise la stat de DEF. La défense utilise la stat d\'ATK.', 
+            'Passif : ATK = DEF + 20% ATK.', 
             '🏰'
         );
     }
 
     public function modifyStat(string $stat, int $currentValue, Personnage $owner): int {
         if ($stat === 'atk') {
-            // Utilise la DEF pour attaquer
-            return $owner->getDef(); 
+            // ATK = DEF + 0.2 * ATK de base
+            return $owner->getDef() + (int)($owner->getBaseAtk() * 0.2);
         }
         return $currentValue;
     }
 
     public function onReceiveDamage(Personnage $victim, Personnage $attacker, int $damage): int {
-        // Réduction des dégâts = ATK de base + 0.2 * DEF
-        $rawAtk = $victim->getBaseAtk();
-        $reduction = $rawAtk + (int)($victim->getDef() * 0.2);
-        
-        return max(1, $damage - $reduction);
+        return $damage;
     }
 
     public function getExtraActions(): array {

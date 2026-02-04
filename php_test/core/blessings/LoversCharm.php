@@ -11,7 +11,7 @@ class LoversCharm extends Blessing {
         parent::__construct(
             'LoversCharm', 
             'Charmes Amoureux', 
-            'Passif : Renvoie 25% des dégâts reçus.', 
+            'Passif : Renvoie 22% des dégâts reçus.', 
             '💘'
         );
     }
@@ -22,7 +22,7 @@ class LoversCharm extends Blessing {
 
     public function onReceiveDamage(Personnage $victim, Personnage $attacker, int $damage): int {
         if ($attacker !== $victim && !$attacker->isDead()) {
-            $reflect = (int)($damage * 0.25);
+            $reflect = (int)($damage * 0.22);
             if ($reflect > 0) {
                 $attacker->receiveDamage($reflect);
                 $this->damageReflectedThisTurn = true;
@@ -39,7 +39,7 @@ class LoversCharm extends Blessing {
                 'emoji' => '⚡',
                 'method' => 'actionFoudreAmour',
                 'needsTarget' => true,
-                'pp' => 3
+                'pp' => 1
             ]
         ];
     }
