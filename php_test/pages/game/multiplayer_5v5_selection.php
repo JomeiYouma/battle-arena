@@ -1,21 +1,14 @@
 <?php
-/**
- * MULTIPLAYER 5v5 - Sélection d'une équipe pré-créée + Queue
- */
+/** MULTIPLAYER_5V5_SELECTION - Sélection équipe + Queue 5v5 */
 
-// Autoloader centralisé (démarre la session automatiquement)
 require_once __DIR__ . '/../../includes/autoload.php';
 
-// Nettoyer les données de match précédent pour éviter les conflits
 unset($_SESSION['matchId']);
 unset($_SESSION['queue5v5Status']);
 unset($_SESSION['queue5v5Team']);
 unset($_SESSION['queue5v5DisplayName']);
 unset($_SESSION['queue5v5BlessingId']);
 
-// L'autoloader se charge des classes User, Database, etc.
-
-// Vérifier si l'utilisateur est connecté
 if (!User::isLoggedIn()) {
     header('Location: ../auth/login.php?redirect=multiplayer_5v5_selection.php');
     exit;

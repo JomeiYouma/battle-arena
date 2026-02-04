@@ -1,7 +1,5 @@
 <?php
-/**
- * DEBUG TOOLS - Outils de développement et debug
- */
+/** DEBUG - Outils de développement */
 
 require_once __DIR__ . '/../admin/admin_helper.php';
 

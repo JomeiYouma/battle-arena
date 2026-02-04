@@ -1,4 +1,6 @@
 <?php
+/** MULTICOMBAT - Gestion des combats multijoueur 1v1 */
+
 require_once __DIR__ . '/Combat.php';
 
 // Ensure autoloader is registered for unserialize() to work

@@ -1,21 +1,6 @@
 <?php
-/**
- * COMPOSANT: Sélecteur de Héros pour Équipe
- * 
- * Réutilise selection-utils.php et affiche le même layout que selection-screen.php
- * Mais pour sélectionner 1 héros + 1 bénédiction pour une équipe
- * 
- * Paramètres POST:
- * - action: add_hero_to_team
- * - team_id
- * - position
- * - hero_id
- * - blessing_id
- * 
- * Utilise asset_url() de l'autoloader pour les chemins d'images
- */
+/** TEAM-HERO-SELECTOR - Sélecteur de héros pour équipe */
 
-// Charger les utilitaires si pas déjà chargés
 if (!function_exists('getHeroesList')) {
     include __DIR__ . '/selection-utils.php';
 }

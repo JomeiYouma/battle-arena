@@ -1,10 +1,5 @@
 <?php
-/**
- * FOOTER - Inclure en bas de chaque page
- * 
- * Variables optionnelles:
- * - $showBackLink (bool) : Afficher le lien retour menu (défaut: true)
- */
+/** FOOTER - Template bas de page. Option: $showBackLink */
 
 $showBackLink = $showBackLink ?? true;
 

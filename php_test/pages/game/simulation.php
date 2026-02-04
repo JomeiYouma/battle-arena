@@ -1,9 +1,6 @@
 <?php
-/**
- * SIMULATION - Simule des combats automatiques pour statistiques d'équilibrage
- */
+/** SIMULATION - Simule des combats pour statistiques d'équilibrage */
 
-// Autoloader centralisé
 require_once __DIR__ . '/../../includes/autoload.php';
 
 // Charger les personnages depuis la BDD

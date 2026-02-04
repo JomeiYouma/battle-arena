@@ -1,4 +1,6 @@
 <?php
+/** STRENGTHFAVOR - Bénédiction Faveur de Force */
+
 require_once __DIR__ . '/../Blessing.php';
 require_once __DIR__ . '/../effects/ImmunityEffect.php';
 

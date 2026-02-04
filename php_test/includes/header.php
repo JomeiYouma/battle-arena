@@ -1,13 +1,5 @@
 <?php
-/**
- * HEADER - Inclure en haut de chaque page
- * 
- * Variables optionnelles à définir avant l'include:
- * - $pageTitle (string) : Titre de la page (défaut: "Horus Battle Arena")
- * - $extraCss (array) : CSS supplémentaires à charger
- * - $showMainTitle (bool) : Afficher le h1 principal (défaut: true)
- * - $showUserBadge (bool) : Afficher le badge utilisateur (défaut: true)
- */
+/** HEADER - Template haut de page. Options: $pageTitle, $extraCss, $showMainTitle, $showUserBadge */
 
 // Valeurs par défaut
 $pageTitle = $pageTitle ?? 'Horus Battle Arena';

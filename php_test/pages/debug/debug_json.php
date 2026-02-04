@@ -1,4 +1,6 @@
 <?php
+/** DEBUG_JSON - Test encodage JSON */
+
 require_once __DIR__ . '/../../includes/autoload.php';
 
 $pdo = Database::getInstance();

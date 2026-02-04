@@ -1,7 +1,6 @@
 <?php
-/**
- * BombEffect - Explosion différée (dégâts au tour suivant)
- */
+/** BOMBEFFECT - Explosion différée */
+
 class BombEffect extends StatusEffect {
     private int $explosionDamage;
     

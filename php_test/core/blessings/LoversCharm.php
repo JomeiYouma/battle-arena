@@ -1,4 +1,6 @@
 <?php
+/** LOVERSCHARM - Bénédiction Charmes Amoureux */
+
 require_once __DIR__ . '/../Blessing.php';
 require_once __DIR__ . '/../effects/ParalysisEffect.php';
 

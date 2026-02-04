@@ -1,4 +1,6 @@
 <?php
+/** DEBUG_TEAMS - Test données équipes */
+
 require_once __DIR__ . '/../../includes/autoload.php';
 
 $pdo = Database::getInstance();

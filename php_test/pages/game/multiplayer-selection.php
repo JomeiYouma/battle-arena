@@ -1,13 +1,8 @@
 <?php
-/**
- * MULTIPLAYER MODE - Sélection héros + Queue 30s → Combat vs Bot
- */
+/** MULTIPLAYER-SELECTION - Sélection héros + Queue 1v1 */
 
-// Autoloader centralisé (démarre la session automatiquement)
 require_once __DIR__ . '/../../includes/autoload.php';
 
-// Charger la liste des héros et définitions des bénédictions (partagés)
-// Configuration du header
 $pageTitle = 'Multijoueur - Horus Battle Arena';
 $extraCss = ['shared-selection', 'multiplayer'];
 $showUserBadge = false; // On affiche le nom dans le formulaire

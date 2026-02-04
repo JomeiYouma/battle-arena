@@ -1,7 +1,6 @@
 <?php
-/**
- * CurseEffect - Malédiction (dégâts fixes par tour)
- */
+/** CURSEEFFECT - Malédiction (dégâts/tour) */
+
 class CurseEffect extends StatusEffect {
     private int $damageAmount;
     

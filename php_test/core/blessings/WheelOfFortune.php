@@ -1,4 +1,6 @@
 <?php
+/** WHEELOFFORTUNE - Bénédiction Roue de Fortune */
+
 require_once __DIR__ . '/../Blessing.php';
 
 class WheelOfFortune extends Blessing {

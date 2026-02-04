@@ -1,17 +1,7 @@
 <?php
-require_once __DIR__ . '/MultiCombat.php';
+/** TEAMCOMBAT - Combat multijoueur 5v5 avec équipes et switch */
 
-/**
- * TEAMCOMBAT - Combat multijoueur 5v5 avec équipes
- * 
- * Hérite de MultiCombat et ajoute la gestion des équipes avec système de switch
- * 
- * Fonctionnalités:
- * - Gestion de 5 héros par équipe
- * - Switch de héros en combat (action spéciale)
- * - Persistance des HP et buffs après switch
- * - Récupération des équipes initiales depuis BD
- */
+require_once __DIR__ . '/MultiCombat.php';
 
 class TeamCombat extends MultiCombat {
     // Équipes complètes
@@ -29,15 +19,7 @@ class TeamCombat extends MultiCombat {
     private bool $player1NeedsForcedSwitch = false;
     private bool $player2NeedsForcedSwitch = false;
 
-    /**
-     * Initialiser un combat d'équipe
-     * 
-     * @param array $player1Team Array de 5 Personnage objects (P1)
-     * @param array $player2Team Array de 5 Personnage objects (P2)
-     * @throws Exception Si les équipes n'ont pas 5 héros
-     */
     public function __construct(array $player1Team, array $player2Team) {
-        // Validation
         if (count($player1Team) !== 5 || count($player2Team) !== 5) {
             throw new Exception("Les équipes doivent contenir exactement 5 héros");
         }
@@ -58,9 +40,6 @@ class TeamCombat extends MultiCombat {
         $this->logs[] = "⚔️ Équipe 2: " . implode(", ", array_map(fn($h) => $h->getName(), $player2Team));
     }
 
-    /**
-     * Établir les références croisées pour que les passifs fonctionnent
-     */
     private function setupOpponentReferences(): void {
         // Player 1's current opponent = Player 2's current hero
         // Player 2's current opponent = Player 1's current hero

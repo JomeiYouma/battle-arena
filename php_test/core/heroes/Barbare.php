@@ -1,8 +1,6 @@
 <?php
-/**
- * BARBARE - Force brute et berserk
- * Thème: Plus dangereux quand blessé - Risque et récompense
- */
+/** BARBARE - Force brute, plus dangereux quand blessé */
+
 class Barbare extends Personnage {
     
     private $berserkThreshold = 0.3;

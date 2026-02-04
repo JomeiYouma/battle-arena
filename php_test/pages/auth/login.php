@@ -1,11 +1,7 @@
 <?php
-/**
- * LOGIN PAGE - Connexion utilisateur
- */
+/** LOGIN - Connexion utilisateur */
 
-// Autoloader centralisé
 require_once __DIR__ . '/../../includes/autoload.php';
-// Note: autoload.php démarre déjà la session
 
 // Rediriger si déjà connecté
 if (User::isLoggedIn()) {

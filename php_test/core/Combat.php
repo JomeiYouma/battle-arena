@@ -1,10 +1,5 @@
 <?php
-/**
- * Combat - Système de combat tour par tour
- * 
- * Séquence: Effets dégâts → Effets stats → Action rapide → Action lent
- * Vérifie la mort à chaque phase
- */
+/** COMBAT - Système de combat tour par tour */
 
 class Combat {
     protected Personnage $player;

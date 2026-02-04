@@ -1,10 +1,8 @@
 <?php
+/** MATCHQUEUE - Gestion file d'attente multijoueur via BDD */
+
 require_once __DIR__ . '/Database.php';
 
-/**
- * MatchQueue - Gestion de la file d'attente multijoueur via BDD
- * Remplace l'ancien système basé sur queue.json
- */
 class MatchQueue {
     private PDO $db;
     private string $matchesDir;

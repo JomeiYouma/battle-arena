@@ -1,15 +1,5 @@
 <?php
-/**
- * COMPOSANT: Gestion des Équipes
- * 
- * Affiche et permet de modifier les équipes du joueur
- * Variables disponibles du parent:
- * - $userId
- * - $teamManager
- * - $userTeams
- * 
- * Utilise asset_url() de l'autoloader pour les chemins d'images
- */
+/** TEAM-MANAGER - Composant de gestion des équipes */
 ?>
 
 <div class="teams-manager">

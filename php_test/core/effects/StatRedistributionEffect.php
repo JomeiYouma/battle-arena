@@ -1,7 +1,6 @@
 <?php
-/**
- * StatRedistributionEffect - Répartit équitablement les stats (ATK, DEF, SPEED)
- */
+/** STATREDISTRIBUTIONEFFECT - Répartition équitable des stats */
+
 class StatRedistributionEffect extends StatusEffect {
     private bool $applied = false;
     private array $originalStats = [];

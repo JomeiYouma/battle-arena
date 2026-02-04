@@ -1,4 +1,6 @@
 <?php
+/** AQUATIQUE - Esquive et soins aquatiques */
+
 class Aquatique extends Personnage {
     
     private $dodgeChance = 50;

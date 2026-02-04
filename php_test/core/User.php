@@ -1,7 +1,5 @@
 <?php
-/**
- * USER - Gestion des utilisateurs et statistiques
- */
+/** USER - Gestion des utilisateurs et statistiques */
 
 class User {
     private PDO $db;
@@ -10,9 +8,6 @@ class User {
         $this->db = Database::getInstance();
     }
     
-    /**
-     * Inscription d'un nouvel utilisateur
-     */
     public function register(string $username, string $email, string $password): array {
         // Validation
         if (strlen($username) < 3 || strlen($username) > 50) {

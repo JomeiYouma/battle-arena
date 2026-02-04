@@ -1,8 +1,5 @@
 <?php
-/**
- * Classe abstraite de base pour tous les personnages
- * Gère les PV, stats, buffs, effets et PP
- */
+/** PERSONNAGE - Classe abstraite de base pour les héros */
 
 require_once __DIR__ . '/StatusEffect.php';
 require_once __DIR__ . '/Blessing.php';

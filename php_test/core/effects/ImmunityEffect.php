@@ -1,7 +1,6 @@
 <?php
-/**
- * ImmunityEffect - Empêche l'application de nouveaux effets négatifs
- */
+/** IMMUNITYEFFECT - Immunité aux effets négatifs */
+
 class ImmunityEffect extends StatusEffect {
     
     public function __construct(int $duration) {

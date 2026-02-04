@@ -1,10 +1,6 @@
 <?php
-/**
- * LOADER: Affiche selection-screen.php adapté pour les équipes
- * Chargé via AJAX
- */
+/** TEAM-HERO-SELECTOR-LOADER - Chargement AJAX du sélecteur héros */
 
-// Autoloader centralisé
 require_once __DIR__ . '/../includes/autoload.php';
 
 $teamId = (int) ($_GET['team_id'] ?? 0);

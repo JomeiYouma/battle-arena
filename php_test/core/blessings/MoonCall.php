@@ -1,4 +1,6 @@
 <?php
+/** MOONCALL - Bénédiction Appel de la Lune */
+
 require_once __DIR__ . '/../Blessing.php';
 
 class MoonCall extends Blessing {

@@ -1,11 +1,7 @@
 <?php
-/**
- * ACCOUNT PAGE - Page "Mon compte" avec statistiques
- */
+/** ACCOUNT - Page mon compte avec statistiques */
 
-// Autoloader centralisé
 require_once __DIR__ . '/../includes/autoload.php';
-// Note: autoload.php démarre déjà la session
 
 // Rediriger si non connecté
 if (!User::isLoggedIn()) {

@@ -1,8 +1,6 @@
 <?php
-/**
- * Modèle de données pour un héros (BDD)
- * Ne contient QUE les données, pas la logique de jeu
- */
+/** HERO - Modèle de données héros (BDD) */
+
 class Hero {
     private ?int $id = null;
     private string $heroId;
@@ -17,9 +15,6 @@ class Hero {
     private ?string $imageP2 = null;
     private bool $isActive = true;
     
-    /**
-     * Hydratation depuis tableau associatif
-     */
     public function __construct(array $data = []) {
         if (!empty($data)) {
             $this->hydrate($data);

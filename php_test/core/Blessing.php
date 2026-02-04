@@ -1,7 +1,6 @@
 <?php
-/**
- * Abstract class for Blessings
- */
+/** BLESSING - Classe abstraite pour les bénédictions */
+
 abstract class Blessing {
     protected string $id;
     protected string $name;
@@ -22,19 +21,17 @@ abstract class Blessing {
 
     // --- HOOKS ---
 
-    /**
-     * Called when checking available actions
-     */
+    /** Retourne les actions supplémentaires de la bénédiction */
     public function getExtraActions(): array {
         return [];
     }
 
     /**
-     * Execute une action spéciale du blessing
-     * @param string $actionKey La clé de l'action (ex: 'grand_conseil')
-     * @param Personnage $actor Le personnage qui lance l'action
-     * @param ?Personnage $target La cible (null si needsTarget=false)
-     * @return string Le message de résultat
+     * Exécute une action spéciale de la bénédiction
+     * @param string $actionKey Clé de l'action
+     * @param Personnage $actor Personnage qui lance
+     * @param ?Personnage $target Cible optionnelle
+     * @return string Message de résultat
      */
     public function executeAction(string $actionKey, Personnage $actor, ?Personnage $target = null): string {
         // À implémenter dans les classes enfant

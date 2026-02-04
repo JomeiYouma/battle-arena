@@ -1,9 +1,8 @@
 <?php
+/** DESTINYLINKEFFECT - Lien de destin (dégâts partagés) */
+
 require_once __DIR__ . '/../StatusEffect.php';
 
-/**
- * DestinyLinkEffect - Lie le destin : inflige un pourcentage des dégâts reçus à l'adversaire
- */
 class DestinyLinkEffect extends StatusEffect {
     private float $damagePercent;
     private ?Personnage $linkedTarget;

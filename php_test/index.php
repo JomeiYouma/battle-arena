@@ -1,10 +1,8 @@
 <?php
-// Autoloader centralisé (AVANT session_start pour la désérialisation des objets StatusEffect)
-require_once __DIR__ . '/includes/autoload.php';
-// Note: autoload.php démarre déjà la session
+/** INDEX - Menu principal */
 
-// --- LOGIQUE DE RESET GLOBALE ---
-// Doit être ici car les formulaires de reset sont soumis vers index.php
+require_once __DIR__ . '/includes/autoload.php';
+
 if (isset($_POST['logout']) || isset($_POST['new_game'])) {
     // Préserver les données de connexion
     $userId = $_SESSION['user_id'] ?? null;

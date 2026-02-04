@@ -1,10 +1,6 @@
 <?php
-/**
- * SCRIPT D'ADMINISTRATION - Exécuter le SQL de création des tables d'équipes
- * À exécuter une fois pour initialiser la BD
- */
+/** ADMIN_EXECUTE_SQL - Initialisation BD équipes */
 
-// Autoloader centralisé
 require_once __DIR__ . '/../../includes/autoload.php';
 
 // Connexion BD

@@ -1,4 +1,6 @@
 <?php
+/** DEBUG_ONCLICK - Test onclick JSON */
+
 require_once __DIR__ . "/../../includes/autoload.php";
 
 $pdo = Database::getInstance();

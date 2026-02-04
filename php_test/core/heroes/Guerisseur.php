@@ -1,8 +1,6 @@
 <?php
-/**
- * GUÉRISSEUR - Support et dégâts sacrés
- * Thème: Énergie divine pour soigner et ignorer les défenses
- */
+/** GUERISSEUR - Support et dégâts sacrés */
+
 class Guerisseur extends Personnage {
     
     private $healAmount = 25;

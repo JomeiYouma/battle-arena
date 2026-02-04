@@ -1,4 +1,6 @@
 <?php
+/** JUDGMENTOFDAMNED - Bénédiction Jugement des Maudits */
+
 require_once __DIR__ . '/../Blessing.php';
 require_once __DIR__ . '/../effects/StatRedistributionEffect.php';
 

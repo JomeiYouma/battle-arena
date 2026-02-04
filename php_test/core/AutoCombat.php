@@ -1,7 +1,6 @@
 <?php
-/**
- * AUTOCOMBAT - Combats automatiques IA vs IA pour simulation de matchups
- */
+/** AUTOCOMBAT - Combats automatiques IA vs IA pour simulation */
+
 class AutoCombat {
     private Personnage $fighter1;
     private Personnage $fighter2;

@@ -1,10 +1,6 @@
 <?php
-/**
- * MENTIONS LÉGALES & CRÉDITS
- * Conforme RGPD et législation française
- */
+/** LEGAL - Mentions légales, RGPD et crédits */
 
-// Autoloader centralisé
 require_once __DIR__ . '/../includes/autoload.php';
 
 // Configuration du header

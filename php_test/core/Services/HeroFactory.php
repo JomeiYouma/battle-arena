@@ -1,17 +1,10 @@
 <?php
+/** HEROFACTORY - Convertit Hero (BDD) en Personnage (jeu) */
+
 require_once __DIR__ . '/../Models/Hero.php';
 
-/**
- * Factory pour créer des instances de personnages de jeu
- * Convertit un Hero (BDD) en Personnage (jeu)
- */
 class HeroFactory {
     
-    /**
-     * Crée une instance de personnage de jeu depuis un Hero (BDD)
-     * @param Hero $heroModel Modèle de données
-     * @return Personnage Instance de la classe de jeu
-     */
     public static function createFromModel(Hero $heroModel): Personnage {
         $className = $heroModel->getType();
         

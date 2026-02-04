@@ -1,9 +1,6 @@
 <?php
-/**
- * DefenseBoostEffect - Augmente la DEF durant plusieurs tours
- * Utilisé par: Guerrier (Levée de bouclier +15 DEF/2 tours), Brute (Armure d'Os +10 DEF/2 tours), 
- *             Guérisseur (Bénédiction +5 DEF/3 tours), Guérisseur (Barrière +25 DEF/1 tour)
- */
+/** DEFENSEBOOSTEFFECT - Boost DEF temporaire */
+
 require_once __DIR__ . '/../StatusEffect.php';
 
 class DefenseBoostEffect extends StatusEffect {

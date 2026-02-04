@@ -1,9 +1,7 @@
 <?php
-/**
- * AUTH HELPER - Protection par mot de passe pour les pages sensibles
- */
+/** AUTH_HELPER - Protection par mot de passe pour pages sensibles */
 
-define('DEBUG_PASSWORD', 'admin123'); // Mot de passe à modifier selon vos besoins
+define('DEBUG_PASSWORD', 'admin123');
 
 function requireDebugAuth() {
     session_start();

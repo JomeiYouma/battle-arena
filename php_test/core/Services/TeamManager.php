@@ -1,9 +1,5 @@
 <?php
-/**
- * TEAMMANAGER - Service de gestion des équipes
- * 
- * Gère la création, modification, suppression et récupération des équipes 5 héros
- */
+/** TEAMMANAGER - Service de gestion des équipes 5v5 */
 
 class TeamManager {
     private PDO $pdo;
@@ -12,18 +8,6 @@ class TeamManager {
         $this->pdo = $pdo;
     }
 
-    // ============================================
-    // GESTION DES ÉQUIPES
-    // ============================================
-
-    /**
-     * Créer une nouvelle équipe pour l'utilisateur
-     * 
-     * @param int $userId ID de l'utilisateur
-     * @param string $teamName Nom de l'équipe
-     * @param string $description Description optionnelle
-     * @return int|null ID de l'équipe créée, ou null en cas d'erreur
-     */
     public function createTeam(int $userId, string $teamName, string $description = ''): ?int {
         try {
             $stmt = $this->pdo->prepare('

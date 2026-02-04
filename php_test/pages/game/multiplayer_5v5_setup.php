@@ -1,10 +1,6 @@
 <?php
-/**
- * TEST 5v5 MATCH GENERATOR
- * Génère un match 5v5 fictif pour tester l'UI
- */
+/** MULTIPLAYER_5V5_SETUP - Générateur de match 5v5 test */
 
-// Autoloader centralisé (démarre la session automatiquement)
 require_once __DIR__ . '/../../includes/autoload.php';
 
 // Charger quelques héros pour le test

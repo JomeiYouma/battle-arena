@@ -1,7 +1,6 @@
 <?php
-/**
- * ELECTRIQUE - Vitesse extrême, paralysie et décharge dévastatrice
- */
+/** ELECTRIQUE - Vitesse extrême et paralysie */
+
 class Electrique extends Personnage {
     
     public function __construct($pv, $atk, $name) {

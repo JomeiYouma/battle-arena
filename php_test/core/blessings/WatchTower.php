@@ -1,4 +1,6 @@
 <?php
+/** WATCHTOWER - Bénédiction Tour de Garde */
+
 require_once __DIR__ . '/../Blessing.php';
 
 class WatchTower extends Blessing {

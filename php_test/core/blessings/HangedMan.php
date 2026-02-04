@@ -1,4 +1,6 @@
 <?php
+/** HANGEDMAN - Bénédiction Corde du Pendu */
+
 require_once __DIR__ . '/../Blessing.php';
 require_once __DIR__ . '/../effects/DestinyLinkEffect.php';
 

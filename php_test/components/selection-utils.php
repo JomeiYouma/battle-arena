@@ -1,14 +1,6 @@
 <?php
-/**
- * UTILITAIRE DE SÉLECTION
- * Fonctions partagées pour charger héros, bénédictions et actions
- * 
- * Usage:
- *   $heroes = getHeroesList();
- *   $blessings = getBlessingsList();
- */
+/** SELECTION-UTILS - Fonctions pour charger héros et bénédictions */
 
-// S'assurer que l'autoloader est chargé
 if (!defined('BASE_PATH')) {
     require_once __DIR__ . '/../includes/autoload.php';
 }

@@ -1,7 +1,6 @@
 <?php
-/**
- * StatSwapEffect - Échange ATK et DEF pendant la durée
- */
+/** STATSWAPEFFECT - Échange ATK et DEF */
+
 class StatSwapEffect extends StatusEffect {
     private bool $swapped = false;
     private int $originalAtk = 0;

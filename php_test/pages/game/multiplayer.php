@@ -1,8 +1,8 @@
 <?php
-// Autoloader centralisé (démarre la session automatiquement)
+/** MULTIPLAYER - Page de sélection du mode multijoueur */
+
 require_once __DIR__ . '/../../includes/autoload.php';
 
-// Chemin de base pour les assets (accès direct depuis pages/game/)
 $basePath = '../../';
 
 // Nettoyer les données de match précédent pour éviter les conflits
@@ -18,9 +18,6 @@ unset($_SESSION['queueHeroData']);
 unset($_SESSION['queueDisplayName']);
 unset($_SESSION['queueBlessingId']);
 
-// L'autoloader se charge des classes User, Database, etc.
-
-// Charger le header
 $pageTitle = 'Multijoueur - Horus Battle Arena';
 $extraCss = ['shared-selection', 'multiplayer-mode'];
 $showUserBadge = true;

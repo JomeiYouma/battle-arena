@@ -1,20 +1,11 @@
 <?php
-/**
- * SINGLE PLAYER MODE - Combat contre l'IA
- */
+/** SINGLE_PLAYER - Combat contre l'IA */
 
-// Autoloader centralisé
 require_once __DIR__ . '/../../includes/autoload.php';
 
-// Chemin de base pour les assets (accès direct depuis pages/game/)
 $basePath = '../../';
 
-// --- RESET ---
 if (isset($_POST['logout']) || isset($_POST['new_game'])) {
-    // Note: Pas d'enregistrement de stats en mode solo (vs bot)
-    // Seuls les combats PvP sont enregistrés dans l'API
-    
-    // Préserver les données de connexion
     $userId = $_SESSION['user_id'] ?? null;
     $username = $_SESSION['username'] ?? null;
     

@@ -1,8 +1,6 @@
 <?php
-/**
- * GUERRIER - Force brute et défense
- * Thème: Rage et protection - Alterner attaques dévastatrices et défense solide
- */
+/** GUERRIER - Rage et protection */
+
 class Guerrier extends Personnage {
     
     private $rageBonus = 10;

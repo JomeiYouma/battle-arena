@@ -1,7 +1,6 @@
 <?php
-/**
- * BRUTE - Colosse lent et dévastateur. Bombe finale quand presque mort.
- */
+/** BRUTE - Colosse lent et dévastateur */
+
 class Brute extends Personnage {
     
     public function __construct($pv, $atk, $name, $def = 8, $speed = 3) {

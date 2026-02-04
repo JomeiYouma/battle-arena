@@ -1,11 +1,9 @@
 <?php
+/** HEROMANAGER - CRUD sur les héros (Pattern Repository) */
+
 require_once __DIR__ . '/../Models/Hero.php';
 require_once __DIR__ . '/../Database.php';
 
-/**
- * Manager pour les opérations CRUD sur les héros
- * Pattern Repository
- */
 class HeroManager {
     private PDO $db;
     
@@ -13,10 +11,6 @@ class HeroManager {
         $this->db = Database::getInstance();
     }
     
-    /**
-     * Récupère tous les héros actifs
-     * @return Hero[]
-     */
     public function getAll(bool $includeInactive = false): array {
         $query = "SELECT * FROM heroes ";
         if (!$includeInactive) {

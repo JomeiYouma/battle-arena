@@ -1,7 +1,6 @@
 <?php
-/**
- * PYROMANE - Feu et dégâts massifs. Sacrifie sa vie pour des dégâts dévastateurs.
- */
+/** PYROMANE - Feu et sacrifices pour dégâts massifs */
+
 class Pyromane extends Personnage {
     
     private $overheatDamageBonus = 20;

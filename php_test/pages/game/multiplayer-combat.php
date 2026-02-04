@@ -1,11 +1,6 @@
 ﻿<?php
-/**
- * MULTIPLAYER COMBAT PAGE
- * Interface complÃ¨te de combat multiplayer avec polling en temps rÃ©el
- * BasÃ©e sur la structure de single_player.php
- */
+/** MULTIPLAYER-COMBAT - Interface de combat multijoueur temps réel */
 
-// Autoloader centralisÃ© (dÃ©marre la session automatiquement)
 require_once __DIR__ . '/../../includes/autoload.php';
 
 // --- ABANDON ---
@@ -41,7 +36,7 @@ if (isset($_POST['abandon_multi'])) {
                         $matchUuid = $matchId; // Utiliser le matchId comme UUID unique
                         
                         if ($mode === '5v5') {
-                            // Mode 5v5 : enregistrer tous les hÃ©ros de chaque Ã©quipe
+                            // Mode 5v5 : enregistrer tous les héros
                             $p1Heroes = array_column($metaData['player1']['heroes'] ?? [], 'id');
                             $p2Heroes = array_column($metaData['player2']['heroes'] ?? [], 'id');
                             $p1TeamName = $metaData['player1']['team_name'] ?? 'Équipe 1';
@@ -49,7 +44,7 @@ if (isset($_POST['abandon_multi'])) {
                             $p1DisplayName = $metaData['player1']['display_name'] ?? 'Joueur 1';
                             $p2DisplayName = $metaData['player2']['display_name'] ?? 'Joueur 2';
                             
-                            // Enregistrer pour P1 (tous les hÃ©ros de son Ã©quipe)
+                            // Enregistrer stats P1
                             if ($p1UserId && !empty($p1Heroes)) {
                                 $userModel->recordTeamCombat(
                                     $p1UserId,
@@ -61,7 +56,7 @@ if (isset($_POST['abandon_multi'])) {
                                 );
                             }
                             
-                            // Enregistrer pour P2 (tous les hÃ©ros de son Ã©quipe)
+                            // Enregistrer stats P2
                             if ($p2UserId && !empty($p2Heroes)) {
                                 $userModel->recordTeamCombat(
                                     $p2UserId,
@@ -110,11 +105,11 @@ if (isset($_POST['abandon_multi'])) {
         }
     }
     
-    // PrÃ©server les donnÃ©es de connexion
+    // Préserver connexion
     $userId = $_SESSION['user_id'] ?? null;
     $username = $_SESSION['username'] ?? null;
     
-    // Nettoyer les donnÃ©es de combat/match
+    // Nettoyer session combat
     unset($_SESSION['combat']);
     unset($_SESSION['matchId']);
     unset($_SESSION['queueHeroId']);
@@ -122,7 +117,7 @@ if (isset($_POST['abandon_multi'])) {
     unset($_SESSION['queueHeroData']);
     unset($_SESSION['queueDisplayName']);
     
-    // Restaurer les donnÃ©es de connexion
+    // Restaurer connexion
     if ($userId !== null) {
         $_SESSION['user_id'] = $userId;
         $_SESSION['username'] = $username;
@@ -132,7 +127,7 @@ if (isset($_POST['abandon_multi'])) {
     exit;
 }
 
-// RÃ©cupÃ©rer le matchId depuis l'URL
+// Récupérer matchId
 $matchId = $_GET['match_id'] ?? $_SESSION['matchId'] ?? null;
 
 if (!$matchId) {
@@ -142,8 +137,7 @@ if (!$matchId) {
 
 $_SESSION['matchId'] = $matchId;
 
-// Charger l'Ã©tat initial du match directement depuis le fichier
-// (Plus fiable que file_get_contents avec URL relative)
+// Charger le match
 $matchFile = DATA_PATH . '/matches/' . $matchId . '.json';
 
 if (!file_exists($matchFile)) {
@@ -159,47 +153,42 @@ if (!file_exists($matchFile)) {
 $matchData = json_decode(file_get_contents($matchFile), true);
 
 if (!$matchData) {
-    die("Erreur: Impossible de lire les donnÃ©es du match.");
+    die("Erreur: Impossible de lire les données du match.");
 }
 
-// Charger l'Ã©tat du combat via MultiCombat (ou TeamCombat pour 5v5)
-// L'autoloader se charge des classes MultiCombat et TeamCombat
-
+// Charger état combat
 $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
 $multiCombat = null;
 
-// Essayer de charger l'Ã©tat existant
 if (file_exists($stateFile)) {
     $multiCombat = MultiCombat::load($stateFile);
 }
 
-// Si pas d'Ã©tat, crÃ©er un Ã©tat initial (pour les tests UI ou nouveau combat)
+// Créer état initial si nécessaire
 if (!$multiCombat && isset($matchData['player1']['hero'])) {
-    // Initialiser le combat si pas encore crÃ©Ã©
     try {
         $multiCombat = MultiCombat::create($matchData['player1'], $matchData['player2']);
         if ($multiCombat && !$multiCombat->save($stateFile)) {
-            error_log("Erreur: Impossible de sauvegarder l'Ã©tat initial du combat.");
+            error_log("Erreur: Impossible de sauvegarder l'état du combat.");
         }
     } catch (Exception $e) {
-        error_log("Erreur lors de l'initialisation du combat: " . $e->getMessage());
-        // Continuer sans Ã©tat - pour les tests UI
+        error_log("Erreur initialisation combat: " . $e->getMessage());
     }
 }
 
-// DÃ©terminer le rÃ´le du joueur actuel
+// Déterminer le rôle du joueur
 $sessionId = session_id();
 $isP1 = ($matchData['player1']['session'] === $sessionId);
 $myRole = $isP1 ? 'p1' : 'p2';
 
-// DÃ‰TECTION MODE 5v5
+// Mode 5v5
 $is5v5 = $matchData['mode'] === '5v5' || ($multiCombat instanceof TeamCombat);
 $teamSidebars = ['p1' => [], 'p2' => []];
 
 // isTestUI = vrai seulement si pas de fichier de combat (mode visualisation UI sans vrai combat)
 $isTestUI = !$multiCombat && isset($matchData['player1']['heroes']) && isset($matchData['player2']['heroes']);
 
-// Noms d'Ã©quipes pour l'UI
+// Noms des équipes
 $myTeamName = $isP1 ? ($matchData['player1']['display_name'] ?? 'Mon Équipe') : ($matchData['player2']['display_name'] ?? 'Mon Équipe');
 $oppTeamName = $isP1 ? ($matchData['player2']['display_name'] ?? 'Adversaire') : ($matchData['player1']['display_name'] ?? 'Adversaire');
 
@@ -208,7 +197,7 @@ if ($is5v5) {
     $teamSidebars['p2'] = $matchData['player2']['heroes'] ?? [];
 }
 
-// Construire l'Ã©tat du jeu pour l'affichage
+// Construire l'état du jeu
 try {
     if ($multiCombat) {
         $gameState = $multiCombat->getStateForUser($sessionId, $matchData);
@@ -228,7 +217,7 @@ try {
             $gameState['opponent']['img'] = asset_url('media/heroes/default.png');
         }
     } else {
-        // Mode test UI - crÃ©er un Ã©tat par dÃ©faut
+        // Mode test UI
         $myPlayer = $isP1 ? $matchData['player1'] : $matchData['player2'];
         $oppPlayer = $isP1 ? $matchData['player2'] : $matchData['player1'];
         $myHero = $myPlayer['hero'] ?? $myPlayer['heroes'][0] ?? null;
@@ -243,7 +232,7 @@ try {
             'logs' => $matchData['logs'] ?? ["Test UI 5v5"],
             'turnActions' => [],
             'me' => [
-                'name' => $myHero['name'] ?? 'HÃ©ros 1',
+                'name' => $myHero['name'] ?? 'Héros 1',
                 'type' => $myHero['type'] ?? 'Unknown',
                 'pv' => $myHero['pv'] ?? 100,
                 'max_pv' => $myHero['pv'] ?? 100,
@@ -272,7 +261,7 @@ try {
         ];
     }
     
-    // DÃ©terminer qui doit jouer
+    // Déterminer qui doit jouer
     $actions = $matchData['current_turn_actions'] ?? [];
     $oppRole = $isP1 ? 'p2' : 'p1';
     if (!isset($gameState['waiting_for_me'])) {
@@ -283,7 +272,7 @@ try {
     }
     
 } catch (Exception $e) {
-    die("Erreur lors de la construction de l'Ã©tat du jeu: " . $e->getMessage());
+    die("Erreur construction état du jeu: " . $e->getMessage());
 }
 
 // Configuration du header
@@ -308,7 +297,7 @@ require_once INCLUDES_PATH . '/header.php';
     </aside>
     
     <!-- DRAWER BUTTONS pour mobile -->
-    <button class="drawer-toggle team-1-toggle" id="drawerToggle1" onclick="toggleTeamDrawer(1)" title="Équipe 1">◄</button>
+    <button class="drawer-toggle team-1-toggle" id="drawerToggle1" onclick="toggleTeamDrawer(1)" title="Équipe 1">►</button>
     <?php endif; ?>
     
     <div class="arena">
@@ -419,7 +408,7 @@ require_once INCLUDES_PATH . '/header.php';
     </aside>
     
     <!-- DRAWER BUTTON pour mobile (droite) -->
-    <button class="drawer-toggle team-2-toggle" id="drawerToggle2" onclick="toggleTeamDrawer(2)" title="Équipe 2">►</button>
+    <button class="drawer-toggle team-2-toggle" id="drawerToggle2" onclick="toggleTeamDrawer(2)" title="Équipe 2">◄</button>
     
     <!-- MODAL DE SWITCH -->
     <div id="switchModal" class="switch-modal" style="display:none;">

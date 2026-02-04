@@ -1,4 +1,6 @@
 <?php
+/** RACHARIOT - Bénédiction Chariot de Fracas */
+
 require_once __DIR__ . '/../Blessing.php';
 require_once __DIR__ . '/../StatusEffect.php';
 

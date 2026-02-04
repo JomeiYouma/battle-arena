@@ -1,8 +1,6 @@
 <?php
-/**
- * AttackBoostEffect - Augmente l'ATK durant plusieurs tours
- * Utilisé par: Barbare (Cri de Guerre +8 ATK/3 tours), Guerrier (Rage +10 ATK/2 tours)
- */
+/** ATTACKBOOSTEFFECT - Boost ATK temporaire */
+
 require_once __DIR__ . '/../StatusEffect.php';
 
 class AttackBoostEffect extends StatusEffect {

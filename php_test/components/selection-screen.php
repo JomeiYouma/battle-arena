@@ -1,16 +1,6 @@
 <?php
-/**
- * COMPOSANT DE SÉLECTION DES HÉROS ET BÉNÉDICTIONS
- * 
- * Usage:
- *   include 'components/selection-screen.php';
- *   renderSelectionScreen([
- *       'mode' => 'single',              // ou 'multiplayer'
- *       'showPlayerNameInput' => false,  // Pour multiplayer: true
- *   ]);
- */
+/** SELECTION-SCREEN - Composant de sélection héros/bénédictions */
 
-// Charger les utilitaires si pas déjà chargés
 if (!function_exists('getHeroesList')) {
     include __DIR__ . '/selection-utils.php';
 }

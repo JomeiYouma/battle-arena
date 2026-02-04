@@ -1,13 +1,9 @@
 <?php
-/**
- * MULTIPLAYER API - Queue & Combat
- */
+/** API - Queue & Combat multijoueur */
 
-// Disable error display output (prevent HTML in JSON responses)
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
-// Autoloader centralisé
 require_once __DIR__ . '/includes/autoload.php';
 
 if (session_status() === PHP_SESSION_NONE) {

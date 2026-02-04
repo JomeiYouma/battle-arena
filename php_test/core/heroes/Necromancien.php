@@ -1,7 +1,6 @@
 <?php
-/**
- * NECROMANCIEN - Manipulateur d'âmes, copie les attaques et inflige des malédictions
- */
+/** NECROMANCIEN - Manipulateur d'âmes et malédictions */
+
 class Necromancien extends Personnage {
     
     private ?string $lastEnemyAction = null;

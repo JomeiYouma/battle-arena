@@ -1,9 +1,6 @@
 <?php
-/**
- * StatusEffect - Classe abstraite pour tous les effets de statut (Brûlure, Paralysie, etc.)
- * 
- * Méthodes à implémenter : resolveDamage() et resolveStats()
- */
+/** STATUSEFFECT - Classe abstraite pour les effets de statut */
+
 abstract class StatusEffect {
     protected string $name;
     protected string $emoji;

@@ -1,10 +1,6 @@
 <?php
-/**
- * Protection des pages d'administration
- * Vérifie que l'utilisateur est connecté ET est administrateur
- */
+/** ADMIN_HELPER - Protection des pages admin */
 
-// Autoloader centralisé (démarre la session automatiquement)
 require_once __DIR__ . '/../../includes/autoload.php';
 
 function requireAdmin() {
