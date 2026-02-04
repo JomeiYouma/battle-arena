@@ -714,7 +714,7 @@ h3 {
 /* --- ÉCRAN DE SÉLECTION --- */
 .select-screen {
     text-align: center;
-    padding: 50px 20px;
+    padding: 25px 20px;
     background: linear-gradient(180deg, transparent 0%, rgba(139, 0, 0, 0.1) 100%);
     border-radius: 15px;
     border: 2px solid var(--blood-red);

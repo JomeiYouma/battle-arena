@@ -286,13 +286,13 @@ try {
     die("Erreur lors de la construction de l'Ã©tat du jeu: " . $e->getMessage());
 }
 
+// Configuration du header
+$pageTitle = 'Combat Multijoueur - Horus Battle Arena';
+$extraCss = ['shared-selection', 'combat', 'multiplayer-combat'];
+$showUserBadge = true;
+$showMainTitle = false;
+require_once INCLUDES_PATH . '/header.php';
 ?>
-
-<link rel="icon" href="../../public/media/website/favicon.ico" type="image/x-icon">
-<link rel="stylesheet" href="../../public/css/style.css">
-<link rel="stylesheet" href="../../public/css/shared-selection.css">
-<link rel="stylesheet" href="../../public/css/combat.css">
-<link rel="stylesheet" href="../../public/css/multiplayer-combat.css">
 
 <h1 class="arena-title">Horus Battle Arena</h1>
 
@@ -441,7 +441,6 @@ try {
 <!-- Tooltip System -->
 <div id="customTooltip" class="custom-tooltip"></div>
 
-<?php require_once INCLUDES_PATH . '/footer.php'; ?>
 <script>
 // Define asset base path before loading external scripts
 const ASSET_BASE_PATH = '<?php echo asset_url(""); ?>';  // Path to public/ folder
@@ -462,3 +461,8 @@ initMultiplayerCombat({
     assetBasePath: ASSET_BASE_PATH
 });
 </script>
+
+<?php 
+$showBackLink = true;
+require_once INCLUDES_PATH . '/footer.php'; 
+?>

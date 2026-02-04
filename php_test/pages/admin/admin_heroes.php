@@ -68,23 +68,17 @@ $availableClasses = [
     'Pyromane', 'Guerrier', 'Guerisseur', 'Aquatique', 
     'Barbare', 'Brute', 'Necromancien', 'Electrique'
 ];
+
+// Configuration du header
+$pageTitle = 'Administration des Héros - Horus Battle Arena';
+$extraCss = ['account', 'admin'];
+$showUserBadge = true;
+$showMainTitle = false;
+require_once INCLUDES_PATH . '/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administration des Héros</title>
-    <link rel="icon" href="../../public/media/website/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../../public/css/style.css">
-    <link rel="stylesheet" href="../../public/css/account.css">
-    <link rel="stylesheet" href="../../public/css/admin.css">
-</head>
-<body>
     <div class="account-container">
         <div class="account-header">
             <h1>Gestion des Héros</h1>
-            <a href="../../index.php" class="logout-btn">← Retour au jeu</a>
         </div>
         
         <?php if ($message): ?>
@@ -222,5 +216,7 @@ $availableClasses = [
             </tbody>
         </table>
     </div>
-</body>
-</html>
+<?php 
+$showBackLink = true;
+require_once INCLUDES_PATH . '/footer.php'; 
+?>

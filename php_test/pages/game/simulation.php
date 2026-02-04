@@ -311,19 +311,14 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
     
     return $results;
 }
-?>
 
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simulation - Horus Battle Arena</title>
-    <link rel="icon" href="../../public/media/website/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../../public/css/style.css">
-    <link rel="stylesheet" href="../../public/css/simulation.css">
-</head>
-<body>
+// Configuration du header
+$pageTitle = 'Simulation - Horus Battle Arena';
+$extraCss = ['simulation'];
+$showUserBadge = false;
+$showMainTitle = true;
+require_once INCLUDES_PATH . '/header.php';
+?>
 
     <!-- LOADING OVERLAY -->
     <div class="loading-overlay" id="loadingOverlay">
@@ -335,7 +330,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
         <div class="loading-tips">Conseil : Réduisez le nombre de combats pour des résultats plus rapides</div>
     </div>
 
-    <h1>Simulateur de Matchs</h1>
+    <!-- <h1>Simulateur de Matchs</h1> -->
 
     <div class="simulation-container">
         
@@ -750,7 +745,6 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
         
         <?php endif; ?>
         
-        <a href="../../index.php" class="back-link">Retour au menu</a>
     </div>
 
     <script src="../../public/js/simulation.js"></script>
@@ -763,5 +757,7 @@ function runBlessingSimulation(array $personnages, array $blessingsList, int $co
         });
     </script>
 
-</body>
-</html>
+<?php 
+$showBackLink = true;
+require_once INCLUDES_PATH . '/footer.php'; 
+?>

@@ -119,26 +119,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+// Configuration du header
+$pageTitle = 'Mon Compte - Horus Battle Arena';
+$extraCss = ['account', 'shared-selection', 'multiplayer'];
+$showUserBadge = false;
+$showMainTitle = false;
+require_once INCLUDES_PATH . '/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Compte - Horus Battle Arena</title>
-    <link rel="icon" href="../public/media/website/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../public/css/style.css">
-    <link rel="stylesheet" href="../public/css/account.css">
-    <link rel="stylesheet" href="../public/css/shared-selection.css">
-    <link rel="stylesheet" href="../public/css/multiplayer.css">
-</head>
-<body>
     <!-- Tooltip system -->
     <div id="customTooltip" class="custom-tooltip"></div>
     <div class="account-container">
-        <div class="nav-links">
-            <a href="../index.php">← Retour au jeu</a>
-        </div>
         
         <div class="account-header">
             <div>
@@ -407,8 +398,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div id="teams-tab" class="tab-content">
         <?php include COMPONENTS_PATH . '/team-manager.php'; ?>
     </div>
-</body>
-</html>
+</div>
 
 <script src="../public/js/selection-tooltip.js"></script>
 <script src="../public/js/account.js"></script>
@@ -419,3 +409,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<?php 
+$showBackLink = true;
+require_once INCLUDES_PATH . '/footer.php'; 
+?>

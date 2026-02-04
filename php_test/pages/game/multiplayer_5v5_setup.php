@@ -219,10 +219,13 @@ $_SESSION['test_5v5_mode'] = true;
         <a href="multiplayer-combat.php?match_id=<?php echo urlencode($matchId); ?>" class="button">
             Lancer le combat
         </a>
-        
-        <br><br>
-        
-        <a href="../../index.php" class="button" style="background: #666;">← Retour</a>
     </div>
+    
+    <footer class="site-footer" style="margin-top: 40px; padding: 20px 0; border-top: 1px solid rgba(255, 215, 0, 0.2); text-align: center;">
+        <a href="../../index.php" class="back-link" style="color: #ffd700;">← Retour au menu</a>
+        <div style="margin-top: 15px; font-size: 0.85em; color: #888;">
+            <a href="../legal.php" style="color: #ffd700; text-decoration: none; margin: 0 10px;">Mentions légales & Crédits</a>
+        </div>
+    </footer>
 </body>
 </html>

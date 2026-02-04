@@ -98,11 +98,14 @@ if (isset($_POST['action']) && isset($_SESSION['combat'])) {
         $combat->executePlayerAction($_POST['action']);
     }
 }
+
+// Configuration du header
+$pageTitle = 'Combat Solo - Horus Battle Arena';
+$extraCss = ['shared-selection', 'single_player', 'combat'];
+$showUserBadge = true;
+$showMainTitle = false;
+require_once INCLUDES_PATH . '/header.php';
 ?>
-<link rel="stylesheet" href="<?php echo $basePath; ?>public/css/style.css">
-<link rel="stylesheet" href="<?php echo $basePath; ?>public/css/shared-selection.css">
-<link rel="stylesheet" href="<?php echo $basePath; ?>public/css/single_player.css">
-<link rel="stylesheet" href="<?php echo $basePath; ?>public/css/combat.css">
 
 <div class="game-container">
 
@@ -289,10 +292,14 @@ else:
     include COMPONENTS_PATH . '/selection-screen.php';
     renderSelectionScreen(['mode' => 'single', 'showPlayerNameInput' => false]);
 endif; 
-require_once INCLUDES_PATH . '/footer.php';
 ?>
 </div>
 
 <!-- Tooltip System -->
 <div id="customTooltip" class="custom-tooltip"></div>
 <script src="<?php echo $basePath; ?>public/js/selection-tooltip.js"></script>
+
+<?php 
+$showBackLink = true;
+require_once INCLUDES_PATH . '/footer.php';
+?>

@@ -35,18 +35,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Veuillez remplir tous les champs';
     }
 }
+
+// Configuration du header
+$pageTitle = 'Connexion - Horus Battle Arena';
+$extraCss = ['auth'];
+$showUserBadge = false;
+$showMainTitle = false;
+require_once INCLUDES_PATH . '/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - Horus Battle Arena</title>
-    <link rel="icon" href="../../public/media/website/favicon.ico" type="image/x-icon">
-    <link rel="stylesheet" href="../../public/css/style.css">
-    <link rel="stylesheet" href="../../public/css/auth.css">
-</head>
-<body>
     <div class="auth-container">
         <div class="auth-box">
             <h2>Connexion</h2>
@@ -76,9 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <div class="auth-links">
                 <a href="register.php">Pas encore de compte ? S'inscrire</a>
-                <a href="../../index.php" class="back-home">← Retour au menu</a>
             </div>
         </div>
     </div>
-</body>
-</html>
+<?php 
+$showBackLink = true;
+require_once INCLUDES_PATH . '/footer.php'; 
+?>

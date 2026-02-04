@@ -1,0 +1,98 @@
+/**
+ * LAYOUT CSS - Styles pour header, footer et pages communes
+ */
+
+/* ============================================
+   SITE FOOTER
+   ============================================ */
+.site-footer {
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 215, 0, 0.2);
+    text-align: center;
+}
+
+.site-footer .footer-links {
+    margin-top: 15px;
+    font-size: 0.85em;
+    color: #888;
+}
+
+.site-footer .footer-links a {
+    color: #ffd700;
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+.site-footer .footer-links a:hover {
+    text-decoration: underline;
+}
+
+.site-footer .footer-links .separator {
+    color: #555;
+}
+
+.site-footer .footer-links .copyright {
+    margin: 0 10px;
+}
+
+/* ============================================
+   LEGAL PAGE
+   ============================================ */
+.legal-container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    color: #e0e0e0;
+    line-height: 1.8;
+}
+
+.legal-container h2 {
+    color: #ffd700;
+    border-bottom: 2px solid #ff6b35;
+    padding-bottom: 10px;
+}
+
+.legal-container h2.section-title {
+    margin-top: 40px;
+}
+
+.legal-container section {
+    margin-bottom: 30px;
+}
+
+.legal-container h3 {
+    color: #ff6b35;
+}
+
+.legal-container ul {
+    margin-left: 20px;
+}
+
+.legal-container ul.credits-list {
+    list-style-type: none;
+}
+
+.legal-container ul.credits-list li {
+    margin-bottom: 10px;
+}
+
+.legal-container a {
+    color: #ffd700;
+}
+
+.legal-container a:hover {
+    text-decoration: underline;
+}
+
+.legal-container .contact-info {
+    margin-top: 15px;
+}
+
+.legal-container .footer-note {
+    text-align: center;
+    margin-top: 40px;
+    color: #888;
+    font-size: 0.9em;
+}

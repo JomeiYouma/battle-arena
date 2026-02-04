@@ -26,7 +26,9 @@ if (!defined('BASE_PATH')) {
 }
 
 // Calculer le chemin relatif vers public/ depuis le fichier appelant
-$callerPath = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0]['file'] ?? __FILE__;
+// [1] = le fichier qui a fait require_once du header (pas [0] qui est header.php lui-même)
+$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
+$callerPath = $backtrace[1]['file'] ?? $backtrace[0]['file'] ?? __FILE__;
 $callerDir = dirname($callerPath);
 $publicPath = str_replace(BASE_PATH, '', PUBLIC_PATH);
 $relativePath = '';
@@ -45,15 +47,16 @@ $relativePath = rtrim($relativePath, '/\\') . '/';
     <title><?php echo htmlspecialchars($pageTitle); ?></title>
     <link rel="icon" href="<?php echo $relativePath; ?>media/website/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="<?php echo $relativePath; ?>css/style.css">
+    <link rel="stylesheet" href="<?php echo $relativePath; ?>css/layout.css">
     <?php foreach ($extraCss as $css): ?>
     <link rel="stylesheet" href="<?php echo $relativePath; ?>css/<?php echo $css; ?>.css">
     <?php endforeach; ?>
 </head>
 <body>
 
-<?php if ($showMainTitle): ?>
+
 <h1>Horus Battle Arena</h1>
-<?php endif; ?>
+
 
 <?php if ($showUserBadge && User::isLoggedIn()): ?>
 <div class="user-badge">
