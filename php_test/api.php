@@ -287,11 +287,16 @@ try {
                 break;
             }
             
-            // Créer une équipe bot aléatoire
-            $db = Database::getInstance();
-            $allHeroes = $db->getAllHeroes();
-            shuffle($allHeroes);
-            $botTeam = array_slice($allHeroes, 0, 5);
+            // Créer une équipe bot aléatoire avec HeroManager
+            $heroManager = new HeroManager();
+            $allHeroModels = $heroManager->getAll();
+            shuffle($allHeroModels);
+            $botTeamModels = array_slice($allHeroModels, 0, 5);
+            
+            // Convertir les Hero en format attendu par TeamCombat
+            $botTeam = array_map(function($hero) {
+                return $hero->toArray();
+            }, $botTeamModels);
             
             // Récupérer les données du joueur depuis la queue ou la session
             $queueFile = DATA_PATH . '/queue_5v5.json';
@@ -761,7 +766,7 @@ function generateBotMove($metaData, $botRole = 'p2') {
     
     // Mode 5v5 - charger le combat pour obtenir les vraies actions du héros actif
     if ($metaData['mode'] === '5v5') {
-        $matchId = $metaData['match_id'] ?? null;
+        $matchId = $metaData['id'] ?? null;
         $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
         
         if ($matchId && file_exists($stateFile)) {
@@ -804,7 +809,7 @@ function generateBotMove($metaData, $botRole = 'p2') {
     }
     
     // Mode 1v1 classique - charger les vraies actions aussi
-    $matchId = $metaData['match_id'] ?? null;
+    $matchId = $metaData['id'] ?? null;
     $stateFile = DATA_PATH . '/matches/' . $matchId . '.state';
     
     if ($matchId && file_exists($stateFile)) {

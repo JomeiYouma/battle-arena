@@ -27,7 +27,7 @@ if (isset($_POST['abandon_multi'])) {
                     
                     $metaData['status'] = 'finished';
                     $metaData['winner'] = $winnerKey;
-                    $metaData['logs'][] = "ðŸ³ï¸ " . $loserName . " a abandonnÃ© !";
+                    $metaData['logs'][] = "🏳️ " . $loserName . " a abandonné !";
                     
                     // === ENREGISTRER LES STATS LORS DE L'ABANDON ===
                     $mode = $metaData['mode'] ?? '';
@@ -44,8 +44,8 @@ if (isset($_POST['abandon_multi'])) {
                             // Mode 5v5 : enregistrer tous les hÃ©ros de chaque Ã©quipe
                             $p1Heroes = array_column($metaData['player1']['heroes'] ?? [], 'id');
                             $p2Heroes = array_column($metaData['player2']['heroes'] ?? [], 'id');
-                            $p1TeamName = $metaData['player1']['team_name'] ?? 'Ã‰quipe 1';
-                            $p2TeamName = $metaData['player2']['team_name'] ?? 'Ã‰quipe 2';
+                            $p1TeamName = $metaData['player1']['team_name'] ?? 'Équipe 1';
+                            $p2TeamName = $metaData['player2']['team_name'] ?? 'Équipe 2';
                             $p1DisplayName = $metaData['player1']['display_name'] ?? 'Joueur 1';
                             $p2DisplayName = $metaData['player2']['display_name'] ?? 'Joueur 2';
                             
@@ -200,7 +200,7 @@ $teamSidebars = ['p1' => [], 'p2' => []];
 $isTestUI = !$multiCombat && isset($matchData['player1']['heroes']) && isset($matchData['player2']['heroes']);
 
 // Noms d'Ã©quipes pour l'UI
-$myTeamName = $isP1 ? ($matchData['player1']['display_name'] ?? 'Mon Ã‰quipe') : ($matchData['player2']['display_name'] ?? 'Mon Ã‰quipe');
+$myTeamName = $isP1 ? ($matchData['player1']['display_name'] ?? 'Mon Équipe') : ($matchData['player2']['display_name'] ?? 'Mon Équipe');
 $oppTeamName = $isP1 ? ($matchData['player2']['display_name'] ?? 'Adversaire') : ($matchData['player1']['display_name'] ?? 'Adversaire');
 
 if ($is5v5) {
@@ -254,7 +254,7 @@ try {
                 'activeEffects' => []
             ],
             'opponent' => [
-                'name' => $oppHero['name'] ?? 'HÃ©ros 2',
+                'name' => $oppHero['name'] ?? 'Héros 2',
                 'type' => $oppHero['type'] ?? 'Unknown',
                 'pv' => $oppHero['pv'] ?? 100,
                 'max_pv' => $oppHero['pv'] ?? 100,
@@ -265,9 +265,9 @@ try {
                 'activeEffects' => []
             ],
             'actions' => [
-                'attack' => ['label' => 'Attaque', 'emoji' => 'âš”ï¸', 'description' => 'Attaque normale', 'canUse' => true, 'ppText' => ''],
-                'spell' => ['label' => 'Sort', 'emoji' => 'âœ¨', 'description' => 'Utilise un sort', 'canUse' => true, 'ppText' => ''],
-                'defend' => ['label' => 'DÃ©fense', 'emoji' => 'ðŸ›¡ï¸', 'description' => 'Se dÃ©fendre', 'canUse' => true, 'ppText' => '']
+                'attack' => ['label' => 'Attaque', 'emoji' => '⚔️', 'description' => 'Attaque normale', 'canUse' => true, 'ppText' => ''],
+                'spell' => ['label' => 'Sort', 'emoji' => '✨', 'description' => 'Utilise un sort', 'canUse' => true, 'ppText' => ''],
+                'defend' => ['label' => 'Défense', 'emoji' => '🛡️', 'description' => 'Se défendre', 'canUse' => true, 'ppText' => '']
             ]
         ];
     }
@@ -298,17 +298,17 @@ require_once INCLUDES_PATH . '/header.php';
 
 <div class="game-container <?php echo $is5v5 ? 'mode-5v5' : ''; ?>">
     <?php if ($is5v5): ?>
-    <!-- TEAM 1 SIDEBAR (cachÃ© sur petit Ã©cran) -->
+    <!-- TEAM 1 SIDEBAR (caché sur petit écran) -->
     <aside class="team-sidebar team-1" id="teamSidebar1">
         <div class="sidebar-header">
             <h3 id="myTeamName"><?php echo htmlspecialchars($myTeamName); ?></h3>
-            <button class="sidebar-close" onclick="closeTeamDrawer(1)">âœ•</button>
+            <button class="sidebar-close" onclick="closeTeamDrawer(1)">✕</button>
         </div>
         <div class="team-heroes-list" id="team1HeroesList"></div>
     </aside>
     
     <!-- DRAWER BUTTONS pour mobile -->
-    <button class="drawer-toggle team-1-toggle" id="drawerToggle1" onclick="toggleTeamDrawer(1)" title="Ã‰quipe 1">â—„</button>
+    <button class="drawer-toggle team-1-toggle" id="drawerToggle1" onclick="toggleTeamDrawer(1)" title="Équipe 1">◄</button>
     <?php endif; ?>
     
     <div class="arena">
@@ -368,14 +368,14 @@ require_once INCLUDES_PATH . '/header.php';
                 <div class="action-container-5v5" id="actionContainer">
                     <?php if ($is5v5): ?>
                     <!-- BOUTON DE SWITCH EN PREMIER pour 5v5 -->
-                    <button type="button" class="action-btn switch-btn" id="switchBtn" onclick="showSwitchMenu()" data-tooltip="Changer de hÃ©ros actif">
-                        <span class="action-emoji-icon">ðŸ”„</span>
+                    <button type="button" class="action-btn switch-btn" id="switchBtn" onclick="showSwitchMenu()" data-tooltip="Changer de héros actif">
+                        <span class="action-emoji-icon">🔄</span>
                         <span class="action-label">SWITCH</span>
                     </button>
                     <?php endif; ?>
                     
                     <div id="actionButtons" class="action-list">
-                        <!-- Actions gÃ©nÃ©rÃ©es dynamiquement par JS -->
+                        <!-- Actions générées dynamiquement par JS -->
                     </div>
                 </div>
                 
@@ -409,28 +409,28 @@ require_once INCLUDES_PATH . '/header.php';
     </div>
     
     <?php if ($is5v5): ?>
-    <!-- TEAM 2 SIDEBAR (cachÃ© sur petit Ã©cran) -->
+    <!-- TEAM 2 SIDEBAR (caché sur petit écran) -->
     <aside class="team-sidebar team-2" id="teamSidebar2">
         <div class="sidebar-header">
             <h3 id="oppTeamName"><?php echo htmlspecialchars($oppTeamName); ?></h3>
-            <button class="sidebar-close" onclick="closeTeamDrawer(2)">âœ•</button>
+            <button class="sidebar-close" onclick="closeTeamDrawer(2)">✕</button>
         </div>
         <div class="team-heroes-list" id="team2HeroesList"></div>
     </aside>
     
     <!-- DRAWER BUTTON pour mobile (droite) -->
-    <button class="drawer-toggle team-2-toggle" id="drawerToggle2" onclick="toggleTeamDrawer(2)" title="Ã‰quipe 2">â–º</button>
+    <button class="drawer-toggle team-2-toggle" id="drawerToggle2" onclick="toggleTeamDrawer(2)" title="Équipe 2">►</button>
     
     <!-- MODAL DE SWITCH -->
     <div id="switchModal" class="switch-modal" style="display:none;">
         <div class="switch-modal-content">
             <div class="switch-modal-header">
-                <h3 id="switchModalTitle">ðŸ”„ Changer de HÃ©ros</h3>
-                <button class="switch-modal-close" onclick="closeSwitchModal(true)">âœ•</button>
+                <h3 id="switchModalTitle">🔄 Changer de Héros</h3>
+                <button class="switch-modal-close" onclick="closeSwitchModal(true)">✕</button>
             </div>
-            <p class="switch-modal-subtitle">SÃ©lectionnez un hÃ©ros pour remplacer votre combattant actuel</p>
+            <p class="switch-modal-subtitle">Sélectionnez un héros pour remplacer votre combattant actuel</p>
             <div id="switchHeroesGrid" class="switch-heroes-grid">
-                <!-- HÃ©ros disponibles gÃ©nÃ©rÃ©s par JS -->
+                <!-- Héros disponibles générés par JS -->
             </div>
             <button class="switch-modal-cancel" onclick="closeSwitchModal(true)">Annuler</button>
         </div>
@@ -441,10 +441,6 @@ require_once INCLUDES_PATH . '/header.php';
 <!-- Tooltip System -->
 <div id="customTooltip" class="custom-tooltip"></div>
 
-<script>
-// Define asset base path before loading external scripts
-const ASSET_BASE_PATH = '<?php echo asset_url(""); ?>';  // Path to public/ folder
-</script>
 <script src="../../public/js/combat-animations.js"></script>
 <script src="../../public/js/selection-tooltip.js"></script>
 <script src="../../public/js/multiplayer-combat.js"></script>
@@ -458,7 +454,7 @@ initMultiplayerCombat({
     isTestUI: <?php echo $isTestUI ? 'true' : 'false'; ?>,
     teamDataP1: <?php echo json_encode($teamSidebars['p1']); ?>,
     teamDataP2: <?php echo json_encode($teamSidebars['p2']); ?>,
-    assetBasePath: ASSET_BASE_PATH
+    assetBasePath: '<?php echo asset_url(""); ?>'
 });
 </script>
 
