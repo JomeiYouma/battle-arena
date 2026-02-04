@@ -525,4 +525,33 @@ class User {
         
         return $result ?: null;
     }
+
+    public function getLeaderboard(int $limit = 20): array {
+        $sql = '
+            SELECT 
+                u.id,
+                u.username,
+                COUNT(cs.id) as total_games,
+                SUM(cs.victory) as wins,
+                COUNT(cs.id) - SUM(cs.victory) as losses,
+                ROUND(SUM(cs.victory) * 100.0 / NULLIF(COUNT(cs.id), 0), 1) as winrate
+            FROM users u
+            INNER JOIN combat_stats cs ON u.id = cs.user_id
+            GROUP BY u.id, u.username
+            HAVING total_games >= 1
+            ORDER BY wins DESC, winrate DESC, total_games DESC
+            LIMIT ?
+        ';
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$limit]);
+        $leaderboard = $stmt->fetchAll();
+        
+        foreach ($leaderboard as &$player) {
+            $mostPlayed = $this->getMostPlayedHeroes((int)$player['id'], 1);
+            $player['main_hero'] = !empty($mostPlayed) ? $mostPlayed[0]['hero_id'] : null;
+        }
+        
+        return $leaderboard;
+    }
 }

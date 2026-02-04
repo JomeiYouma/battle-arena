@@ -32,6 +32,9 @@ $stats5v5 = $userModel->get5v5Stats($userId);
 $statsByMode = $userModel->getStatsByMode($userId);
 $bestHero5v5 = $userModel->getBestHeroByWinrate($userId, '5v5', 2);
 
+// Leaderboard
+$leaderboard = $userModel->getLeaderboard(20);
+
 // Charger les héros pour les noms depuis la BDD
 // HeroManager et Hero sont chargés par l'autoloader
 $heroManager = new HeroManager();
@@ -149,6 +152,7 @@ require_once INCLUDES_PATH . '/header.php';
             <button class="tab-button active" onclick="switchTab('stats')">Statistiques 1v1</button>
             <button class="tab-button" onclick="switchTab('stats5v5')">Statistiques 5v5</button>
             <button class="tab-button" onclick="switchTab('teams')">Mes Équipes</button>
+            <button class="tab-button" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
         </div>
 
         <!-- TAB 1: Statistiques -->
@@ -393,6 +397,59 @@ require_once INCLUDES_PATH . '/header.php';
     <!-- TAB 3: Gestion des Équipes -->
     <div id="teams-tab" class="tab-content">
         <?php include COMPONENTS_PATH . '/team-manager.php'; ?>
+    </div>
+
+    <!-- TAB 4: Leaderboard -->
+    <div id="leaderboard-tab" class="tab-content">
+        <div class="section">
+            <h2>🏆 Classement des Joueurs</h2>
+            <?php if (empty($leaderboard)): ?>
+                <div class="empty-state">
+                    <div class="icon">🏆</div>
+                    <p>Aucun joueur classé pour le moment.</p>
+                </div>
+            <?php else: ?>
+                <table class="history-table leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-col">#</th>
+                            <th>Joueur</th>
+                            <th>Victoires</th>
+                            <th>Défaites</th>
+                            <th>Winrate</th>
+                            <th>Héros Principal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($leaderboard as $i => $player): 
+                            $rank = $i + 1;
+                            $rankEmoji = ['🥇', '🥈', '🥉'][$i] ?? $rank;
+                            $isCurrentUser = ($player['id'] == $userId);
+                            $heroName = $player['main_hero'] ? ($heroNames[$player['main_hero']] ?? $player['main_hero']) : '-';
+                        ?>
+                            <tr class="<?php echo $isCurrentUser ? 'current-user-row' : ''; ?> <?php echo $rank <= 3 ? 'top-3' : ''; ?>">
+                                <td class="rank-cell">
+                                    <span class="rank-badge rank-<?php echo min($rank, 4); ?>"><?php echo $rankEmoji; ?></span>
+                                </td>
+                                <td class="player-cell">
+                                    <?php echo htmlspecialchars($player['username']); ?>
+                                    <?php if ($isCurrentUser): ?><span class="you-badge">Vous</span><?php endif; ?>
+                                </td>
+                                <td class="result-victory"><?php echo $player['wins']; ?></td>
+                                <td class="result-defeat"><?php echo $player['losses']; ?></td>
+                                <td class="winrate-cell">
+                                    <span class="winrate-value"><?php echo $player['winrate']; ?>%</span>
+                                    <div class="winrate-bar">
+                                        <div class="winrate-fill" style="width: <?php echo min(100, $player['winrate']); ?>%"></div>
+                                    </div>
+                                </td>
+                                <td class="hero-cell"><?php echo htmlspecialchars($heroName); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
     </div>
 </div>
 

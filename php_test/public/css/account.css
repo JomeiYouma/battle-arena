@@ -597,3 +597,129 @@
         min-width: unset;
     }
 }
+
+/* ===== LEADERBOARD STYLES ===== */
+.leaderboard-table {
+    border-collapse: separate;
+    border-spacing: 0 4px;
+}
+
+.leaderboard-table thead th {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    padding: 12px 15px;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.leaderboard-table tbody tr {
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+
+.leaderboard-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: scale(1.01);
+}
+
+.leaderboard-table tbody tr.top-3 {
+    background: linear-gradient(90deg, rgba(255, 215, 0, 0.1), transparent);
+}
+
+.leaderboard-table tbody tr.current-user-row {
+    background: linear-gradient(90deg, rgba(74, 144, 226, 0.2), transparent);
+    border-left: 3px solid #4a90e2;
+}
+
+.rank-col {
+    width: 60px;
+    text-align: center;
+}
+
+.rank-cell {
+    text-align: center;
+}
+
+.rank-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.rank-badge.rank-1 { background: linear-gradient(135deg, #ffd700, #ffb700); color: #1a1a2e; }
+.rank-badge.rank-2 { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #1a1a2e; }
+.rank-badge.rank-3 { background: linear-gradient(135deg, #cd7f32, #b87333); color: #1a1a2e; }
+.rank-badge.rank-4 { background: rgba(255, 255, 255, 0.1); color: #888; font-size: 0.85rem; }
+
+.player-cell {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.you-badge {
+    background: #4a90e2;
+    color: white;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.winrate-cell {
+    min-width: 120px;
+}
+
+.winrate-value {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.winrate-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.winrate-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e74c3c, #f39c12, #2ecc71);
+    border-radius: 2px;
+    transition: width 0.5s ease;
+}
+
+.hero-cell {
+    color: #aaa;
+    font-style: italic;
+}
+
+@media (max-width: 600px) {
+    .leaderboard-table {
+        font-size: 0.85rem;
+    }
+    
+    .winrate-cell {
+        min-width: 80px;
+    }
+    
+    .rank-badge {
+        width: 26px;
+        height: 26px;
+        font-size: 0.85rem;
+    }
+    
+    .player-cell {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+}
