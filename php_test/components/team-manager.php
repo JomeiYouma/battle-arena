@@ -1,5 +1,6 @@
 <?php
 /** TEAM-MANAGER - Composant de gestion des équipes */
+$componentBasePath = getBasePath();
 ?>
 
 <div class="teams-manager">
@@ -536,9 +537,9 @@ function closeHeroSelector() {
 }
 
 function loadHeroSelectorComponent(teamId, slot) {
-    // Créer et envoyer une requête pour charger le composant
+    const basePath = '<?php echo $componentBasePath; ?>';
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'components/team-hero-selector-loader.php?team_id=' + teamId + '&position=' + slot, true);
+    xhr.open('GET', basePath + 'components/team-hero-selector-loader.php?team_id=' + teamId + '&position=' + slot, true);
     xhr.onload = function() {
         if (xhr.status === 200) {
             document.getElementById('heroSelectorContent').innerHTML = xhr.responseText;

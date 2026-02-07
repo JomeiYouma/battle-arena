@@ -174,6 +174,14 @@ class MultiCombat extends Combat {
         [$first, $second] = $this->getOrderedFighters();
         $playerIsFirst = ($first === $this->player);
         
+        // === HOOKS onTurnStart pour les blessings ===
+        foreach ($this->player->getBlessings() as $blessing) {
+            $blessing->onTurnStart($this->player, $this);
+        }
+        foreach ($this->enemy->getBlessings() as $blessing) {
+            $blessing->onTurnStart($this->enemy, $this);
+        }
+        
         // Actions associées aux combattants
         // Si first est player, son action est p1ActionKey
         $firstActionKey = $playerIsFirst ? $p1ActionKey : $p2ActionKey;

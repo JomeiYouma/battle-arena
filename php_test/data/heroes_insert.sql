@@ -8,7 +8,7 @@ INSERT INTO heroes (hero_id, name, type, pv, atk, def, speed, description, image
 ('ulroc', 'Ulroc le Mastoc', 'Guerrier', 120, 20, 10, 8, 'Tank puissant, alterne rage offensive et défense solide.', 'media/heroes/combat_skol.png', 'media/heroes/combat_skol_2.png', 1),
 ('siras', 'Siras le Sage', 'Guerisseur', 150, 14, 3, 13, 'Énergie divine pour soigner et infliger des dégâts qui ignorent les défenses.', 'media/heroes/priest_skol.png', 'media/heroes/priest_skol_2.png', 1),
 ('poissard', 'Poissard le Poisson', 'Aquatique', 85, 20, 6, 15, 'Insaisissable et fluide, esquive et contre-attaque avec des tsunamis.', 'media/heroes/fish_skol.png', 'media/heroes/fish_skol_2.png', 1),
-('pedro', 'Pedro', 'Barbare', 110, 20, 0, 10, 'Berserk sanguinaire, plus dangereux quand blessé. Risque et récompense.', 'media/heroes/kouto_skol.png', 'media/heroes/kouto_skol_2.png', 1),
+('pedro', 'Pedro', 'Barbare', 110, 20, 0, 10, 'Berserk sanguinaire, plus dangereux quand blessé.', 'media/heroes/kouto_skol.png', 'media/heroes/kouto_skol_2.png', 1),
 ('krimus', 'Krimus l''Astucieux', 'Guerisseur', 110, 12, 9, 9, 'Guérisseur rusé, combine soins puissants et attaques sacrées.', 'media/heroes/sat_skol.png', 'media/heroes/sat_skol_2.png', 1),
 ('pikratchu', 'Pikratchu', 'Electrique', 90, 18, 3, 11, 'Vitesse extrême et dégâts électriques. Paralysie et charge dévastatrice.', 'media/heroes/pikachu_skol.png', 'media/heroes/pikachu_skol_2.png', 1),
 ('norgol', 'Norgol Roi des Ombres', 'Necromancien', 145, 17, 4, 5, 'Manipulateur d''âmes, copie les attaques et maudit ses ennemis.', 'media/heroes/necro_skol.png', 'media/heroes/necro_skol_2.png', 1),

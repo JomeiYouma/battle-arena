@@ -309,6 +309,14 @@ class TeamCombat extends MultiCombat {
         $this->captureInitialStates();
         $this->logs[] = "--- Tour " . $this->turn . " ---";
 
+        // === HOOKS onTurnStart pour les blessings ===
+        foreach ($this->player->getBlessings() as $blessing) {
+            $blessing->onTurnStart($this->player, $this);
+        }
+        foreach ($this->enemy->getBlessings() as $blessing) {
+            $blessing->onTurnStart($this->enemy, $this);
+        }
+
         // ===== PHASE SWITCH (PRIORITAIRE) =====
         // Les switchs sont toujours exécutés en premier
         $p1IsSwitch = strpos($p1ActionKey, 'switch:') === 0;
