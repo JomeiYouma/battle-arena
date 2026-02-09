@@ -8,6 +8,8 @@ define('PAGES_PATH', BASE_PATH . '/pages');
 define('DATA_PATH', BASE_PATH . '/data');
 define('INCLUDES_PATH', BASE_PATH . '/includes');
 define('COMPONENTS_PATH', BASE_PATH . '/components');
+define('APP_PATH', BASE_PATH . '/app');
+define('VIEWS_PATH', BASE_PATH . '/views');
 
 spl_autoload_register(function ($classe) {
     $directories = [
@@ -17,6 +19,9 @@ spl_autoload_register(function ($classe) {
         CORE_PATH . '/blessings',
         CORE_PATH . '/Models',
         CORE_PATH . '/Services',
+        // MVC directories
+        APP_PATH . '/Controllers',
+        APP_PATH . '/Repositories',
     ];
     
     foreach ($directories as $dir) {
@@ -33,6 +38,11 @@ function asset($path) {
 }
 
 function asset_url($path) {
+    // Si on est dans le contexte MVC (View chargée), utiliser View::asset()
+    if (class_exists('View') && method_exists('View', 'asset')) {
+        return View::asset($path);
+    }
+    
     $scriptName = $_SERVER['SCRIPT_NAME'];
     
     if (strpos($scriptName, '/pages/game/') !== false || 

@@ -13,6 +13,8 @@ let IS_TEST_UI = false;
 let TEAM_DATA_P1 = [];
 let TEAM_DATA_P2 = [];
 let ASSET_BASE_PATH = '';
+let API_BASE_PATH = '';
+let HOME_URL = '/nodeTest2/mood-checker/php_test/app/';
 
 let pollInterval = null;
 let lastLogCount = 0;
@@ -40,6 +42,7 @@ function initMultiplayerCombat(config) {
     TEAM_DATA_P1 = config.teamDataP1;
     TEAM_DATA_P2 = config.teamDataP2;
     ASSET_BASE_PATH = config.assetBasePath;
+    API_BASE_PATH = config.apiBasePath || '../../api.php';
     
     currentGameState = INITIAL_STATE;
     lastLogCount = INITIAL_STATE.logs ? INITIAL_STATE.logs.length : 0;
@@ -299,7 +302,7 @@ function updateCombatState() {
         return;
     }
 
-    fetch('../../api.php?action=poll_status&match_id=' + MATCH_ID, {
+    fetch(API_BASE_PATH + '?action=poll_status&match_id=' + MATCH_ID, {
         credentials: 'same-origin'
     })
         .then(r => {
@@ -513,7 +516,7 @@ function showErrorMessage(message) {
         const controls = document.querySelector('.controls');
         controls.parentNode.insertBefore(errorMsg, controls);
     }
-    errorMsg.innerHTML = message + '<br><button onclick="location.href=\'../../index.php\'" class="error-return-btn">Retour Menu</button>';
+    errorMsg.innerHTML = message + '<br><button onclick="location.href=\'' + HOME_URL + '\'" class="error-return-btn">Retour Menu</button>';
     errorMsg.style.display = 'block';
 }
 
@@ -526,7 +529,7 @@ function sendAction(action) {
     waitMsg.style.display = 'block';
     waitMsg.innerText = 'Envoi de l\'action...';
     
-    fetch('../../api.php?action=submit_move', {
+    fetch(API_BASE_PATH + '?action=submit_move', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -848,13 +851,13 @@ function performSwitch(heroIndex, isForcedSwitch = false) {
     }
     
     const fetchPromise = isForcedSwitch 
-        ? fetch('../../api.php?action=submit_forced_switch', {
+        ? fetch(API_BASE_PATH + '?action=submit_forced_switch', {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'match_id=' + MATCH_ID + '&target_index=' + heroIndex
         })
-        : fetch('../../api.php?action=submit_move', {
+        : fetch(API_BASE_PATH + '?action=submit_move', {
             method: 'POST',
             credentials: 'same-origin',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

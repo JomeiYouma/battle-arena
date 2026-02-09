@@ -1,11 +1,13 @@
 <?php
 /** TEAMMANAGER - Service de gestion des équipes 5v5 */
 
+require_once __DIR__ . '/../Database.php';
+
 class TeamManager {
     private PDO $pdo;
 
-    public function __construct(PDO $pdo) {
-        $this->pdo = $pdo;
+    public function __construct() {
+        $this->pdo = Database::getInstance();
     }
 
     public function createTeam(int $userId, string $teamName, string $description = ''): ?int {

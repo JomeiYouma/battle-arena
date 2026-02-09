@@ -1,163 +1,5 @@
 <?php
-/** SIMULATION - Simule des combats pour statistiques d'équilibrage */
-
-require_once __DIR__ . '/../../includes/autoload.php';
-
-// Charger les personnages depuis la BDD
-require_once COMPONENTS_PATH . '/selection-utils.php';
-$personnages = getHeroesList();
-
-// Liste des bénédictions disponibles
-$blessingsList = [
-    ['id' => 'none', 'name' => 'Aucune', 'emoji' => '❌'],
-    ['id' => 'WheelOfFortune', 'name' => 'Roue de Fortune', 'emoji' => '🎰'],
-    ['id' => 'LoversCharm', 'name' => 'Charmes Amoureux', 'emoji' => '💘'],
-    ['id' => 'JudgmentOfDamned', 'name' => 'Jugement des Maudits', 'emoji' => '⚖️'],
-    ['id' => 'StrengthFavor', 'name' => 'Faveur de Force', 'emoji' => '💪'],
-    ['id' => 'MoonCall', 'name' => 'Appel de la Lune', 'emoji' => '🌙'],
-    ['id' => 'WatchTower', 'name' => 'La Tour de Garde', 'emoji' => '🏰'],
-    ['id' => 'RaChariot', 'name' => 'Chariot de Ra', 'emoji' => '☀️'],
-    ['id' => 'HangedMan', 'name' => 'Corde du Pendu', 'emoji' => '🪢']
-];
-
-// Variables pour les résultats
-$results = null;
-$blessingResults = null;
-$combatsPerMatchup = 10; // Valeur par défaut
-$simulationType = 'classic'; // classic, blessing_single, blessing_all
-$selectedHero = 'all';
-$selectedBlessing = 'all';
-$opponentBlessingMode = 'same'; // same, all
-
-// --- LANCER LA SIMULATION ---
-if (isset($_POST['simulate'])) {
-    set_time_limit(0); // Pas de limite de temps
-    $combatsPerMatchup = (int) $_POST['combats_count'];
-    $combatsPerMatchup = max(1, min(1000, $combatsPerMatchup));
-    
-    $results = runSimulation($personnages, $combatsPerMatchup);
-}
-
-// --- SIMULATION AVEC BÉNÉDICTIONS ---
-if (isset($_POST['simulate_blessing'])) {
-    set_time_limit(0); // Pas de limite de temps
-    $combatsPerMatchup = (int) $_POST['combats_count_blessing'];
-    $combatsPerMatchup = max(1, min(500, $combatsPerMatchup));
-    $selectedHero = $_POST['hero_select'] ?? 'all';
-    $selectedBlessing = $_POST['blessing_select'] ?? 'all';
-    $opponentBlessingMode = $_POST['opponent_blessing_mode'] ?? 'same';
-    
-    $blessingResults = runBlessingSimulation($personnages, $blessingsList, $combatsPerMatchup, $selectedHero, $selectedBlessing, $opponentBlessingMode);
-}
-
-/**
- * Crée une instance fraîche d'un personnage à partir de ses stats
- */
-function createFighter(array $stats): Personnage {
-    $class = $stats['type'];
-    return new $class(
-        $stats['pv'], 
-        $stats['atk'], 
-        $stats['name'], 
-        $stats['def'] ?? 5, 
-        $stats['speed'] ?? 10
-    );
-}
-
-/**
- * Lance la simulation complète
- */
-function runSimulation(array $personnages, int $combatsPerMatchup): array {
-    $stats = [];
-    $matchups = [];
-    
-    // Initialiser les stats pour chaque personnage
-    foreach ($personnages as $p) {
-        $stats[$p['id']] = [
-            'id' => $p['id'],
-            'name' => $p['name'],
-            'type' => $p['type'],
-            'wins' => 0,
-            'losses' => 0,
-            'battles' => 0,
-            'avgTurns' => 0,
-            'totalTurns' => 0,
-            'matchups' => []
-        ];
-    }
-    
-    // Faire combattre chaque paire de personnages
-    $count = count($personnages);
-    for ($i = 0; $i < $count; $i++) {
-        for ($j = $i + 1; $j < $count; $j++) {
-            $p1 = $personnages[$i];
-            $p2 = $personnages[$j];
-            
-            $p1Wins = 0;
-            $p2Wins = 0;
-            $totalTurns = 0;
-            
-            // Lancer N combats pour cette paire
-            for ($n = 0; $n < $combatsPerMatchup; $n++) {
-                // Créer des instances fraîches à chaque combat
-                $fighter1 = createFighter($p1);
-                $fighter2 = createFighter($p2);
-                
-                $combat = new AutoCombat($fighter1, $fighter2);
-                $winner = $combat->run();
-                $totalTurns += $combat->getTurns();
-                
-                if ($winner->getName() === $p1['name']) {
-                    $p1Wins++;
-                } else {
-                    $p2Wins++;
-                }
-            }
-            
-            // Mettre à jour les stats globales
-            $stats[$p1['id']]['wins'] += $p1Wins;
-            $stats[$p1['id']]['losses'] += $p2Wins;
-            $stats[$p1['id']]['battles'] += $combatsPerMatchup;
-            $stats[$p1['id']]['totalTurns'] += $totalTurns;
-            
-            $stats[$p2['id']]['wins'] += $p2Wins;
-            $stats[$p2['id']]['losses'] += $p1Wins;
-            $stats[$p2['id']]['battles'] += $combatsPerMatchup;
-            $stats[$p2['id']]['totalTurns'] += $totalTurns;
-            
-            // Stocker les résultats du matchup
-            $stats[$p1['id']]['matchups'][$p2['id']] = [
-                'opponent' => $p2['name'],
-                'wins' => $p1Wins,
-                'losses' => $p2Wins,
-                'winRate' => round(($p1Wins / $combatsPerMatchup) * 100, 1)
-            ];
-            
-            $stats[$p2['id']]['matchups'][$p1['id']] = [
-                'opponent' => $p1['name'],
-                'wins' => $p2Wins,
-                'losses' => $p1Wins,
-                'winRate' => round(($p2Wins / $combatsPerMatchup) * 100, 1)
-            ];
-        }
-    }
-    
-    // Calculer les moyennes et ratios
-    foreach ($stats as $id => &$s) {
-        if ($s['battles'] > 0) {
-            $s['winRate'] = round(($s['wins'] / $s['battles']) * 100, 1);
-            $s['avgTurns'] = round($s['totalTurns'] / $s['battles'], 1);
-        } else {
-            $s['winRate'] = 0;
-            $s['avgTurns'] = 0;
-        }
-    }
-    
-    // Trier par winRate décroissant
-    uasort($stats, fn($a, $b) => $b['winRate'] <=> $a['winRate']);
-    
-    return $stats;
-}
+/** VUE: Simulation - Simule des combats pour statistiques d'équilibrage */
 
 /**
  * Retourne une classe CSS selon le taux de victoire
@@ -169,152 +11,6 @@ function getBalanceClass(float $winRate): string {
     if ($winRate <= 45) return 'slightly-weak';
     return 'balanced';
 }
-
-/**
- * Crée une instance de bénédiction à partir de son ID
- */
-function createBlessing(string $blessingId): ?Blessing {
-    if ($blessingId === 'none') return null;
-    
-    $blessingFile = CORE_PATH . '/blessings/' . $blessingId . '.php';
-    if (file_exists($blessingFile)) {
-        require_once $blessingFile;
-        return new $blessingId();
-    }
-    return null;
-}
-
-/**
- * Crée un combattant avec une bénédiction optionnelle
- */
-function createFighterWithBlessing(array $stats, ?string $blessingId = null): Personnage {
-    $fighter = createFighter($stats);
-    if ($blessingId && $blessingId !== 'none') {
-        $blessing = createBlessing($blessingId);
-        if ($blessing) {
-            $fighter->addBlessing($blessing);
-        }
-    }
-    return $fighter;
-}
-
-/**
- * Lance la simulation avec bénédictions
- */
-function runBlessingSimulation(array $personnages, array $blessingsList, int $combatsPerMatchup, string $selectedHero, string $selectedBlessing, string $opponentBlessingMode): array {
-    $results = [];
-    
-    // Filtrer les bénédictions (exclure 'none' sauf si sélectionné explicitement)
-    $activeBlessings = array_filter($blessingsList, fn($b) => $b['id'] !== 'none');
-    
-    // Déterminer les héros à tester
-    $herosToTest = ($selectedHero === 'all') 
-        ? $personnages 
-        : array_filter($personnages, fn($p) => $p['id'] === $selectedHero);
-    
-    // Déterminer les bénédictions à tester pour le héros
-    $blessingsToTest = ($selectedBlessing === 'all') 
-        ? $activeBlessings 
-        : array_filter($activeBlessings, fn($b) => $b['id'] === $selectedBlessing);
-    
-    foreach ($herosToTest as $hero) {
-        foreach ($blessingsToTest as $heroBlessing) {
-            // Clé unique pour ce héros+bénédiction
-            $key = $hero['id'] . '_' . $heroBlessing['id'];
-            
-            $results[$key] = [
-                'heroId' => $hero['id'],
-                'heroName' => $hero['name'],
-                'heroType' => $hero['type'],
-                'blessingId' => $heroBlessing['id'],
-                'blessingName' => $heroBlessing['name'],
-                'blessingEmoji' => $heroBlessing['emoji'],
-                'wins' => 0,
-                'losses' => 0,
-                'battles' => 0,
-                'totalTurns' => 0,
-                'matchups' => []
-            ];
-            
-            // Autres héros comme adversaires
-            foreach ($personnages as $opponent) {
-                if ($opponent['id'] === $hero['id']) continue;
-                
-                // Déterminer les bénédictions adverses à tester
-                if ($opponentBlessingMode === 'same') {
-                    // Même bénédiction pour l'adversaire
-                    $opponentBlessings = [$heroBlessing];
-                } else {
-                    // Toutes les bénédictions pour l'adversaire
-                    $opponentBlessings = $activeBlessings;
-                }
-                
-                foreach ($opponentBlessings as $oppBlessing) {
-                    $matchupKey = $opponent['id'] . '_' . $oppBlessing['id'];
-                    
-                    $heroWins = 0;
-                    $oppWins = 0;
-                    $totalTurns = 0;
-                    
-                    // Lancer les combats
-                    for ($n = 0; $n < $combatsPerMatchup; $n++) {
-                        $fighter1 = createFighterWithBlessing($hero, $heroBlessing['id']);
-                        $fighter2 = createFighterWithBlessing($opponent, $oppBlessing['id']);
-                        
-                        $combat = new AutoCombat($fighter1, $fighter2);
-                        $winner = $combat->run();
-                        $totalTurns += $combat->getTurns();
-                        
-                        if ($winner->getName() === $hero['name']) {
-                            $heroWins++;
-                        } else {
-                            $oppWins++;
-                        }
-                    }
-                    
-                    // Stocker les résultats
-                    $results[$key]['wins'] += $heroWins;
-                    $results[$key]['losses'] += $oppWins;
-                    $results[$key]['battles'] += $combatsPerMatchup;
-                    $results[$key]['totalTurns'] += $totalTurns;
-                    
-                    $results[$key]['matchups'][$matchupKey] = [
-                        'opponentName' => $opponent['name'],
-                        'opponentType' => $opponent['type'],
-                        'opponentBlessing' => $oppBlessing['name'],
-                        'opponentBlessingEmoji' => $oppBlessing['emoji'],
-                        'wins' => $heroWins,
-                        'losses' => $oppWins,
-                        'winRate' => round(($heroWins / $combatsPerMatchup) * 100, 1)
-                    ];
-                }
-            }
-        }
-    }
-    
-    // Calculer les moyennes
-    foreach ($results as $key => &$r) {
-        if ($r['battles'] > 0) {
-            $r['winRate'] = round(($r['wins'] / $r['battles']) * 100, 1);
-            $r['avgTurns'] = round($r['totalTurns'] / $r['battles'], 1);
-        } else {
-            $r['winRate'] = 0;
-            $r['avgTurns'] = 0;
-        }
-    }
-    
-    // Trier par winRate décroissant
-    uasort($results, fn($a, $b) => $b['winRate'] <=> $a['winRate']);
-    
-    return $results;
-}
-
-// Configuration du header
-$pageTitle = 'Simulation - Horus Battle Arena';
-$extraCss = ['simulation'];
-$showUserBadge = false;
-$showMainTitle = true;
-require_once INCLUDES_PATH . '/header.php';
 ?>
 
     <!-- LOADING OVERLAY -->
@@ -327,8 +23,6 @@ require_once INCLUDES_PATH . '/header.php';
         <div class="loading-tips">Conseil : Réduisez le nombre de combats pour des résultats plus rapides</div>
     </div>
 
-    <!-- <h1>Simulateur de Matchs</h1> -->
-
     <div class="simulation-container">
         
         <!-- ONGLETS -->
@@ -339,7 +33,7 @@ require_once INCLUDES_PATH . '/header.php';
         
         <!-- TAB: SIMULATION CLASSIQUE -->
         <div id="tab-classic" class="tab-content active">
-            <form method="POST" class="simulation-form">
+            <form method="POST" class="simulation-form" action="<?= View::url('/game/simulation') ?>">
                 <div class="form-group">
                     <label for="combats_count">Nombre de combats par matchup :</label>
                     <input type="number" 
@@ -352,10 +46,6 @@ require_once INCLUDES_PATH . '/header.php';
                 </div>
                 
                 <div class="form-info">
-                    <?php 
-                    $nbPersonnages = count($personnages);
-                    $nbMatchups = ($nbPersonnages * ($nbPersonnages - 1)) / 2;
-                    ?>
                     <p><?php echo $nbPersonnages; ?> personnages = <?php echo $nbMatchups; ?> matchups</p>
                     <p>Total : <strong id="totalCombats"><?php echo $nbMatchups * $combatsPerMatchup; ?></strong> combats simulés</p>
                     <p class="time-estimate-preview">Temps estimé : <strong id="timeEstimateClassic">~0s</strong></p>
@@ -369,7 +59,7 @@ require_once INCLUDES_PATH . '/header.php';
         
         <!-- TAB: SIMULATION BÉNÉDICTIONS -->
         <div id="tab-blessing" class="tab-content">
-            <form method="POST" class="simulation-form">
+            <form method="POST" class="simulation-form" action="<?= View::url('/game/simulation') ?>">
                 <h3 class="simulation-section-title">Test d'équilibrage des Bénédictions</h3>
                 
                 <div class="blessing-form-grid">
@@ -744,7 +434,7 @@ require_once INCLUDES_PATH . '/header.php';
         
     </div>
 
-    <script src="../../public/js/simulation.js"></script>
+    <script src="<?= View::asset('js/simulation.js') ?>"></script>
     <script>
         initSimulation({
             nbPersonnages: <?php echo count($personnages); ?>,
@@ -753,8 +443,3 @@ require_once INCLUDES_PATH . '/header.php';
             hasBlessingResults: <?php echo $blessingResults ? 'true' : 'false'; ?>
         });
     </script>
-
-<?php 
-$showBackLink = true;
-require_once INCLUDES_PATH . '/footer.php'; 
-?>

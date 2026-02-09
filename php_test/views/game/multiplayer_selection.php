@@ -1,14 +1,5 @@
 <?php
-/** MULTIPLAYER-SELECTION - Sélection héros + Queue 1v1 */
-
-require_once __DIR__ . '/../../includes/autoload.php';
-
-$pageTitle = 'Multijoueur - Horus Battle Arena';
-$extraCss = ['shared-selection', 'multiplayer'];
-$showUserBadge = false; // On affiche le nom dans le formulaire
-$showMainTitle = false; // Le titre est dans le composant
-require_once INCLUDES_PATH . '/header.php';
-
+/** VUE: Multiplayer Selection - Sélection héros + Queue 1v1 */
 ?>
 
 <div class="multi-container">
@@ -22,8 +13,8 @@ require_once INCLUDES_PATH . '/header.php';
         $selectionConfig = [
             'mode' => 'multiplayer',
             'showPlayerNameInput' => true,
-            'displayNameValue' => User::isLoggedIn() ? User::getCurrentUsername() : null,
-            'displayNameIsStatic' => User::isLoggedIn()
+            'displayNameValue' => $displayNameValue ?? null,
+            'displayNameIsStatic' => $displayNameIsStatic ?? false
         ];
         
         renderSelectionScreen($selectionConfig);
@@ -64,7 +55,9 @@ require_once INCLUDES_PATH . '/header.php';
 
 <!-- Tooltip System -->
 <div id="customTooltip" class="custom-tooltip"></div>
-<script src="../../public/js/selection-tooltip.js"></script>
-<script src="../../public/js/multiplayer-selection.js"></script>
-
-<?php require_once INCLUDES_PATH . '/footer.php'; ?>
+<script src="<?php echo View::asset('js/selection-tooltip.js'); ?>"></script>
+<script>
+// Configuration API pour le mode MVC
+window.API_BASE_PATH = '<?php echo View::url("api"); ?>';
+</script>
+<script src="<?php echo View::asset('js/multiplayer-selection.js'); ?>"></script>

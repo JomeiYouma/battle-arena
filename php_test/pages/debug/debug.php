@@ -215,13 +215,13 @@ require_once INCLUDES_PATH . '/header.php';
         <div class="debug-card">
             <h3>Accès Rapide</h3>
             <div class="quick-links">
-                <a href="../game/simulation.php" class="debug-btn primary">Simulateur</a>
+                <a href="/nodeTest2/mood-checker/php_test/app/game/simulation" class="debug-btn primary">Simulateur</a>
                 <a href="../admin/admin_heroes.php" class="debug-btn primary">Gestionnaire Héros</a>
-                <a href="../account.php" class="debug-btn">Mon Compte</a>
-                <a href="../game/single_player.php" class="debug-btn">Solo</a>
-                <a href="../game/multiplayer-selection.php" class="debug-btn">Multi 1v1</a>
-                <a href="../game/multiplayer_5v5_selection.php" class="debug-btn">Multi 5v5</a>
-                <a href="../game/multiplayer-combat.php?match_id=debug_test" class="debug-btn">Combat Debug</a>
+                <a href="/nodeTest2/mood-checker/php_test/app/account" class="debug-btn">Mon Compte</a>
+                <a href="/nodeTest2/mood-checker/php_test/app/game/single" class="debug-btn">Solo</a>
+                <a href="/nodeTest2/mood-checker/php_test/app/game/multiplayer-selection" class="debug-btn">Multi 1v1</a>
+                <a href="/nodeTest2/mood-checker/php_test/app/game/5v5-selection" class="debug-btn">Multi 5v5</a>
+                <a href="/nodeTest2/mood-checker/php_test/app/game/multiplayer-combat?match_id=debug_test" class="debug-btn">Combat Debug</a>
             </div>
         </div>
 

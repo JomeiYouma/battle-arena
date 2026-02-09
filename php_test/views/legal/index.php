@@ -1,14 +1,5 @@
 <?php
-/** LEGAL - Mentions légales, RGPD et crédits */
-
-require_once __DIR__ . '/../includes/autoload.php';
-
-// Configuration du header
-$pageTitle = 'Mentions Légales - Horus Battle Arena';
-$extraCss = [];
-$showUserBadge = false;
-$showMainTitle = true;
-require_once INCLUDES_PATH . '/header.php';
+/** VUE: Legal - Mentions légales, RGPD et crédits */
 ?>
 
 <div class="legal-container">
@@ -119,7 +110,7 @@ require_once INCLUDES_PATH . '/header.php';
             <li><strong>Droit à la limitation :</strong> Limiter le traitement de vos données</li>
         </ul>
         <p class="contact-info">
-            Pour exercer ces droits, contactez-nous à : <strong>[EMAIL À COMPLÉTER]</strong>
+            Pour exercer ces droits, contactez-nous à : <strong>contact.battle-arena@gmail.com</strong>
         </p>
         <p>
             En cas de litige, vous pouvez saisir la <strong>CNIL</strong> (Commission Nationale de l'Informatique et des Libertés) :<br>
@@ -178,8 +169,3 @@ require_once INCLUDES_PATH . '/header.php';
     </p>
 
 </div>
-
-<?php 
-$showBackLink = true;
-require_once INCLUDES_PATH . '/footer.php'; 
-?>

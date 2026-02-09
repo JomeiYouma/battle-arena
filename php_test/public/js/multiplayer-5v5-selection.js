@@ -5,6 +5,7 @@
 
 // Configuration globale (initialisée depuis PHP)
 let ASSET_BASE_PATH = '';
+let API_BASE_PATH = '';
 let PLAYER_DISPLAY_NAME = 'Joueur';
 
 let selectedTeamData = null;
@@ -15,9 +16,10 @@ const MAX_QUEUE_TIME = 30;
 /**
  * Initialiser le module avec les paramètres PHP
  */
-function init5v5Selection(assetBasePath, displayName) {
+function init5v5Selection(assetBasePath, displayName, apiBasePath) {
     ASSET_BASE_PATH = assetBasePath;
     PLAYER_DISPLAY_NAME = displayName;
+    API_BASE_PATH = apiBasePath || '../../api.php';
     
     // Event listener pour le bouton annuler
     const cancelBtn = document.getElementById('cancelQueue');
@@ -76,7 +78,7 @@ function startQueue() {
     queueSeconds = 0;
     updateQueueDisplay();
     
-    fetch('../../api.php?action=join_queue_5v5', {
+    fetch(API_BASE_PATH + '?action=join_queue_5v5', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -112,7 +114,7 @@ function pollQueue() {
     queueSeconds++;
     updateQueueDisplay();
     
-    fetch('../../api.php?action=poll_queue_5v5', {
+    fetch(API_BASE_PATH + '?action=poll_queue_5v5', {
         credentials: 'same-origin'
     })
     .then(r => r.json())
@@ -152,7 +154,7 @@ function updateQueueDisplay() {
 function forceMatchWithBot() {
     clearInterval(queueInterval);
     
-    fetch('../../api.php?action=force_bot_match_5v5', {
+    fetch(API_BASE_PATH + '?action=force_bot_match_5v5', {
         method: 'POST',
         credentials: 'same-origin'
     })
@@ -178,7 +180,7 @@ function forceMatchWithBot() {
 function cancelQueue() {
     clearInterval(queueInterval);
     
-    fetch('../../api.php?action=leave_queue_5v5', {
+    fetch(API_BASE_PATH + '?action=leave_queue_5v5', {
         method: 'POST',
         credentials: 'same-origin'
     }).catch(() => {}); // Ignorer les erreurs

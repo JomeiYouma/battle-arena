@@ -259,16 +259,74 @@ mood-checker/
 
 ---
 
+## 🏗️ MVC Architecture (v2.0)
+
+Le projet a été restructuré en MVC pour améliorer la maintenabilité.
+
+### Structure des dossiers
+
+```
+php_test/
+├── app/                        # Front Controller MVC
+│   ├── index.php              # Point d'entrée unique
+│   ├── .htaccess              # Redirections Apache
+│   ├── Controllers/           # Contrôleurs
+│   │   ├── AuthController.php
+│   │   ├── AccountController.php
+│   │   ├── GameController.php
+│   │   ├── HomeController.php
+│   │   ├── LegalController.php
+│   │   ├── ApiController.php
+│   │   └── DebugController.php
+│   └── Repositories/          # Accès aux données (prévu)
+├── config/
+│   └── routes.php             # Définition des routes
+├── core/                      # Classes métier & MVC
+│   ├── Router.php             # Routeur
+│   ├── Controller.php         # Classe de base contrôleur
+│   └── View.php               # Moteur de vues
+├── views/                     # Templates
+│   ├── layouts/               # Layouts (main.php, home.php)
+│   ├── auth/                  # Vues authentification
+│   ├── account/               # Vue compte
+│   ├── game/                  # Vues jeu
+│   ├── home/                  # Vue accueil
+│   └── legal/                 # Vue mentions légales
+└── pages/                     # Anciennes pages (obsolètes)
+```
+
+### Routes principales
+
+| Méthode | Route | Contrôleur | Description |
+|---------|-------|------------|-------------|
+| GET | `/` | HomeController::index | Accueil |
+| GET/POST | `/login` | AuthController | Connexion |
+| GET/POST | `/register` | AuthController | Inscription |
+| GET/POST | `/game/single` | GameController | Combat solo |
+| GET | `/game/multiplayer` | GameController | Menu multi |
+| GET/POST | `/game/multiplayer-selection` | GameController | Sélection 1v1 |
+| GET/POST | `/game/multiplayer-combat` | GameController | Combat multi |
+| GET/POST | `/game/5v5-selection` | GameController | Sélection 5v5 |
+| GET | `/account` | AccountController | Compte utilisateur |
+| GET | `/legal` | LegalController | Mentions légales |
+
+### URL d'accès
+
+Point d'entrée MVC : `http://localhost/nodeTest2/mood-checker/php_test/app/`
+
+---
+
 ## Technologies Used
 
 - **Frontend:** HTML5, CSS3, Vanilla JavaScript
-- **Backend:** PHP 7.4+
-- **Data Storage:** JSON (file-based, no database needed)
+- **Backend:** PHP 8.2+, MVC Pattern
+- **Database:** MySQL (horus_arena)
+- **Data Storage:** JSON (files pour matchmaking)
 - **Deployment:** GitHub Actions + SSH
 - **Version Control:** Git + GitHub
 
 ---
 
-**Last Updated:** January 23, 2026  
-**Version:** 1.0 - Production Ready  
-**Status:** ✅ Complete
+**Last Updated:** July 2025  
+**Version:** 2.0 - MVC Migration  
+**Status:** ✅ MVC Complete (Simulation page still redirects)

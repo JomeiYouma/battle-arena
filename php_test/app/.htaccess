@@ -1,0 +1,11 @@
+# Configuration pour le Front Controller MVC
+# Activer le module rewrite dans Apache si ce n'est pas fait
+
+RewriteEngine On
+
+# Ne pas réécrire les fichiers/dossiers existants
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rediriger tout vers index.php
+RewriteRule ^(.*)$ index.php [QSA,L]

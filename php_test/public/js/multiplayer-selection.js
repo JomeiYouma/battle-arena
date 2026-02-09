@@ -3,6 +3,9 @@
  * Gestion de la sélection de héros et du système de queue 1v1
  */
 
+// Configuration globale (peut être définie par PHP avant le chargement du script)
+let API_BASE_PATH = window.API_BASE_PATH || '';
+
 let selectedHeroId = null;
 let selectedBlessingId = null;
 let queuePollInterval = null;
@@ -13,7 +16,13 @@ let isInQueue = false;
 /**
  * Initialisation du système de sélection multiplayer
  */
-function initMultiplayerSelection() {
+function initMultiplayerSelection(apiBasePath) {
+    // Utilise le paramètre, ou la variable globale définie par PHP, ou le fallback
+    if (apiBasePath) {
+        API_BASE_PATH = apiBasePath;
+    } else if (!API_BASE_PATH) {
+        API_BASE_PATH = '../../api.php';
+    }
     const form = document.querySelector('.select-screen form');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -81,7 +90,7 @@ function joinQueue(heroId, displayName, blessingId) {
         body += '&blessing_id=' + encodeURIComponent(blessingId);
     }
 
-    fetch('../../api.php?action=join_queue', {
+    fetch(API_BASE_PATH + '?action=join_queue', {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -112,7 +121,7 @@ function joinQueue(heroId, displayName, blessingId) {
  * Polling du statut de la queue
  */
 function pollQueueStatus() {
-    fetch('../../api.php?action=poll_queue', {
+    fetch(API_BASE_PATH + '?action=poll_queue', {
         credentials: 'same-origin'
     })
     .then(r => r.json())
@@ -185,7 +194,7 @@ function cancelQueue() {
     
     // Informer le serveur qu'on quitte la queue
     if (isInQueue) {
-        fetch('../../api.php?action=leave_queue', {
+        fetch(API_BASE_PATH + '?action=leave_queue', {
             method: 'POST',
             credentials: 'same-origin'
         }).catch(() => {});
