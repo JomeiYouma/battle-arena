@@ -59,5 +59,6 @@
 <script>
 // Configuration API pour le mode MVC
 window.API_BASE_PATH = '<?php echo View::url("api"); ?>';
+window.APP_BASE_PATH = '<?php echo View::url(""); ?>';
 </script>
 <script src="<?php echo View::asset('js/multiplayer-selection.js'); ?>"></script>

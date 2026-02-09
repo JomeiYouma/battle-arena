@@ -100,6 +100,7 @@
 init5v5Selection(
     '<?php echo View::asset(""); ?>',
     '<?php echo htmlspecialchars($username ?? 'Joueur'); ?>',
-    '<?php echo View::url("api"); ?>'
+    '<?php echo View::url("api"); ?>',
+    '<?php echo View::url(""); ?>'
 );
 </script>

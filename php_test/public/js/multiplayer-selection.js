@@ -148,8 +148,9 @@ function goToMatch(matchId) {
     if (queuePollInterval) clearInterval(queuePollInterval);
     if (countdownInterval) clearInterval(countdownInterval);
     
-    // Rediriger vers le combat
-    window.location.href = 'multiplayer-combat.php?match_id=' + matchId;
+    // Rediriger vers le combat (utilise APP_BASE_PATH si disponible)
+    const basePath = window.APP_BASE_PATH || '/nodeTest2/mood-checker/php_test/app/';
+    window.location.href = basePath + 'game/multiplayer-combat?match_id=' + matchId;
 }
 
 /**

@@ -6,6 +6,7 @@
 // Configuration globale (initialisée depuis PHP)
 let ASSET_BASE_PATH = '';
 let API_BASE_PATH = '';
+let APP_BASE_PATH = '';
 let PLAYER_DISPLAY_NAME = 'Joueur';
 
 let selectedTeamData = null;
@@ -16,10 +17,11 @@ const MAX_QUEUE_TIME = 30;
 /**
  * Initialiser le module avec les paramètres PHP
  */
-function init5v5Selection(assetBasePath, displayName, apiBasePath) {
+function init5v5Selection(assetBasePath, displayName, apiBasePath, appBasePath) {
     ASSET_BASE_PATH = assetBasePath;
     PLAYER_DISPLAY_NAME = displayName;
     API_BASE_PATH = apiBasePath || '../../api.php';
+    APP_BASE_PATH = appBasePath || '/nodeTest2/mood-checker/php_test/app/';
     
     // Event listener pour le bouton annuler
     const cancelBtn = document.getElementById('cancelQueue');
@@ -122,7 +124,7 @@ function pollQueue() {
         if (data.status === 'matched') {
             // Match trouvé !
             clearInterval(queueInterval);
-            window.location.href = 'multiplayer-combat.php?match_id=' + data.match_id;
+            window.location.href = APP_BASE_PATH + 'game/multiplayer-combat?match_id=' + data.match_id;
         } else if (data.status === 'waiting') {
             // Toujours en attente
             if (queueSeconds >= MAX_QUEUE_TIME) {
@@ -161,7 +163,7 @@ function forceMatchWithBot() {
     .then(r => r.json())
     .then(data => {
         if (data.status === 'ok' && data.match_id) {
-            window.location.href = 'multiplayer-combat.php?match_id=' + data.match_id;
+            window.location.href = APP_BASE_PATH + 'game/multiplayer-combat?match_id=' + data.match_id;
         } else {
             alert('Erreur lors de la création du match contre le bot');
             cancelQueue();
