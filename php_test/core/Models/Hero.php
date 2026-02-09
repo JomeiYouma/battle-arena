@@ -63,7 +63,7 @@ class Hero {
     /**
      * Convertit en tableau pour JSON/affichage (compatibilité avec l'ancien système)
      * Les images sont retournées telles quelles depuis la BDD (ex: media/heroes/fire_skol.png)
-     * Les composants utiliseront asset_url() pour construire le chemin final
+     * Note: p2 retourne toujours p1 - le flip CSS (.enemy-img) gère le mirroring
      */
     public function toArray(): array {
         return [
@@ -77,10 +77,10 @@ class Hero {
             'description' => $this->description,
             'images' => [
                 'p1' => $this->imageP1,
-                'p2' => $this->imageP2 ?? $this->imageP1
+                'p2' => $this->imageP1  // Same as p1, CSS handles flip
             ],
             'image_p1' => $this->imageP1,
-            'image_p2' => $this->imageP2 ?? $this->imageP1
+            'image_p2' => $this->imageP1  // Same as p1, CSS handles flip
         ];
     }
 }
