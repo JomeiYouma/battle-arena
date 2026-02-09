@@ -106,7 +106,7 @@ if ($inCombat):
 
     <!-- CONTRÔLES -->
     <div class="controls">
-        <form method="POST" class="action-form" id="actionForm">
+        <form method="POST" action="<?php echo View::url('/game/single'); ?>" class="action-form" id="actionForm">
             <input type="hidden" name="mode" value="single">
             
             <!-- LISTE D'ACTIONS DÉFILANTE -->
@@ -149,7 +149,7 @@ if ($inCombat):
                     <br>
                 <?php endif; ?>
                 
-                <form method="POST">
+                <form method="POST" action="<?php echo View::url('/game/single'); ?>">
                     <input type="hidden" name="mode" value="single">
                     <button type="submit" name="new_game" class="action-btn new-game">NOUVEAU COMBAT</button>
                 </form>
