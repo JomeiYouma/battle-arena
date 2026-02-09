@@ -3,6 +3,21 @@
  * Gestion du combat solo contre l'IA
  */
 
+// Track previous stats for animation
+let previousStats = { player: null, enemy: null };
+
+/**
+ * Create a stat span with animation class if value changed
+ */
+function createStatSpan(label, value, prevValue, instant) {
+    let animClass = '';
+    if (!instant && prevValue !== null && prevValue !== undefined) {
+        if (value > prevValue) animClass = 'stat-up';
+        else if (value < prevValue) animClass = 'stat-down';
+    }
+    return `<span class="stat-value ${animClass}">${value} ${label}</span>`;
+}
+
 // Fonctions de mise à jour de l'UI
 function updateStats(states, instant = false) {
     if (!states) return;
@@ -18,7 +33,13 @@ function updateStats(states, instant = false) {
         if (instant) heroPvBar.style.transition = '';
     }
     if (heroStats && states.player) {
-        heroStats.textContent = `${states.player.pv}/${states.player.basePv} PV | ${states.player.atk} ATK | ${states.player.def} DEF | ${states.player.speed} SPE`;
+        const prev = previousStats.player;
+        heroStats.innerHTML = 
+            createStatSpan('PV', `${states.player.pv}/${states.player.basePv}`, prev ? `${prev.pv}/${prev.basePv}` : null, instant) + ' | ' +
+            createStatSpan('ATK', states.player.atk, prev?.atk, instant) + ' | ' +
+            createStatSpan('DEF', states.player.def, prev?.def, instant) + ' | ' +
+            createStatSpan('SPE', states.player.speed, prev?.speed, instant);
+        previousStats.player = { ...states.player };
     }
     
     // Mise à jour Enemy
@@ -32,7 +53,13 @@ function updateStats(states, instant = false) {
         if (instant) enemyPvBar.style.transition = '';
     }
     if (enemyStats && states.enemy) {
-        enemyStats.textContent = `${states.enemy.pv}/${states.enemy.basePv} PV | ${states.enemy.atk} ATK | ${states.enemy.def} DEF | ${states.enemy.speed} SPE`;
+        const prev = previousStats.enemy;
+        enemyStats.innerHTML = 
+            createStatSpan('PV', `${states.enemy.pv}/${states.enemy.basePv}`, prev ? `${prev.pv}/${prev.basePv}` : null, instant) + ' | ' +
+            createStatSpan('ATK', states.enemy.atk, prev?.atk, instant) + ' | ' +
+            createStatSpan('DEF', states.enemy.def, prev?.def, instant) + ' | ' +
+            createStatSpan('SPE', states.enemy.speed, prev?.speed, instant);
+        previousStats.enemy = { ...states.enemy };
     }
 }
 

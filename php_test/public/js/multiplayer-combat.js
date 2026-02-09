@@ -28,6 +28,9 @@ let actionTimer = null;
 let timeRemaining = 60;
 let isTimerRunning = false;
 const RANDOM_ACTION_THRESHOLD = 0;
+
+// Track previous stats for animation
+let prevStatsMulti = { my: null, opp: null };
 const FORFEIT_THRESHOLD = -65;
 
 /**
@@ -224,6 +227,18 @@ const combatAnimConfig = {
     }
 };
 
+/**
+ * Create a stat span with animation class if value changed
+ */
+function createMultiStatSpan(label, value, prevValue) {
+    let animClass = '';
+    if (prevValue !== null && prevValue !== undefined) {
+        if (value > prevValue) animClass = 'stat-up';
+        else if (value < prevValue) animClass = 'stat-down';
+    }
+    return `<span class="stat-value ${animClass}">${label}: ${value}</span>`;
+}
+
 function updateStatsFromAction(states) {
     const myKey = IS_P1 ? 'player' : 'enemy';
     const oppKey = IS_P1 ? 'enemy' : 'player';
@@ -231,14 +246,28 @@ function updateStatsFromAction(states) {
     if (states[myKey]) {
         const bar = document.getElementById('myPvBar');
         const stats = document.getElementById('myStats');
+        const prev = prevStatsMulti.my;
         if (bar) bar.style.width = (states[myKey].pv / states[myKey].basePv * 100) + '%';
-        if (stats) stats.innerText = Math.round(states[myKey].pv) + " / " + states[myKey].basePv + " | ATK: " + states[myKey].atk + " | DEF: " + states[myKey].def;
+        if (stats) {
+            stats.innerHTML = 
+                `<span class="stat-value ${!prev ? '' : (states[myKey].pv !== prev.pv ? (states[myKey].pv > prev.pv ? 'stat-up' : 'stat-down') : '')}">${Math.round(states[myKey].pv)} / ${states[myKey].basePv}</span> | ` +
+                createMultiStatSpan('ATK', states[myKey].atk, prev?.atk) + ' | ' +
+                createMultiStatSpan('DEF', states[myKey].def, prev?.def);
+        }
+        prevStatsMulti.my = { ...states[myKey] };
     }
     if (states[oppKey]) {
         const bar = document.getElementById('oppPvBar');
         const stats = document.getElementById('oppStats');
+        const prev = prevStatsMulti.opp;
         if (bar) bar.style.width = (states[oppKey].pv / states[oppKey].basePv * 100) + '%';
-        if (stats) stats.innerText = Math.round(states[oppKey].pv) + " / " + states[oppKey].basePv + " | ATK: " + states[oppKey].atk + " | DEF: " + states[oppKey].def;
+        if (stats) {
+            stats.innerHTML = 
+                `<span class="stat-value ${!prev ? '' : (states[oppKey].pv !== prev.pv ? (states[oppKey].pv > prev.pv ? 'stat-up' : 'stat-down') : '')}">${Math.round(states[oppKey].pv)} / ${states[oppKey].basePv}</span> | ` +
+                createMultiStatSpan('ATK', states[oppKey].atk, prev?.atk) + ' | ' +
+                createMultiStatSpan('DEF', states[oppKey].def, prev?.def);
+        }
+        prevStatsMulti.opp = { ...states[oppKey] };
     }
 }
 
