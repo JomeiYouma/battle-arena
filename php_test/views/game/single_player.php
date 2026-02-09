@@ -136,7 +136,7 @@ if ($inCombat):
                 <?php endforeach; ?>
             </div>
             
-            <button type="submit" name="logout" class="action-btn abandon" <?php echo $combat->isOver() ? 'disabled' : ''; ?>>Abandonner</button>
+            <button type="submit" name="logout" value="1" class="action-btn abandon" <?php echo $combat->isOver() ? 'disabled' : ''; ?>>Abandonner</button>
         </form>
     
         <?php if ($combat->isOver()): ?>
@@ -151,7 +151,7 @@ if ($inCombat):
                 
                 <form method="POST" action="<?php echo View::url('/game/single'); ?>">
                     <input type="hidden" name="mode" value="single">
-                    <button type="submit" name="new_game" class="action-btn new-game">NOUVEAU COMBAT</button>
+                    <button type="submit" name="new_game" value="1" class="action-btn new-game">NOUVEAU COMBAT</button>
                 </form>
             </div>
         <?php endif; ?>
