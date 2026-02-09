@@ -56,7 +56,7 @@ class Pyromane extends Personnage {
 
     public function attack(Personnage $target): string {
         $effectiveDef = max(0, $target->getDef() - 3);
-        $damage = $this->randomDamage(max(1, $this->atk - $effectiveDef), 3);
+        $damage = $this->randomDamage(max(1, $this->getAtk() - $effectiveDef), 3);
         $target->receiveDamage($damage, $this);
         return $target->isDead() ? "FLAMMES ! $damage dégâts ! K.O. !" : "boule de feu ! $damage dégâts";
     }
@@ -87,7 +87,7 @@ class Pyromane extends Personnage {
 
     public function inferno(Personnage $target): string {
         $this->setPv($this->pv - 20);
-        $damage = $this->randomDamage(max(1, ($this->atk * 2) - $target->getDef()), 5);
+        $damage = $this->randomDamage(max(1, ($this->getAtk() * 2) - $target->getDef()), 5);
         $target->receiveDamage($damage, $this);
         return $target->isDead() 
             ? "INFERNO ! $damage dégâts ! K.O. !"

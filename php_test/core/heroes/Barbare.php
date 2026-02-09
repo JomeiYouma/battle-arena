@@ -54,7 +54,7 @@ class Barbare extends Personnage {
     public function attack(Personnage $target): string {
         $bonusDamage = $this->isBerserk() ? $this->berserkBonus : 0;
         $berserkText = $this->isBerserk() ? " [BERSERK!]" : "";
-        $baseDamage = max(1, $this->atk + $bonusDamage - $target->getDef());
+        $baseDamage = max(1, $this->getAtk() + $bonusDamage - $target->getDef());
         $damage = $this->randomDamage($baseDamage, 4);
         $target->receiveDamage($damage, $this);
         return $target->isDead() 
@@ -83,7 +83,7 @@ class Barbare extends Personnage {
 
     public function fury(Personnage $target): string {
         $this->setPv($this->pv - 15);
-        $baseDamage = max(1, $this->atk - $target->getDef());
+        $baseDamage = max(1, $this->getAtk() - $target->getDef());
         $damage1 = $this->randomDamage($baseDamage, 3);
         $damage2 = $this->randomDamage($baseDamage, 3);
         $total = $damage1 + $damage2;

@@ -46,7 +46,7 @@ class Aquatique extends Personnage {
     }
 
     public function attack(Personnage $target): string {
-        $damage = $this->randomDamage(max(1, $this->atk - $target->getDef()), 3);
+        $damage = $this->randomDamage(max(1, $this->getAtk() - $target->getDef()), 3);
         $target->receiveDamage($damage, $this);
         return $target->isDead() ? "torrent ! $damage dégâts ! K.O. !" : "jet d'eau ! $damage dégâts";
     }
@@ -68,7 +68,7 @@ class Aquatique extends Personnage {
     }
 
     public function tsunami(Personnage $target): string {
-        $damage = $this->randomDamage(max(1, (int)($this->atk * 1.8) - $target->getDef()), 4);
+        $damage = $this->randomDamage(max(1, (int)($this->getAtk() * 1.8) - $target->getDef()), 4);
         $target->receiveDamage($damage, $this);
         return $target->isDead() ? "TSUNAMI ! $damage dégâts ! K.O. !" : "TSUNAMI ! $damage dégâts !";
     }

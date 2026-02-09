@@ -55,7 +55,7 @@ class Guerisseur extends Personnage {
     }
 
     public function attack(Personnage $target): string {
-        $damage = $this->randomDamage(max(1, $this->atk - $target->getDef()), 2);
+        $damage = $this->randomDamage(max(1, $this->getAtk() - $target->getDef()), 2);
         $target->receiveDamage($damage, $this);
         return $target->isDead() ? "frappe ! $damage dégâts ! K.O. !" : "frappe : $damage dégâts";
     }
@@ -91,7 +91,7 @@ class Guerisseur extends Personnage {
     }
 
     public function smite(Personnage $target): string {
-        $damage = $this->randomDamage($this->atk + 5, 3);
+        $damage = $this->randomDamage($this->getAtk() + 5, 3);
         $target->receiveDamage($damage, $this);
         return $target->isDead() ? "CHÂTIMENT ! $damage dégâts purs ! K.O. !" : "CHÂTIMENT ! $damage dég (ignore DEF)";
     }

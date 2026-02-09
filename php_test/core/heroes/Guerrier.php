@@ -47,7 +47,7 @@ class Guerrier extends Personnage {
     }
 
     public function attack(Personnage $target): string {
-        $baseDamage = max(1, $this->atk - $target->getDef() + 5);
+        $baseDamage = max(1, $this->getAtk() - $target->getDef() + 5);
         $damage = $this->randomDamage($baseDamage, 3);
         $target->receiveDamage($damage, $this);
         return $target->isDead() 
@@ -79,7 +79,7 @@ class Guerrier extends Personnage {
 
     public function charge(Personnage $target): string {
         $this->def = max(0, $this->def - 5);
-        $baseDamage = max(1, (int)(($this->atk * 1.5) - $target->getDef()));
+        $baseDamage = max(1, (int)(($this->getAtk() * 1.5) - $target->getDef()));
         $damage = $this->randomDamage($baseDamage, 4);
         $target->receiveDamage($damage, $this);
         return $target->isDead() 
