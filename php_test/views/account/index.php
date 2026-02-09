@@ -53,13 +53,13 @@
             <?php else: ?>
                 <div class="hero-list">
                     <?php foreach ($mostPlayed as $i => $hero): 
-                        $winrate = $hero['games'] > 0 ? round(($hero['wins'] / $hero['games']) * 100) : 0;
+                        $winrate = $hero->games > 0 ? round(($hero->wins / $hero->games) * 100) : 0;
                         $rankEmoji = ['🥇', '🥈', '🥉'][$i] ?? ($i + 1);
                     ?>
                         <div class="hero-item">
                             <span class="rank"><?= $rankEmoji ?></span>
-                            <span class="name"><?= View::e($heroNames[$hero['hero_id']] ?? $hero['hero_id']) ?></span>
-                            <span class="games"><?= $hero['games'] ?> parties</span>
+                            <span class="name"><?= View::e($heroNames[$hero->hero_id] ?? $hero->hero_id) ?></span>
+                            <span class="games"><?= $hero->games ?> parties</span>
                             <span class="winrate"><?= $winrate ?>% winrate</span>
                         </div>
                     <?php endforeach; ?>
@@ -89,17 +89,17 @@
                     <tbody>
                         <?php foreach ($recentCombats as $combat): ?>
                             <tr>
-                                <td><?= View::e($heroNames[$combat['hero_id']] ?? $combat['hero_id']) ?></td>
-                                <td><?= View::e($heroNames[$combat['opponent_hero_id']] ?? $combat['opponent_hero_id'] ?? '-') ?></td>
-                                <td class="<?= $combat['victory'] ? 'result-victory' : 'result-defeat' ?>">
-                                    <?= $combat['victory'] ? '✓ Victoire' : '✗ Défaite' ?>
+                                <td><?= View::e($heroNames[$combat->hero_id] ?? $combat->hero_id) ?></td>
+                                <td><?= View::e($heroNames[$combat->opponent_hero_id] ?? $combat->opponent_hero_id ?? '-') ?></td>
+                                <td class="<?= $combat->victory ? 'result-victory' : 'result-defeat' ?>">
+                                    <?= $combat->victory ? '✓ Victoire' : '✗ Défaite' ?>
                                 </td>
                                 <td>
-                                    <span class="mode-badge <?= $combat['game_mode'] ?>">
-                                        <?= $combat['game_mode'] === 'multi' ? 'Multi' : 'Solo' ?>
+                                    <span class="mode-badge <?= $combat->game_mode ?>">
+                                        <?= $combat->game_mode === 'multi' ? 'Multi' : 'Solo' ?>
                                     </span>
                                 </td>
-                                <td><?= date('d/m/Y H:i', strtotime($combat['played_at'])) ?></td>
+                                <td><?= date('d/m/Y H:i', strtotime($combat->played_at)) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -123,13 +123,13 @@
                 </thead>
                 <tbody>
                     <?php foreach ($heroStats as $stat): 
-                        $winrate = $stat['games'] > 0 ? round(($stat['wins'] / $stat['games']) * 100) : 0;
+                        $winrate = $stat->games > 0 ? round(($stat->wins / $stat->games) * 100) : 0;
                     ?>
                         <tr>
-                            <td><?= View::e($heroNames[$stat['hero_id']] ?? $stat['hero_id']) ?></td>
-                            <td><?= $stat['games'] ?></td>
-                            <td class="result-victory"><?= $stat['wins'] ?></td>
-                            <td class="result-defeat"><?= $stat['losses'] ?></td>
+                            <td><?= View::e($heroNames[$stat->hero_id] ?? $stat->hero_id) ?></td>
+                            <td><?= $stat->games ?></td>
+                            <td class="result-victory"><?= $stat->wins ?></td>
+                            <td class="result-defeat"><?= $stat->losses ?></td>
                             <td><?= $winrate ?>%</td>
                         </tr>
                     <?php endforeach; ?>
@@ -178,13 +178,13 @@
             <?php else: ?>
                 <div class="hero-list">
                     <?php foreach ($mostPlayed5v5 as $i => $hero): 
-                        $winrate = $hero['games'] > 0 ? round(($hero['wins'] / $hero['games']) * 100) : 0;
+                        $winrate = $hero->games > 0 ? round(($hero->wins / $hero->games) * 100) : 0;
                         $rankEmoji = ['🥇', '🥈', '🥉'][$i] ?? ($i + 1);
                     ?>
                         <div class="hero-item">
                             <span class="rank"><?= $rankEmoji ?></span>
-                            <span class="name"><?= View::e($heroNames[$hero['hero_id']] ?? $hero['hero_id']) ?></span>
-                            <span class="games"><?= $hero['games'] ?> parties</span>
+                            <span class="name"><?= View::e($heroNames[$hero->hero_id] ?? $hero->hero_id) ?></span>
+                            <span class="games"><?= $hero->games ?> parties</span>
                             <span class="winrate"><?= $winrate ?>% winrate</span>
                         </div>
                     <?php endforeach; ?>
@@ -214,13 +214,13 @@
                         <?php foreach ($recentCombats5v5 as $combat): ?>
                             <tr>
                                 <td>
-                                    <strong><?= View::e($combat['team_name'] ?? 'Mon équipe') ?></strong>
+                                    <strong><?= View::e($combat->team_name ?? 'Mon équipe') ?></strong>
                                 </td>
-                                <td><?= View::e($combat['opponent_name'] ?? '-') ?></td>
-                                <td class="<?= $combat['victory'] ? 'result-victory' : 'result-defeat' ?>">
-                                    <?= $combat['victory'] ? '✓ Victoire' : '✗ Défaite' ?>
+                                <td><?= View::e($combat->opponent_name ?? '-') ?></td>
+                                <td class="<?= $combat->victory ? 'result-victory' : 'result-defeat' ?>">
+                                    <?= $combat->victory ? '✓ Victoire' : '✗ Défaite' ?>
                                 </td>
-                                <td><?= date('d/m/Y H:i', strtotime($combat['played_at'])) ?></td>
+                                <td><?= date('d/m/Y H:i', strtotime($combat->played_at)) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -244,13 +244,13 @@
                 </thead>
                 <tbody>
                     <?php foreach ($heroStats5v5 as $stat): 
-                        $winrate = $stat['games'] > 0 ? round(($stat['wins'] / $stat['games']) * 100) : 0;
+                        $winrate = $stat->games > 0 ? round(($stat->wins / $stat->games) * 100) : 0;
                     ?>
                         <tr>
-                            <td><?= View::e($heroNames[$stat['hero_id']] ?? $stat['hero_id']) ?></td>
-                            <td><?= $stat['games'] ?></td>
-                            <td class="result-victory"><?= $stat['wins'] ?></td>
-                            <td class="result-defeat"><?= $stat['losses'] ?></td>
+                            <td><?= View::e($heroNames[$stat->hero_id] ?? $stat->hero_id) ?></td>
+                            <td><?= $stat->games ?></td>
+                            <td class="result-victory"><?= $stat->wins ?></td>
+                            <td class="result-defeat"><?= $stat->losses ?></td>
                             <td><?= $winrate ?>%</td>
                         </tr>
                     <?php endforeach; ?>
@@ -295,23 +295,23 @@
                         <?php foreach ($leaderboard as $i => $player): 
                             $rank = $i + 1;
                             $rankEmoji = ['🥇', '🥈', '🥉'][$i] ?? $rank;
-                            $isCurrentUser = ($player['id'] == $userId);
-                            $heroName = $player['main_hero'] ? ($heroNames[$player['main_hero']] ?? $player['main_hero']) : '-';
+                            $isCurrentUser = ($player->id == $userId);
+                            $heroName = $player->main_hero ? ($heroNames[$player->main_hero] ?? $player->main_hero) : '-';
                         ?>
                             <tr class="<?= $isCurrentUser ? 'current-user-row' : '' ?> <?= $rank <= 3 ? 'top-3' : '' ?>">
                                 <td class="rank-cell">
                                     <span class="rank-badge rank-<?= min($rank, 4) ?>"><?= $rankEmoji ?></span>
                                 </td>
                                 <td class="player-cell">
-                                    <?= View::e($player['username']) ?>
+                                    <?= View::e($player->username) ?>
                                     <?php if ($isCurrentUser): ?><span class="you-badge">Vous</span><?php endif; ?>
                                 </td>
-                                <td class="result-victory"><?= $player['wins'] ?></td>
-                                <td class="result-defeat"><?= $player['losses'] ?></td>
+                                <td class="result-victory"><?= $player->wins ?></td>
+                                <td class="result-defeat"><?= $player->losses ?></td>
                                 <td class="winrate-cell">
-                                    <span class="winrate-value"><?= $player['winrate'] ?>%</span>
+                                    <span class="winrate-value"><?= $player->winrate ?>%</span>
                                     <div class="winrate-bar">
-                                        <div class="winrate-fill" style="width: <?= min(100, $player['winrate']) ?>%"></div>
+                                        <div class="winrate-fill" style="width: <?= min(100, $player->winrate) ?>%"></div>
                                     </div>
                                 </td>
                                 <td class="hero-cell"><?= View::e($heroName) ?></td>

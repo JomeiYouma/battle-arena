@@ -15,8 +15,15 @@ class Hero {
     private ?string $imageP2 = null;
     private bool $isActive = true;
     
-    public function __construct(array $data = []) {
+    /**
+     * @param array|object $data Data from PDO fetch (supports both FETCH_ASSOC and FETCH_OBJ)
+     */
+    public function __construct($data = null) {
         if (!empty($data)) {
+            // Convert object to array if needed
+            if (is_object($data)) {
+                $data = (array)$data;
+            }
             $this->hydrate($data);
         }
     }

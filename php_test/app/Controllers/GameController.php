@@ -120,7 +120,7 @@ class GameController extends Controller {
                 WHERE tm.team_id = ?
                 ORDER BY tm.position ASC
             ");
-            $stmtMembers->execute([$team['id']]);
+            $stmtMembers->execute([$team->id]);
             $members = $stmtMembers->fetchAll();
             
             $teamsWithMembers[] = [

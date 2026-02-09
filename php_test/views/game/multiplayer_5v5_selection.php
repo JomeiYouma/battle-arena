@@ -24,25 +24,25 @@
                     $team = $teamData['team'];
                     $members = $teamData['members'];
                 ?>
-                    <div class="team-card" data-team-id="<?php echo $team['id']; ?>">
+                    <div class="team-card" data-team-id="<?php echo $team->id; ?>">
                         <div class="team-header">
-                            <h3><?php echo htmlspecialchars($team['team_name']); ?></h3>
-                            <?php if ($team['description']): ?>
-                                <p class="team-description"><?php echo htmlspecialchars($team['description']); ?></p>
+                            <h3><?php echo htmlspecialchars($team->team_name); ?></h3>
+                            <?php if ($team->description): ?>
+                                <p class="team-description"><?php echo htmlspecialchars($team->description); ?></p>
                             <?php endif; ?>
                         </div>
                         
                         <div class="team-members-preview">
                             <?php foreach ($members as $member): 
-                                $heroImg = $member['image_p1'] ?? 'media/heroes/default.png';
-                                $blessingId = $member['blessing_id'] ?? null;
+                                $heroImg = $member->image_p1 ?? 'media/heroes/default.png';
+                                $blessingId = $member->blessing_id ?? null;
                                 $blessingData = $blessingId && isset($blessingsById[$blessingId]) ? $blessingsById[$blessingId] : null;
                             ?>
                                 <div class="member-preview">
                                     <div class="member-img-container">
                                         <img src="<?php echo htmlspecialchars(View::asset($heroImg)); ?>" 
-                                             alt="<?php echo htmlspecialchars($member['name']); ?>"
-                                             title="<?php echo htmlspecialchars($member['name'] . ' - ' . $member['type']); ?>">
+                                             alt="<?php echo htmlspecialchars($member->name); ?>"
+                                             title="<?php echo htmlspecialchars($member->name . ' - ' . $member->type); ?>">
                                         <?php if ($blessingData): ?>
                                             <div class="member-blessing" title="<?php echo htmlspecialchars($blessingData['name']); ?>">
                                                 <img src="<?php echo View::asset('media/blessings/' . $blessingData['img']); ?>" 
@@ -50,17 +50,17 @@
                                             </div>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="member-name"><?php echo htmlspecialchars($member['name']); ?></div>
+                                    <div class="member-name"><?php echo htmlspecialchars($member->name); ?></div>
                                 </div>
                             <?php endforeach; ?>
                         </div>
                         
                         <?php 
                         // Encoder les données en JSON puis échapper pour HTML
-                        $teamNameJson = json_encode($team['team_name']);
+                        $teamNameJson = json_encode($team->team_name);
                         $membersJson = json_encode($members);
                         ?>
-                        <button class="btn-select-team" onclick="selectTeam(<?php echo $team['id']; ?>, <?php echo htmlspecialchars($teamNameJson, ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars($membersJson, ENT_QUOTES, 'UTF-8'); ?>)">
+                        <button class="btn-select-team" onclick="selectTeam(<?php echo $team->id; ?>, <?php echo htmlspecialchars($teamNameJson, ENT_QUOTES, 'UTF-8'); ?>, <?php echo htmlspecialchars($membersJson, ENT_QUOTES, 'UTF-8'); ?>)">
                             Combattre avec cette équipe
                         </button>
                     </div>

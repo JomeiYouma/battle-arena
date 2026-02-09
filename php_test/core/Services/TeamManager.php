@@ -55,7 +55,20 @@ class TeamManager {
             
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$userId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $results = $stmt->fetchAll();
+            
+            // Convert objects to arrays
+            $teams = [];
+            foreach ($results as $row) {
+                $teams[] = [
+                    'id' => $row->id,
+                    'team_name' => $row->team_name,
+                    'description' => $row->description,
+                    'is_active' => $row->is_active,
+                    'hero_count' => $row->hero_count
+                ];
+            }
+            return $teams;
         } catch (PDOException $e) {
             error_log("TeamManager::getTeamsByUser error: " . $e->getMessage());
             return [];
@@ -77,17 +90,25 @@ class TeamManager {
             ');
             
             $stmt->execute([$teamId]);
-            $team = $stmt->fetch(PDO::FETCH_ASSOC);
+            $team = $stmt->fetch();
             
             if (!$team) {
                 return null;
             }
 
-            // Ajouter les membres de l'équipe
-            $team['members'] = $this->getTeamMembers($teamId);
-            $team['member_count'] = count($team['members']);
+            // Convert to array and add members
+            $teamArray = [
+                'id' => $team->id,
+                'user_id' => $team->user_id,
+                'team_name' => $team->team_name,
+                'description' => $team->description,
+                'is_active' => $team->is_active,
+                'created_at' => $team->created_at
+            ];
+            $teamArray['members'] = $this->getTeamMembers($teamId);
+            $teamArray['member_count'] = count($teamArray['members']);
             
-            return $team;
+            return $teamArray;
         } catch (PDOException $e) {
             error_log("TeamManager::getTeamById error: " . $e->getMessage());
             return null;
@@ -192,7 +213,30 @@ class TeamManager {
             ');
             
             $stmt->execute([$teamId]);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $results = $stmt->fetchAll();
+            
+            // Convert objects to arrays for compatibility
+            $members = [];
+            foreach ($results as $row) {
+                $members[] = [
+                    'id' => $row->id,
+                    'position' => $row->position,
+                    'hero_id' => $row->hero_id,
+                    'blessing_id' => $row->blessing_id,
+                    'hero_db_id' => $row->hero_db_id,
+                    'hero_code' => $row->hero_code,
+                    'name' => $row->name,
+                    'type' => $row->type,
+                    'pv' => $row->pv,
+                    'atk' => $row->atk,
+                    'def' => $row->def,
+                    'speed' => $row->speed,
+                    'image_p1' => $row->image_p1,
+                    'image_p2' => $row->image_p2,
+                    'description' => $row->description
+                ];
+            }
+            return $members;
         } catch (PDOException $e) {
             error_log("TeamManager::getTeamMembers error: " . $e->getMessage());
             return [];
@@ -308,9 +352,9 @@ class TeamManager {
             ');
             
             $stmt->execute([$teamId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $result = $stmt->fetch();
             
-            return $result['count'] == 5;
+            return $result->count == 5;
         } catch (PDOException $e) {
             error_log("TeamManager::isTeamComplete error: " . $e->getMessage());
             return false;
@@ -387,15 +431,23 @@ class TeamManager {
             ');
             
             $stmt->execute([$matchId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $row = $stmt->fetch();
             
-            if ($result) {
-                // Décoder les JSON
-                $result['player1_team_data'] = json_decode($result['player1_team_data'], true);
-                $result['player2_team_data'] = json_decode($result['player2_team_data'], true);
+            if ($row) {
+                // Convert to array and décoder les JSON
+                $result = [
+                    'player1_team_data' => json_decode($row->player1_team_data, true),
+                    'player2_team_data' => json_decode($row->player2_team_data, true),
+                    'player1_current_idx' => $row->player1_current_idx,
+                    'player2_current_idx' => $row->player2_current_idx,
+                    'turn_number' => $row->turn_number,
+                    'created_at' => $row->created_at,
+                    'updated_at' => $row->updated_at
+                ];
+                return $result;
             }
             
-            return $result;
+            return null;
         } catch (PDOException $e) {
             error_log("TeamManager::getTeamCombatState error: " . $e->getMessage());
             return null;
@@ -478,9 +530,9 @@ class TeamManager {
         try {
             $stmt = $this->pdo->prepare('SELECT COUNT(*) as count FROM teams WHERE user_id = ?');
             $stmt->execute([$userId]);
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            $result = $stmt->fetch();
             
-            return (int) $result['count'];
+            return (int) $result->count;
         } catch (PDOException $e) {
             error_log("TeamManager::countUserTeams error: " . $e->getMessage());
             return 0;

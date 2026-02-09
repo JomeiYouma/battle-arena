@@ -50,11 +50,11 @@ class MatchQueue {
         
         if ($opponent) {
             // MATCH TROUVÉ !
-            $opponentHeroData = json_decode($opponent['hero_data'], true);
+            $opponentHeroData = json_decode($opponent->hero_data, true);
             
             // Retirer l'adversaire de la queue
             $stmt = $this->db->prepare("DELETE FROM match_queue WHERE id = :id");
-            $stmt->execute(['id' => $opponent['id']]);
+            $stmt->execute(['id' => $opponent->id]);
             
             // Retirer le joueur actuel de la queue
             $stmt = $this->db->prepare("DELETE FROM match_queue WHERE session_id = :session_id");
@@ -69,13 +69,13 @@ class MatchQueue {
                 'mode' => 'pvp',
                 'turn' => 1,
                 'player1' => [
-                    'session' => $opponent['session_id'],
+                    'session' => $opponent->session_id,
                     'hero' => $opponentHeroData,
-                    'display_name' => $opponent['display_name'],
-                    'user_id' => $opponent['user_id'],
+                    'display_name' => $opponent->display_name,
+                    'user_id' => $opponent->user_id,
                     'hp' => $opponentHeroData['pv'],
                     'max_hp' => $opponentHeroData['pv'],
-                    'blessing_id' => $opponent['blessing_id'],
+                    'blessing_id' => $opponent->blessing_id,
                     'last_poll' => $now
                 ],
                 'player2' => [
@@ -148,12 +148,12 @@ class MatchQueue {
         $entry = $stmt->fetch();
         
         if ($entry) {
-            $timeInQueue = (int)$entry['time_in_queue'];
+            $timeInQueue = (int)$entry->time_in_queue;
             
             if ($timeInQueue >= $this->timeoutSeconds) {
                 // Créer un match bot
                 $matchId = uniqid('match_');
-                $heroData = json_decode($entry['hero_data'], true);
+                $heroData = json_decode($entry->hero_data, true);
                 
                 // Sélectionner un ennemi aléatoire depuis la BDD
                 require_once __DIR__ . '/Services/HeroManager.php';
@@ -175,10 +175,10 @@ class MatchQueue {
                     'player1' => [
                         'session' => $sessionId,
                         'hero' => $heroData,
-                        'display_name' => $entry['display_name'],
+                        'display_name' => $entry->display_name,
                         'hp' => $heroData['pv'],
                         'max_hp' => $heroData['pv'],
-                        'blessing_id' => $entry['blessing_id'],
+                        'blessing_id' => $entry->blessing_id,
                         'last_poll' => $now
                     ],
                     'player2' => [
@@ -219,7 +219,7 @@ class MatchQueue {
         $stmt = $this->db->query("SELECT COUNT(*) as count FROM match_queue");
         $result = $stmt->fetch();
         
-        return (int)$result['count'];
+        return (int)$result->count;
     }
     
     /**

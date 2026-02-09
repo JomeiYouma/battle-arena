@@ -47,16 +47,16 @@ class User {
         $stmt->execute([$email]);
         $user = $stmt->fetch();
         
-        if (!$user || !password_verify($password, $user['password_hash'])) {
+        if (!$user || !password_verify($password, $user->password_hash)) {
             return ['success' => false, 'error' => 'Email ou mot de passe incorrect'];
         }
         
         // Stocker en session
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['is_admin'] = (int)$user['is_admin'];
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['username'] = $user->username;
+        $_SESSION['is_admin'] = (int)$user->is_admin;
         
-        return ['success' => true, 'user' => ['id' => $user['id'], 'username' => $user['username'], 'is_admin' => $user['is_admin']]];
+        return ['success' => true, 'user' => ['id' => $user->id, 'username' => $user->username, 'is_admin' => $user->is_admin]];
     }
     
     /**
@@ -157,8 +157,8 @@ class User {
         $stmt->execute($params);
         $stats = $stmt->fetch();
         
-        $total = (int)($stats['total'] ?? 0);
-        $wins = (int)($stats['wins'] ?? 0);
+        $total = (int)($stats->total ?? 0);
+        $wins = (int)($stats->wins ?? 0);
         
         return [
             'total' => $total,
@@ -183,8 +183,8 @@ class User {
         $stmt->execute([$userId, '5v5']);
         $stats = $stmt->fetch();
         
-        $total = (int)($stats['total'] ?? 0);
-        $wins = (int)($stats['wins'] ?? 0);
+        $total = (int)($stats->total ?? 0);
+        $wins = (int)($stats->wins ?? 0);
         
         return [
             'total' => $total,
@@ -213,9 +213,9 @@ class User {
         
         $statsByMode = [];
         foreach ($results as $row) {
-            $total = (int)($row['total'] ?? 0);
-            $wins = (int)($row['wins'] ?? 0);
-            $statsByMode[$row['game_mode']] = [
+            $total = (int)($row->total ?? 0);
+            $wins = (int)($row->wins ?? 0);
+            $statsByMode[$row->game_mode] = [
                 'total' => $total,
                 'wins' => $wins,
                 'losses' => $total - $wins,
@@ -386,8 +386,8 @@ class User {
         $stmtNew->execute([$userId, '5v5']);
         $newStats = $stmtNew->fetch();
         
-        $total = (int)($oldStats['total'] ?? 0) + (int)($newStats['total'] ?? 0);
-        $wins = (int)($oldStats['wins'] ?? 0) + (int)($newStats['wins'] ?? 0);
+        $total = (int)($oldStats->total ?? 0) + (int)($newStats->total ?? 0);
+        $wins = (int)($oldStats->wins ?? 0) + (int)($newStats->wins ?? 0);
         
         return [
             'total' => $total,
@@ -438,11 +438,11 @@ class User {
             return ['type' => 'none', 'count' => 0];
         }
         
-        $firstResult = (bool)$results[0]['victory'];
+        $firstResult = (bool)$results[0]->victory;
         $streak = 0;
         
         foreach ($results as $row) {
-            if ((bool)$row['victory'] === $firstResult) {
+            if ((bool)$row->victory === $firstResult) {
                 $streak++;
             } else {
                 break;
@@ -480,11 +480,11 @@ class User {
             return ['type' => 'none', 'count' => 0];
         }
         
-        $firstResult = (bool)$results[0]['victory'];
+        $firstResult = (bool)$results[0]->victory;
         $streak = 0;
         
         foreach ($results as $row) {
-            if ((bool)$row['victory'] === $firstResult) {
+            if ((bool)$row->victory === $firstResult) {
                 $streak++;
             } else {
                 break;
@@ -547,9 +547,9 @@ class User {
         $stmt->execute([$limit]);
         $leaderboard = $stmt->fetchAll();
         
-        foreach ($leaderboard as &$player) {
-            $mostPlayed = $this->getMostPlayedHeroes((int)$player['id'], 1);
-            $player['main_hero'] = !empty($mostPlayed) ? $mostPlayed[0]['hero_id'] : null;
+        foreach ($leaderboard as $player) {
+            $mostPlayed = $this->getMostPlayedHeroes((int)$player->id, 1);
+            $player->main_hero = !empty($mostPlayed) ? $mostPlayed[0]->hero_id : null;
         }
         
         return $leaderboard;
