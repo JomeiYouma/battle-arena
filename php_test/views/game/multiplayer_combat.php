@@ -109,8 +109,8 @@ $isTestUI = !isset($matchData['combat_state']) && isset($matchData['player1']['h
                         <span id="timerValue">60</span>
                     </div>
                     
-                    <form method="POST" class="abandon-form-inline">
-                        <button type="submit" name="abandon_multi" class="action-btn abandon">Abandonner</button>
+                    <form method="POST" action="<?php echo View::url('/game/multiplayer-combat'); ?>" class="abandon-form-inline">
+                        <button type="submit" name="abandon_multi" value="1" class="action-btn abandon">Abandonner</button>
                     </form>
                 </div>
             </div>
@@ -164,11 +164,6 @@ $isTestUI = !isset($matchData['combat_state']) && isset($matchData['player1']['h
 <script src="<?php echo View::asset('js/selection-tooltip.js'); ?>"></script>
 <script src="<?php echo View::asset('js/multiplayer-combat.js'); ?>"></script>
 <script>
-// Define API base path for JavaScript (avoid redeclaration)
-if (typeof API_BASE_PATH === 'undefined') {
-    var API_BASE_PATH = '<?php echo View::url('/api'); ?>';
-}
-
 // Initialiser le combat avec les données PHP
 initMultiplayerCombat({
     matchId: '<?php echo addslashes($matchId); ?>',
@@ -179,6 +174,7 @@ initMultiplayerCombat({
     teamDataP1: <?php echo json_encode($teamSidebars['p1']); ?>,
     teamDataP2: <?php echo json_encode($teamSidebars['p2']); ?>,
     assetBasePath: '<?php echo View::asset(""); ?>',
-    apiBasePath: API_BASE_PATH
+    apiBasePath: '<?php echo View::url("/api"); ?>',
+    homeUrl: '<?php echo View::url("/"); ?>'
 });
 </script>

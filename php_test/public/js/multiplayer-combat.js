@@ -4,7 +4,7 @@
  */
 
 // ============ CONFIGURATION ============
-// Ces variables sont définies dans le HTML par PHP
+// Ces variables sont définies par initMultiplayerCombat()
 let MATCH_ID = '';
 let INITIAL_STATE = {};
 let IS_P1 = true;
@@ -14,7 +14,7 @@ let TEAM_DATA_P1 = [];
 let TEAM_DATA_P2 = [];
 let ASSET_BASE_PATH = '';
 let API_BASE_PATH = '';
-let HOME_URL = '/nodeTest2/mood-checker/php_test/app/';
+let HOME_URL = '/';
 
 let pollInterval = null;
 let lastLogCount = 0;
@@ -37,6 +37,8 @@ const FORFEIT_THRESHOLD = -65;
  * Initialiser le module avec les paramètres PHP
  */
 function initMultiplayerCombat(config) {
+    console.log('initMultiplayerCombat called with config:', config);
+    
     MATCH_ID = config.matchId;
     INITIAL_STATE = config.initialState;
     IS_P1 = config.isP1;
@@ -44,8 +46,13 @@ function initMultiplayerCombat(config) {
     IS_TEST_UI = config.isTestUI;
     TEAM_DATA_P1 = config.teamDataP1;
     TEAM_DATA_P2 = config.teamDataP2;
-    ASSET_BASE_PATH = config.assetBasePath;
-    API_BASE_PATH = config.apiBasePath || '../../api.php';
+    ASSET_BASE_PATH = config.assetBasePath || '';
+    API_BASE_PATH = config.apiBasePath || '/api';
+    HOME_URL = config.homeUrl || '/';
+    
+    console.log('API_BASE_PATH set to:', API_BASE_PATH);
+    console.log('IS_TEST_UI:', IS_TEST_UI);
+    console.log('INITIAL_STATE:', INITIAL_STATE);
     
     currentGameState = INITIAL_STATE;
     lastLogCount = INITIAL_STATE.logs ? INITIAL_STATE.logs.length : 0;
@@ -331,7 +338,10 @@ function updateCombatState() {
         return;
     }
 
-    fetch(API_BASE_PATH + '?action=poll_status&match_id=' + MATCH_ID, {
+    const pollUrl = API_BASE_PATH + '?action=poll_status&match_id=' + MATCH_ID;
+    console.log('Polling:', pollUrl);
+    
+    fetch(pollUrl, {
         credentials: 'same-origin'
     })
         .then(r => {
@@ -349,6 +359,8 @@ function updateCombatState() {
             }
         })
         .then(data => {
+            console.log('Poll response:', data);
+            
             if (!data) {
                 showErrorMessage('Erreur: réponse vide du serveur');
                 return;
@@ -381,6 +393,7 @@ function updateCombatState() {
                 }
             }
             
+            console.log('Calling updateActionButtons with actions:', data.actions, 'waiting_for_me:', data.waiting_for_me);
             updateLogs(data);
             updateActionButtons(data);
             handleGameState(data);

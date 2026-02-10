@@ -669,6 +669,12 @@ class GameController extends Controller {
             $gameState['turn'] = $matchData['turn'] ?? 1;
             $gameState['isOver'] = $multiCombat->isOver();
             
+            // Déterminer qui doit jouer
+            $myRole = $isP1 ? 'p1' : 'p2';
+            $actions = $matchData['current_turn_actions'] ?? [];
+            $gameState['waiting_for_me'] = !isset($actions[$myRole]) && !$gameState['isOver'];
+            $gameState['waiting_for_opponent'] = isset($actions[$myRole]) && !$gameState['isOver'];
+            
             if (!empty($gameState['me']['img'])) {
                 $gameState['me']['img'] = View::asset($gameState['me']['img']);
             }

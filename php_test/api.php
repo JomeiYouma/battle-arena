@@ -492,6 +492,15 @@ try {
                 $response['waiting_for_me'] = !isset($actions[$myRole]) && !$isOver;
                 $response['waiting_for_opponent'] = isset($actions[$myRole]) && !isset($actions[$oppRole]) && !$isVsBot && !$isOver;
                 
+                // Ajouter le préfixe d'asset pour les chemins d'images
+                $assetBase = '/nodeTest2/mood-checker/php_test/public/';
+                if (!empty($response['me']['img'])) {
+                    $response['me']['img'] = $assetBase . $response['me']['img'];
+                }
+                if (!empty($response['opponent']['img'])) {
+                    $response['opponent']['img'] = $assetBase . $response['opponent']['img'];
+                }
+                
                 error_log("poll_status: sessionId=$sessionId, myRole=$myRole, isVsBot=" . ($isVsBot ? 'true' : 'false') . ", current_turn_actions=" . json_encode($actions) . ", waiting_for_me=" . ($response['waiting_for_me'] ? 'true' : 'false') . ", actions_count=" . count($response['actions']));
                 
                 echo json_encode($response);
