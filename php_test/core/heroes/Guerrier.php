@@ -47,7 +47,7 @@ class Guerrier extends Personnage {
     }
 
     public function attack(Personnage $target): string {
-        $baseDamage = max(1, $this->getAtk() - $target->getDef() + 5);
+        $baseDamage = max(1, $this->getAtk() + 2 - $target->getDef() + 5);
         $damage = $this->randomDamage($baseDamage, 3);
         $target->receiveDamage($damage, $this);
         return $target->isDead() 
@@ -62,7 +62,7 @@ class Guerrier extends Personnage {
                 return "est déjà en rage !";
             }
         }
-        $this->addStatusEffect(new AttackBoostEffect(2, $this->rageBonus));
+        $this->addStatusEffect(new AttackBoostEffect(3, $this->rageBonus));
         return "entre en RAGE ! +{$this->rageBonus} ATK";
     }
 

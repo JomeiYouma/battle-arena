@@ -15,7 +15,7 @@ class Guerisseur extends Personnage {
             'attack' => [
                 'label' => 'Rayon psychique',
                 'emoji' => '✨',
-                'description' => 'Attaque de base à distance',
+                'description' => 'Attaque de base',
                 'method' => 'attack',
                 'needsTarget' => true
             ],
@@ -91,7 +91,7 @@ class Guerisseur extends Personnage {
     }
 
     public function smite(Personnage $target): string {
-        $damage = $this->randomDamage($this->getAtk() + 5, 3);
+        $damage = $this->randomDamage($this->getAtk() + 5, 20);
         $target->receiveDamage($damage, $this);
         return $target->isDead() ? "CHÂTIMENT ! $damage dégâts purs ! K.O. !" : "CHÂTIMENT ! $damage dég (ignore DEF)";
     }
@@ -103,7 +103,7 @@ class Guerisseur extends Personnage {
                 return "barrière déjà active !";
             }
         }
-        $this->addStatusEffect(new DefenseBoostEffect(1, 25));
+        $this->addStatusEffect(new DefenseBoostEffect(2, 25));
         return "crée une BARRIÈRE ! +25 DEF";
     }
 }

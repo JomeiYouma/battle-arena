@@ -6,8 +6,8 @@ require_once __DIR__ . '/Blessing.php';
 require_once __DIR__ . '/effects/DestinyLinkEffect.php';
 
 abstract class Personnage {
-    const MAX_PV = 200;
-    const MAX_DEF = 40;  // Cap de défense
+    const MAX_PV = 250;
+    const MAX_DEF = 50;  // Cap de défense
 
     protected static $nbPersonnages = 0;
 

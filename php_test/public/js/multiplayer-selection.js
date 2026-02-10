@@ -17,8 +17,8 @@ let isInQueue = false;
  * Initialisation du système de sélection multiplayer
  */
 function initMultiplayerSelection(apiBasePath) {
-    // Utilise le paramètre, ou la variable globale définie par PHP, ou le fallback
-    if (apiBasePath) {
+    // Utilise le paramètre (si c'est une string), ou la variable globale définie par PHP, ou le fallback
+    if (apiBasePath && typeof apiBasePath === 'string') {
         API_BASE_PATH = apiBasePath;
     } else if (!API_BASE_PATH) {
         API_BASE_PATH = '../../api.php';
