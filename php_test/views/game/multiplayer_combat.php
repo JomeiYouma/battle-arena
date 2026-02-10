@@ -164,8 +164,10 @@ $isTestUI = !isset($matchData['combat_state']) && isset($matchData['player1']['h
 <script src="<?php echo View::asset('js/selection-tooltip.js'); ?>"></script>
 <script src="<?php echo View::asset('js/multiplayer-combat.js'); ?>"></script>
 <script>
-// Define API base path for JavaScript
-const API_BASE_PATH = '<?php echo View::url('/api'); ?>';
+// Define API base path for JavaScript (avoid redeclaration)
+if (typeof API_BASE_PATH === 'undefined') {
+    var API_BASE_PATH = '<?php echo View::url('/api'); ?>';
+}
 
 // Initialiser le combat avec les données PHP
 initMultiplayerCombat({

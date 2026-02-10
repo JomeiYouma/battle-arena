@@ -124,8 +124,14 @@ class MatchQueue {
         $now = time();
         
         // 1. Balayer les fichiers matches pour voir si notre session y est
+        // Exclure les matchs 5v5 (ils utilisent match_5v5_*)
         $files = glob($this->matchesDir . 'match_*.json');
         foreach ($files as $file) {
+            // Skip 5v5 match files
+            if (strpos(basename($file), 'match_5v5_') === 0) {
+                continue;
+            }
+            
             $content = file_get_contents($file);
             if ($content) {
                 $match = json_decode($content, true);
