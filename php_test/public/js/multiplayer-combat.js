@@ -27,11 +27,11 @@ let isSwitchModalManuallyOpen = false;
 let actionTimer = null;
 let timeRemaining = 60;
 let isTimerRunning = false;
-const RANDOM_ACTION_THRESHOLD = 0;
+const RANDOM_ACTION_THRESHOLD = -999; // Désactivé (valeur impossible à atteindre)
 
 // Track previous stats for animation
 let prevStatsMulti = { my: null, opp: null };
-const FORFEIT_THRESHOLD = -65;
+const FORFEIT_THRESHOLD = 5; // Forfait à 5 secondes (grâce suffisante)
 
 /**
  * Initialiser le module avec les paramètres PHP
@@ -513,6 +513,29 @@ function handleGameState(data) {
         stopActionTimer();
         closeSwitchModal(true);
         btnContainer.style.display = 'none';
+        
+        // Cacher le container d'actions et le timer
+        if (actionContainer) actionContainer.style.display = 'none';
+        const infoPanel = document.getElementById('infoPanel');
+        if (infoPanel) infoPanel.style.display = 'none';
+        
+        // Cacher le battle log pour remonter le message de victoire
+        const battleLog = document.getElementById('battleLog');
+        if (battleLog) battleLog.style.display = 'none';
+        
+        // Cacher toute la section controls-row
+        const controlsRow = document.querySelector('.controls-row');
+        if (controlsRow) controlsRow.style.display = 'none';
+        
+        // Cacher les sidebars et drawer toggles en 5v5
+        const sidebar1 = document.getElementById('teamSidebar1');
+        const sidebar2 = document.getElementById('teamSidebar2');
+        const toggle1 = document.getElementById('drawerToggle1');
+        const toggle2 = document.getElementById('drawerToggle2');
+        if (sidebar1) sidebar1.style.display = 'none';
+        if (sidebar2) sidebar2.style.display = 'none';
+        if (toggle1) toggle1.style.display = 'none';
+        if (toggle2) toggle2.style.display = 'none';
         
         const switchBtn = document.getElementById('switchBtn');
         if (switchBtn) {

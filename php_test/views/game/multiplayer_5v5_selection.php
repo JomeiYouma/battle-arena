@@ -86,9 +86,10 @@
                 <div class="queue-progress-bar" id="queueProgressBar"></div>
             </div>
             
-            <p class="queue-hint">Match contre un joueur réel, ou un bot si aucun adversaire trouvé après 30s</p>
-            
+            <!-- Bouton annuler déplacé avant le hint pour être plus proche du haut -->
             <button id="cancelQueue" class="btn-cancel">Annuler la recherche</button>
+            
+            <p class="queue-hint">Match contre un joueur réel, ou un bot si aucun adversaire trouvé après 30s</p>
         </div>
     </div>
 </div>

@@ -409,10 +409,11 @@ try {
             $now = time();
             $metaData[$myPlayerKey]['last_poll'] = $now;
             
-            // Vérifier si l'adversaire est AFK (60 secondes sans poll) - seulement en mode PvP
+            // Vérifier si l'adversaire est AFK (60 secondes sans poll) - PvP et 5v5
             $AFK_TIMEOUT = 60;
             $opponentAFK = false;
-            if (($metaData['mode'] ?? '') === 'pvp' && $metaData['status'] === 'active') {
+            $isPvPMatch = in_array($metaData['mode'] ?? '', ['pvp', '5v5']);  // Inclure 5v5
+            if ($isPvPMatch && $metaData['status'] === 'active' && !isset($metaData[$oppPlayerKey]['is_bot'])) {
                 $oppLastPoll = $metaData[$oppPlayerKey]['last_poll'] ?? $metaData['created_at'];
                 if (($now - $oppLastPoll) > $AFK_TIMEOUT) {
                     $opponentAFK = true;

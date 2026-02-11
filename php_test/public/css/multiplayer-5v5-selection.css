@@ -296,7 +296,7 @@
 }
 
 .btn-cancel {
-    margin-top: 2rem;
+    margin-top: 1.5rem; /* Réduit de 2rem à 1.5rem pour rapprocher du haut */
     padding: 0.8rem 2rem;
     background: var(--stone-gray);
     color: var(--text-light);

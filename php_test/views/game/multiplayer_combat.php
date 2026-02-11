@@ -10,7 +10,8 @@ if ($is5v5) {
     $teamSidebars['p2'] = $matchData['player2']['heroes'] ?? [];
 }
 
-$isTestUI = !isset($matchData['combat_state']) && isset($matchData['player1']['heroes']);
+// Test UI uniquement si paramètre explicite ou match_id commence par "test_"
+$isTestUI = isset($_GET['test']) || (strpos($matchId, 'test_') === 0);
 ?>
 
 <h1 class="arena-title">Horus Battle Arena</h1>

@@ -82,7 +82,7 @@ class GameController extends Controller {
     public function selection5v5(): void {
         // 5v5 requiert d'être connecté
         if (!User::isLoggedIn()) {
-            $this->redirect('/auth/login?redirect=game/5v5-selection');
+            $this->redirect('/login?redirect=game/5v5-selection');
         }
         
         $userId = User::getCurrentUserId();
@@ -112,14 +112,17 @@ class GameController extends Controller {
         
         // Charger les membres pour chaque équipe
         $teamsWithMembers = [];
+        
+        // Préparer la requête UNE SEULE FOIS avant la boucle (optimisation)
+        $stmtMembers = $pdo->prepare("
+            SELECT tm.position, tm.hero_id, tm.blessing_id, h.*
+            FROM team_members tm
+            LEFT JOIN heroes h ON tm.hero_id = h.hero_id
+            WHERE tm.team_id = ?
+            ORDER BY tm.position ASC
+        ");
+        
         foreach ($userTeams as $team) {
-            $stmtMembers = $pdo->prepare("
-                SELECT tm.position, tm.hero_id, tm.blessing_id, h.*
-                FROM team_members tm
-                LEFT JOIN heroes h ON tm.hero_id = h.hero_id
-                WHERE tm.team_id = ?
-                ORDER BY tm.position ASC
-            ");
             $stmtMembers->execute([$team->id]);
             $members = $stmtMembers->fetchAll();
             
