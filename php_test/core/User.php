@@ -521,7 +521,7 @@ class User {
         
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-        $result = $stmt->fetch();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
         
         return $result ?: null;
     }

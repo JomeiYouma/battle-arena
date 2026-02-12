@@ -65,7 +65,7 @@ class TeamManager {
                     'team_name' => $row->team_name,
                     'description' => $row->description,
                     'is_active' => $row->is_active,
-                    'hero_count' => $row->hero_count
+                    'hero_count' => $row->member_count
                 ];
             }
             return $teams;
