@@ -1,5 +1,8 @@
 # Horus Battle Arena
 
+
+Vous jouez le personnage de gauche, l'action est réalisée selon la vitesse de votre héros et de celui affronté. En solo, l'action de l'adversaire est déterminée au hasard.
+
 Un jeu de combat tour par tour multijoueur en temps réel (PHP/JS).
 
 ## � Structure du Projet
