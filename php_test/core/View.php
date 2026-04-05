@@ -72,8 +72,8 @@ class View {
     /**
      * Échapper une chaîne pour l'affichage HTML
      */
-    public static function e(string $string): string {
-        return htmlspecialchars($string, ENT_QUOTES, 'UTF-8');
+    public static function e(?string $string): string {
+        return htmlspecialchars($string ?? '', ENT_QUOTES, 'UTF-8');
     }
     
     /**
